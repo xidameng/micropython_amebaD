@@ -81,6 +81,7 @@ int main(void)
     mp_hal_log_uart_init();
     pin_init0();
     ip_init0();
+    rtc_init0();
     // wifi should br init after lwip init, or it will hang.
     wlan_init0(); 
     mpexception_init0();
