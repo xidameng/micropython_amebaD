@@ -177,3 +177,9 @@ Q(dhcp_stop)
 // for arp
 Q(arp)
 Q(table)
+
+// for time module
+Q(time)
+Q(localtime)
+Q(mktime)
+Q(datetime)

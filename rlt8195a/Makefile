@@ -172,6 +172,7 @@ SRC_C += \
 	lib/mp-readline/readline.c \
 	lib/netutils/netutils.c \
 	lib/fatfs/ff.c \
+	lib/timeutils/timeutils.c \
 	$(SRC_MOD) \
 	$(STM_SRC_C)
 
