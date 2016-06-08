@@ -48,6 +48,8 @@
 
 #include "wifi_ind.h"
 
+#include "lwip/dhcp.h"
+
 extern const mp_obj_type_t ip_type;
 
 #define NETIF_STA_ID    0
