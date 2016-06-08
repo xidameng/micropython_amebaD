@@ -164,15 +164,15 @@ Q(MASTER)
 Q(SLAVE)
 
 Q(network)
-Q(lwip)
+Q(ip)
 
 // for dhcp 
-Q(dhcp)
-Q(request)
-Q(renew)
-Q(release)
-Q(inform)
-Q(state)
+Q(dhcp_request)
+Q(dhcp_renew)
+Q(dhcp_release)
+Q(dhcp_inform)
+Q(dhcp_state)
+Q(dhcp_stop)
 
 // for arp
 Q(arp)
