@@ -12,7 +12,8 @@ MEMORY
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 65536
   ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 13368
   RECY_RAM (rwx)  : ORIGIN = 0x10002114, LENGTH = 16108
-  BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 434176
+  BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6FFFF
+  /*BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 434176*/
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
 }
 
@@ -177,7 +178,6 @@ SECTIONS
     __buffer_data_start__ = .;
     *(.ossram.heap*)
     __buffer_data_end__ = .;
-    
   } > BD_RAM
 
  .heap :

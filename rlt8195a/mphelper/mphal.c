@@ -72,12 +72,10 @@ void mp_hal_set_interrupt_char(int c) {
 }
 
 void mp_hal_delay_ms(uint32_t ms) {
-    //TODO
     mdelay(ms);
 }
 
 void mp_hal_delay_us(uint32_t us) {
-    //TODO
     udelay(us);
 }
 
