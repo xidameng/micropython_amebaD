@@ -133,12 +133,47 @@ STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(time_mktime_obj, time_mktime);
 
+STATIC mp_obj_t time_sleep(mp_obj_t seconds_o) {
+#if MICROPY_PY_BUILTINS_FLOAT
+    if (MP_OBJ_IS_INT(seconds_o)) {
+#endif
+        mp_hal_delay_ms(1000 * mp_obj_get_int(seconds_o));
+#if MICROPY_PY_BUILTINS_FLOAT
+    } else {
+        mp_hal_delay_ms((uint32_t)(1000 * mp_obj_get_float(seconds_o)));
+    }
+#endif
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_obj, time_sleep);
+
+STATIC mp_obj_t time_sleep_ms(mp_obj_t ms_in) {
+    mp_int_t ms = mp_obj_get_int(ms_in);
+    if (ms > 0) {
+        mp_hal_delay_ms(ms);
+    }
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_ms_obj, time_sleep_ms);
+
+STATIC mp_obj_t time_sleep_us(mp_obj_t usec_in) {
+    mp_int_t usec = mp_obj_get_int(usec_in);
+    if (usec > 0) {
+        mp_hal_delay_us(usec);
+    }
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
+
 
 STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_datetime),        (mp_obj_t)&time_datetime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),       (mp_obj_t)&time_localtime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),          (mp_obj_t)&time_mktime_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep),           (mp_obj_t)&time_sleep_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_ms),        (mp_obj_t)&time_sleep_ms_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_us),        (mp_obj_t)&time_sleep_us_obj },
 };
 STATIC MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);
 
