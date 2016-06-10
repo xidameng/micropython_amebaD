@@ -40,16 +40,25 @@
 #include "gchelper.h"
 #include "exception.h"
 
+#include "lib/fatfs/ff.h"
+#include "extmod/fsusermount.h"
+
 #include "cmsis_os.h"
 #include "sys_api.h"
-#include "log_uart_api.h"
+
+#include "flash.h"
+
+#include "flash_api.h"
 
 
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
 osThreadId main_tid = 0;
-
+fs_user_mount_t fs_user_mount_flash;
+static const char fresh_main_py[] =
+"# main.py -- put your code here!\r\n"
+;
 
 /*****************************************************************************
  *                              External functions
@@ -86,9 +95,11 @@ int main(void)
     wlan_init0(); 
     mpexception_init0();
     readline_init0();
-
+    flash_vfs_init0();
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     // Create main task
-    osThreadDef(main_task, osPriorityRealtime, 1, 8192);
+    osThreadDef(main_task, osPriorityRealtime, 1, 8152);
     main_tid = osThreadCreate (osThread (main_task), NULL);
     osKernelStart();
     while(1);
@@ -106,10 +117,45 @@ void NORETURN __fatal_error(const char *msg) {
     }
 }
 
+void flash_vfs_init0(void) {
+    fs_user_mount_t *vfs = &fs_user_mount_flash;
+    vfs->str = "/flash";
+    vfs->len = 6;
+    vfs->flags = 0;
+    flash_init0(vfs);
+// put the flash device in slot 0 (it will be unused at this point)
+    MP_STATE_PORT(fs_user_mount)[0] = vfs;
+
+    FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
+
+    if (res == FR_NO_FILESYSTEM) {
+        res = f_mkfs("/flash", 0, 0);
+        if (res == FR_OK) {
+            // success creating fresh
+        } else {
+            MP_STATE_PORT(fs_user_mount)[0] = NULL;
+            return;
+        }
+        // create empty main.py
+        FIL fp;
+        res = f_open(&fp, "/flash/main.py", FA_WRITE | FA_CREATE_ALWAYS);
+        UINT n;
+        res = f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
+        // TODO check we could write n bytes
+        f_close(&fp);
+    } else if (res == FR_OK) {
+        // mount successful
+    } else {
+        __fatal_error("PYB: can't mount flash\n");
+        MP_STATE_PORT(fs_user_mount)[0] = NULL;
+        return;
+    }
+}
+
 void nlr_jump_fail(void *val) {
     DiagPrintf("FATAL: uncaught exception %p\n", val);
     mp_obj_print_exception(&mp_plat_print, (mp_obj_t)val);
-    __fatal_error("");
+    __fatal_error("error");
 }
 
 mp_import_stat_t mp_import_stat(const char *path) {
