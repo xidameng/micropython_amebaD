@@ -24,6 +24,7 @@ BOARD ?= ameba
 INC += -I.
 INC += -I..
 INC += -I$(BUILD)
+INC += -I$(HELPER)
 
 INC += -I$(HEADER_BUILD)
 
@@ -120,7 +121,7 @@ CFLAGS += $(CFLAGS_MOD)
 ifeq ($(DEBUG), 1)
 CFLAGS += -O0 -ggdb
 else
-CFLAGS += -Os -DNDEBUG
+CFLAGS += -Os -DNDEBUG 
 endif
 
 ELF_CFLAGS += -O2
@@ -162,7 +163,7 @@ SRC_C += $(wildcard $(HELPER)/mods/network/*.c)
 # External C source files and objects
 #-------------------------------------------------------------------------------
 STM_SRC_C = $(addprefix stmhal/,\
-	bufhelper.c \
+		bufhelper.c \
 	)
 
 SRC_C += \
@@ -172,8 +173,8 @@ SRC_C += \
 	lib/mp-readline/readline.c \
 	lib/netutils/netutils.c \
 	lib/fatfs/ff.c \
+	lib/fatfs/option/ccsbcs.c \
 	lib/timeutils/timeutils.c \
-	$(SRC_MOD) \
 	$(STM_SRC_C)
 
 SRC_S += $(wildcard $(HELPER)/gccollect/*.s)
@@ -241,5 +242,10 @@ image:
 	$(Q)cat $(BUILD)/ram_1.p.bin $(BUILD)/ram_2.p.bin $(BUILD)/ram_3.p.bin > $(BUILD)/ram_all.bin
 	$(Q)cat $(BUILD)/ram_2.ns.bin $(BUILD)/ram_3.p.bin > $(BUILD)/ota.bin
 	$(Q)$(TOOLS)/mac/checksum $(BUILD)/ota.bin
+dummy:
+	$(Q)$(CP) $(TOOLS)/ram_1.p.bin $(BUILD)/dummy.bin
+	$(Q)$(TOOLS)/mac/padding 1M 0xFF $(BUILD)/dummy.bin
+	$(Q)$(CP) $(BUILD)/dummy.bin /Volumes/MBED/
+	sync
 
 include ../py/mkrules.mk

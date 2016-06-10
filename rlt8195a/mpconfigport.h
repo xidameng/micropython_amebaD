@@ -3,7 +3,7 @@
 // options to control how Micro Python is built
 
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
-#define MICROPY_ALLOC_PATH_MAX                  (512)
+#define MICROPY_ALLOC_PATH_MAX                  (128)
 #define MICROPY_EMIT_THUMB                      (1)
 #define MICROPY_EMIT_INLINE_THUMB               (1)
 #define MICROPY_COMP_MODULE_CONST               (1)
@@ -13,13 +13,13 @@
 #define MICROPY_MEM_STATS                       (0)
 #define MICROPY_DEBUG_PRINTERS                  (0)
 #define MICROPY_ENABLE_GC                       (1)
-#define MICROPY_ENABLE_FINALISER                (1)
+#define MICROPY_ENABLE_FINALISER                (0)
 #define MICROPY_HELPER_REPL                     (1)
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (1)
 #define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_NONE)
-#define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
-#define MICROPY_ENABLE_DOC_STRING               (1)
+#define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_NONE)
+#define MICROPY_ENABLE_DOC_STRING               (0)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_DETAILED)
 #define MICROPY_REPL_AUTO_INDENT                (1)
 #define MICROPY_OPT_COMPUTED_GOTO               (1)
@@ -37,7 +37,7 @@
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
 #define MICROPY_PY_MATH                         (1)
-#define MICROPY_PY_CMATH                        (1)
+#define MICROPY_PY_CMATH                        (0)
 #define MICROPY_PY_IO                           (0)
 #define MICROPY_PY_IO_FILEIO                    (0)
 #define MICROPY_PY_UZLIB                        (1)
@@ -47,8 +47,19 @@
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
+#define MICROPY_PY_OS_DUPTERM                   (0)
+#define MICROPY_PY_MACHINE_PULSE                (0)
+#define MICROPY_PY_MACHINE                      (0)
 #define MICROPY_PY_BUILTINS_FLOAT               (0)
 #define MICROPY_CPYTHON_COMPAT                  (0)
+
+#define MICROPY_FATFS_ENABLE_LFN                (1)
+#define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
+#define MICROPY_FSUSERMOUNT                     (1)
+#define MICROPY_FATFS_VOLUMES                   (4)
+#define MICROPY_FATFS_RPATH                     (2)
+#define MICROPY_FATFS_USE_LABEL                 (1)
+
 
 // type definitions for the specific machine
 
@@ -79,12 +90,14 @@ extern const struct _mp_obj_module_t mp_hardware_module;
 extern const struct _mp_obj_module_t mp_wireless_module;
 extern const struct _mp_obj_module_t mp_network_module;
 extern const struct _mp_obj_module_t mp_time_module;
+extern const struct _mp_obj_module_t mp_uos_module;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_wireless_module },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),   (mp_obj_t)&mp_network_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },   \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -104,3 +117,8 @@ extern const struct _mp_obj_module_t mp_time_module;
     const char *readline_hist[8];       \
     mp_obj_t mp_const_user_interrupt;   \
 
+#include "FreeRTOS.h"
+#include <semphr.h>
+#include "errno.h"
+
+#define ENOTSUP 524
