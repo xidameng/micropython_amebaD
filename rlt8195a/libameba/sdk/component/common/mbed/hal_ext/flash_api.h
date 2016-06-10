@@ -31,7 +31,7 @@ enum {
 
 //void flash_init         		(flash_t *obj);
 void flash_erase_sector			(flash_t *obj, uint32_t address);
-void flash_erase_block(flash_t * obj, uint32_t address);
+void flash_erase_block          (flash_t *obj, uint32_t address);
 int  flash_read_word			(flash_t *obj, uint32_t address, uint32_t * data);
 int  flash_write_word			(flash_t *obj, uint32_t address, uint32_t data);
 int  flash_stream_read          (flash_t *obj, uint32_t address, uint32_t len, uint8_t * data);
