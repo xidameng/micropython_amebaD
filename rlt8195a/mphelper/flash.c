@@ -55,7 +55,6 @@ bool storage_read_block(uint8_t *dest, uint32_t block) {
     if (flash_addr == -1) {
         return false;
     }
-    DiagPrintf("\n\nread block id = %d, flash addr = 0x%x\n\n",block, flash_addr);
     //TODO need error handle
     for (i = 0; i < FLASH_BLOCK_SIZE; i+= 4) {
         flash_read_word(&flash_obj, flash_addr + i, &value);
@@ -64,26 +63,19 @@ bool storage_read_block(uint8_t *dest, uint32_t block) {
         dest[i+2] = (uint8_t)((value & 0xff0000) >> 16);
         dest[i+3] = (uint8_t)((value & 0xff000000) >> 24);
     }
-    
-    for (i = 0;i < FLASH_BLOCK_SIZE;i++) {
-        DiagPrintf("0x%x ", *(dest+i));
-        if ((i % 20) == 0) 
-            DiagPrintf("\n");
-    }
-    DiagPrintf("\n");
     return true;
 }
 
 bool storage_write_block(const uint8_t *src, uint32_t block) {
     uint16_t i = 0;
+    uint8_t temp[FLASH_BLOCK_SIZE] = {0};
     uint32_t value = 0;
     uint32_t flash_addr = convert_block_to_flash_addr(block);
     if (flash_addr == -1) {
         return false;
     }
-    DiagPrintf("\n\nwrite block id = %d  addr = 0x%x\n\n",block, flash_addr);
     //TODO need error handle
-    flash_erase_sector(&flash_obj, flash_addr);
+    flash_erase_sector(&flash_obj, flash_addr); 
     for (i = 0;i < FLASH_BLOCK_SIZE; i+= 4) {
         value = (src[i+3]<<24) + (src[i+2]<<16) + (src[i+1]<<8) + src[i];
         flash_write_word(&flash_obj, flash_addr + i, value); 
