@@ -96,37 +96,22 @@ int main(void)
     mpexception_init0();
     readline_init0();
     flash_vfs_init0();
-#if 0
-    DiagPrintf("Start test\n");
-    flash_t flash;
-    uint32_t BASE_ADDR = 0xB5000;
-    uint32_t write_val = 0x12345678;
-    uint32_t read_val = 0;
-    uint32_t i = 0;
-    flash_erase_sector(&flash, BASE_ADDR);
-    for (i = 0;i < 0x10000; i+=4) {
-        flash_write_word(&flash, BASE_ADDR + i, write_val);
-        if (i == 0xc000) {
-            flash_erase_sector(&flash, BASE_ADDR +i);
-            DiagPrintf("\nwork around\n");
-        }
-    } 
-    flash_erase_sector(&flash, BASE_ADDR);
-    DiagPrintf("\nAAAAAAAAAAAAAAAAAA\n");
-    for (i = 0; i < 0x10000; i+=4) {
-        flash_read_word(&flash, BASE_ADDR + i, &read_val);
-        DiagPrintf("0x%x ", read_val);
-        if ((i % 20) == 0)
-            DiagPrintf("\n");
-        if ((i % 512) == 0)
-            DiagPrintf("\n address is 0x%x\n", i);
-    }
-
-    DiagPrintf("End test\n");
-#endif
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
+    DiagPrintf("Starting executing main.py\n");
 
+    const uint8_t *main_py = "main.py";
+    FRESULT res = f_stat(main_py, NULL);
+    if (res == FR_OK) {
+        int32_t ret = pyexec_file(main_py);
+        if (!ret) {
+            DiagPrintf("main.py executing error");
+        }
+    } else {
+        DiagPrintf("main.py not found, skipping\n");
+    }
+
+    DiagPrintf("Starting main task\n");
     // Create main task
     osThreadDef(main_task, osPriorityRealtime, 1, 8152);
     main_tid = osThreadCreate (osThread (main_task), NULL);
@@ -192,7 +177,7 @@ mp_import_stat_t mp_import_stat(const char *path) {
 }
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
-    return NULL;
+    return fat_vfs_lexer_new_from_file(filename);
 }
 
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, fatfs_builtin_open);
