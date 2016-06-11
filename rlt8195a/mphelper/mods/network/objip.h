@@ -52,41 +52,46 @@
 
 extern const mp_obj_type_t ip_type;
 
-#define NETIF_STA_ID    0
-#define NETIF_AP_ID     1
+#define NETIF_STA_ID                0
+#define NETIF_AP_ID                 1
 
-#define DEFAULT_IP_ADDR0        192
-#define DEFAULT_IP_ADDR1        168
-#define DEFAULT_IP_ADDR2        3
-#define DEFAULT_IP_ADDR3        2
+#define STATIC_IP                   0 
+#define DHCP_IP                     1
 
-#define DEFAULT_NETMASK_ADDR0   255
-#define DEFAULT_NETMASK_ADDR1   255
-#define DEFAULT_NETMASK_ADDR2   255
-#define DEFAULT_NETMASK_ADDR3   0
+#define DEFAULT_IP_ADDR0            192
+#define DEFAULT_IP_ADDR1            168
+#define DEFAULT_IP_ADDR2            3
+#define DEFAULT_IP_ADDR3            2
 
-#define DEFAULT_GW_ADDR0        192
-#define DEFAULT_GW_ADDR1        168
-#define DEFAULT_GW_ADDR2        3
-#define DEFAULT_GW_ADDR3        1
+#define DEFAULT_NETMASK_ADDR0       255
+#define DEFAULT_NETMASK_ADDR1       255
+#define DEFAULT_NETMASK_ADDR2       255
+#define DEFAULT_NETMASK_ADDR3       0
 
-#define DEFAULT_AP_IP_ADDR0        192
-#define DEFAULT_AP_IP_ADDR1        168
-#define DEFAULT_AP_IP_ADDR2        4
-#define DEFAULT_AP_IP_ADDR3        1
+#define DEFAULT_GW_ADDR0            192
+#define DEFAULT_GW_ADDR1            168
+#define DEFAULT_GW_ADDR2            3
+#define DEFAULT_GW_ADDR3            1
 
-#define DEFAULT_AP_NETMASK_ADDR0   255
-#define DEFAULT_AP_NETMASK_ADDR1   255
-#define DEFAULT_AP_NETMASK_ADDR2   255
-#define DEFAULT_AP_NETMASK_ADDR3   0
+#define DEFAULT_AP_IP_ADDR0         192
+#define DEFAULT_AP_IP_ADDR1         168
+#define DEFAULT_AP_IP_ADDR2         4
+#define DEFAULT_AP_IP_ADDR3         1
 
-#define DEFAULT_AP_GW_ADDR0        192
-#define DEFAULT_AP_GW_ADDR1        168
-#define DEFAULT_AP_GW_ADDR2        4
-#define DEFAULT_AP_GW_ADDR3        1
+#define DEFAULT_AP_NETMASK_ADDR0    255
+#define DEFAULT_AP_NETMASK_ADDR1    255
+#define DEFAULT_AP_NETMASK_ADDR2    255
+#define DEFAULT_AP_NETMASK_ADDR3    0
+
+#define DEFAULT_AP_GW_ADDR0         192
+#define DEFAULT_AP_GW_ADDR1         168
+#define DEFAULT_AP_GW_ADDR2         4
+#define DEFAULT_AP_GW_ADDR3         1
 
 typedef struct {
     mp_obj_base_t base;
+    uint8_t  wifi_mode;
+    uint8_t  dhcp;
 } lwip_obj_t;
 
 
