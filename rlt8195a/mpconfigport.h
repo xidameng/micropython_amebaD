@@ -39,7 +39,7 @@
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_CMATH                        (0)
 #define MICROPY_PY_IO                           (0)
-#define MICROPY_PY_IO_FILEIO                    (0)
+#define MICROPY_PY_IO_FILEIO                    (1)
 #define MICROPY_PY_UZLIB                        (1)
 #define MICROPY_PY_UHASHLIB                     (1)
 #define MICROPY_PY_UJSON                        (1)
@@ -58,6 +58,7 @@
 #define MICROPY_FSUSERMOUNT                     (1)
 #define MICROPY_FATFS_VOLUMES                   (4)
 #define MICROPY_FATFS_RPATH                     (2)
+#define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
 
 
