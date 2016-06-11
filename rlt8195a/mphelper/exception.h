@@ -42,6 +42,7 @@ extern const char mpexception_os_operation_failed[];
 extern const char mpexception_os_request_not_possible[];
 
 // WIFI
+extern const char mpexception_socket_settimeout_failed[];
 /*****************************************************************************
  *                              External Functions
  * ***************************************************************************/

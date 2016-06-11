@@ -216,12 +216,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(lwip_socket_recvfrom_obj, lwip_socket_recvfrom)
 STATIC mp_obj_t lwip_socket_settimeout(mp_obj_t self_in, mp_obj_t timeout_in) {
     socket_obj_t *self = self_in;
     int8_t ret = -1;
-    int16_t timeout;
+    int32_t timeout;
     timeout = mp_obj_get_int(timeout_in);
     ret = lwip_setsockopt(self->sock_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, "set timeout failed"));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, mpexception_socket_settimeout_failed));
     }
+    self->timeout = timeout;
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lwip_socket_settimeout_obj, lwip_socket_settimeout);

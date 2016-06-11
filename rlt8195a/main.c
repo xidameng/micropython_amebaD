@@ -64,6 +64,17 @@ static const char fresh_main_py[] =
  *                              External functions
  * ***************************************************************************/
 void main_task(void const *arg) {
+     DiagPrintf("Starting executing main.py\n");
+    const uint8_t *main_py = "main.py";
+    FRESULT res = f_stat(main_py, NULL);
+    if (res == FR_OK) {
+        int32_t ret = pyexec_file(main_py);
+        if (!ret) {
+            DiagPrintf("main.py executing error");
+        }
+    } else {
+        DiagPrintf("main.py not found, skipping\n");
+    }
     if (pyexec_friendly_repl() != 0) {
         DiagPrintf("Soft reset\r\n");
         sys_reset();
@@ -98,19 +109,6 @@ int main(void)
     flash_vfs_init0();
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
-    DiagPrintf("Starting executing main.py\n");
-
-    const uint8_t *main_py = "main.py";
-    FRESULT res = f_stat(main_py, NULL);
-    if (res == FR_OK) {
-        int32_t ret = pyexec_file(main_py);
-        if (!ret) {
-            DiagPrintf("main.py executing error");
-        }
-    } else {
-        DiagPrintf("main.py not found, skipping\n");
-    }
-
     DiagPrintf("Starting main task\n");
     // Create main task
     osThreadDef(main_task, osPriorityRealtime, 1, 8152);
