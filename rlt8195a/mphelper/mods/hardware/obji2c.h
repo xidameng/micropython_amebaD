@@ -28,6 +28,12 @@
 
 #include "i2c_api.h"
 
+#define I2C_MASTER                          (0)
+#define I2C_SLAVE                           (1)
+#define I2C_MIN_BAUD_RATE_HZ                (50000)
+#define I2C_DEFAULT_BAUD_RATE_HZ            (100000)
+#define I2C_MAX_BAUD_RATE_HZ                (400000)
+
 extern const mp_obj_type_t i2c_type;
 
 typedef struct {

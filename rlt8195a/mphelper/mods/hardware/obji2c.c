@@ -34,11 +34,6 @@
 #include "bufhelper.h"
 #include "obji2c.h"
 
-#define I2C_MASTER                          (0)
-#define I2C_SLAVE                           (1)
-#define I2C_MIN_BAUD_RATE_HZ                (50000)
-#define I2C_MAX_BAUD_RATE_HZ                (400000)
-
 #define I2C_SDA                             PD_7
 #define I2C_SCL                             PD_6
 
@@ -52,13 +47,6 @@ i2c_t i2c_channel0;
 i2c_t i2c_channel1;
 i2c_t i2c_channel3;
 
-STATIC mp_obj_t mp_i2c_reset(mp_obj_t self_in) {
-    i2c_obj_t *self = (i2c_obj_t *)&self_in;
-    i2c_reset((i2c_t *)self->obj);
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(i2c_reset_obj, mp_i2c_reset);
-
 STATIC bool pyb_i2c_write(i2c_t *i2c, byte addr, byte *data, uint len, bool stop) {
     int8_t retval = true;
 
@@ -71,10 +59,10 @@ ret:
     return true;
 }
 
-STATIC bool pyb_i2c_read(i2c_t *i2c, byte addr, byte **data, uint len) {
+STATIC bool pyb_i2c_read(i2c_t *i2c, byte addr, byte **data, uint len, bool stop) {
     int8_t retval = true;
 
-    retval = i2c_read(i2c, addr, *data, len, true);
+    retval = i2c_read(i2c, addr, *data, len, stop);
     
     if (retval != len) {
         return false;
@@ -83,10 +71,18 @@ ret:
     return true;
 }
 
+STATIC mp_obj_t mp_i2c_reset(mp_obj_t self_in) {
+    i2c_obj_t *self = (i2c_obj_t *)&self_in;
+    i2c_reset((i2c_t *)self->obj);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(i2c_reset_obj, mp_i2c_reset);
+
 STATIC mp_obj_t i2c_readfrom(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     STATIC const mp_arg_t i2c_readfrom_args[] = {
         { MP_QSTR_addr,    MP_ARG_REQUIRED | MP_ARG_INT, },
         { MP_QSTR_nbytes,  MP_ARG_REQUIRED | MP_ARG_OBJ, },
+        { MP_QSTR_stop,    MP_ARG_KW_ONLY  | MP_ARG_BOOL, {.u_bool = true} },
     };
 
     i2c_obj_t *self = pos_args[0];
@@ -100,7 +96,7 @@ STATIC mp_obj_t i2c_readfrom(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_
     pyb_buf_get_for_recv(args[1].u_obj, &vstr);
 
     // receive the data
-    if (!pyb_i2c_read((i2c_t *)self->obj, args[0].u_int, (byte *)&(vstr.buf), vstr.len)) {
+    if (!pyb_i2c_read((i2c_t *)self->obj, args[0].u_int, (byte *)&(vstr.buf), vstr.len, args[2].u_bool)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_operation_failed));
     }
     // return the received data
@@ -147,14 +143,13 @@ STATIC void i2c_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
     mp_printf(print, "I2C(%d, I2C.%q, baudrate=%u)", self->id, mode, self->baudrate);
 }
 
-STATIC const mp_arg_t i2c_init_args[] = {
-    { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
-    { MP_QSTR_mode,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = I2C_MASTER} },
-    { MP_QSTR_baudrate,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 100000} },
-    { MP_QSTR_pins,      MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-};
-
 STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
+    const mp_arg_t i2c_init_args[] = {
+        { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_mode,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = I2C_MASTER} },
+        { MP_QSTR_baudrate,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = I2C_DEFAULT_BAUD_RATE_HZ} },
+        { MP_QSTR_pins,      MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
     // parse args
     mp_map_t kw_args;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
@@ -184,7 +179,7 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 
 STATIC const mp_map_elem_t i2c_locals_dict_table[] = {
     // instance methods
-#if 0 // TODO: Need to figure out how to scan ...
+#if 0 // TODO(Chester): Need to figure out how to scan ...
     { MP_OBJ_NEW_QSTR(MP_QSTR_scan),                (mp_obj_t)&i2c_scan_obj },
 #endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset),               (mp_obj_t)&i2c_reset_obj },
@@ -195,7 +190,6 @@ STATIC const mp_map_elem_t i2c_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_readfrom_mem),        (mp_obj_t)&pyb_i2c_readfrom_mem_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readfrom_mem_into),   (mp_obj_t)&pyb_i2c_readfrom_mem_into_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_writeto_mem),         (mp_obj_t)&pyb_i2c_writeto_mem_obj },
-
 #endif
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_MASTER),              MP_OBJ_NEW_SMALL_INT(I2C_MASTER) },
