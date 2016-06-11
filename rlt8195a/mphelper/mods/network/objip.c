@@ -57,12 +57,20 @@ STATIC void ip_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t 
     ipaddr  = xnetif[NETIF_STA_ID].ip_addr;
     netmask = xnetif[NETIF_STA_ID].netmask;
     gateway = xnetif[NETIF_STA_ID].gw;
-    mp_printf(print, "lwip(ip=%s, netmask=%s, gateway=%s)", ip_ntoa(&ipaddr), ip_ntoa(&netmask), ip_ntoa(&gateway));
+    mp_printf(print, "lwip(");
+    mp_printf(print, "ip=%s ,", ip_ntoa(&ipaddr));
+    mp_printf(print, "netmask=%s ,", ip_ntoa(&netmask));
+    mp_printf(print, "gateway=%s ,", ip_ntoa(&gateway));
+    if (self->dhcp == DHCP_IP)
+        mp_printf(print, "static");
+    else 
+        mp_printf(print, "dhcp");
+    mp_printf(print, ")");
 }
 
 STATIC mp_obj_t ip_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
     STATIC const mp_arg_t ip_init_args[] = {
-#if 0
+#if 0 //TODO(Chester) assign static ip here
         { MP_QSTR_ip,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
 #endif
     };
@@ -123,13 +131,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(ip_dhcp_request_method, ip_dhcp_request);
 
 STATIC mp_obj_t ip_dhcp_renew(mp_obj_t self_in) {
     int8_t err ;
-
     err = dhcp_renew(&xnetif[NETIF_STA_ID]);
-
     if (err != ERR_OK) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_MemoryError, "dhcp renew failed"));
     }
-
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(ip_dhcp_renew_method, ip_dhcp_renew);
@@ -176,7 +181,7 @@ STATIC MP_DEFINE_CONST_DICT(ip_locals_dict, ip_locals_dict_table);
 
 const mp_obj_type_t ip_type = {
     { &mp_type_type },
-    .name        = MP_QSTR_ip,
+    .name        = MP_QSTR_lwip,
     .print       = ip_print,
     .make_new    = ip_make_new,
     .locals_dict = (mp_obj_t)&ip_locals_dict,

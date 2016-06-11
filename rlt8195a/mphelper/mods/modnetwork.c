@@ -38,7 +38,7 @@
  * ***************************************************************************/
 STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ip),           (mp_obj_t)&ip_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),         (mp_obj_t)&ip_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_socket),       (mp_obj_t)&ip_socket_type },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_network_globals, mp_module_network_globals_table);
