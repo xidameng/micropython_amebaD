@@ -214,7 +214,7 @@ Q(MASTER)
 Q(SLAVE)
 
 Q(network)
-Q(ip)
+Q(lwip)
 
 // for dhcp 
 Q(dhcp_request)
