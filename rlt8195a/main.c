@@ -173,7 +173,7 @@ void nlr_jump_fail(void *val) {
 }
 
 mp_import_stat_t mp_import_stat(const char *path) {
-    return MP_IMPORT_STAT_NO_EXIST;
+    return fat_vfs_import_stat(path);
 }
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
