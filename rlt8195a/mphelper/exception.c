@@ -54,6 +54,8 @@ const char mpexception_os_request_not_possible[]    = "the requested operation i
 
 // WIFI
 const char mpexception_socket_settimeout_failed[]    = "set timeout failed";
+const char mpexception_socket_recv_failed[]          = "socket recv failed";
+const char mpexception_socket_timeout[]          = "socket timeout";
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
