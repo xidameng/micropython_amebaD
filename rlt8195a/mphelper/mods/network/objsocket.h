@@ -29,6 +29,8 @@
 
 #include "objip.h"
 #include "lwip/sockets.h"
+#include "lwip/netdb.h"
+
 
 extern const mp_obj_type_t ip_socket_type;
 

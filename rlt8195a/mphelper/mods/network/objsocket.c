@@ -67,7 +67,7 @@ STATIC mp_obj_t lwip_socket_bind(mp_obj_t self_in, mp_obj_t addr_in) {
     int8_t ret = lwip_bind(self->sock_fd, &addrinfo, sizeof(struct sockaddr_in));
 
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Bind failed"));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     }
 
     return mp_const_none;
@@ -83,7 +83,7 @@ STATIC mp_obj_t lwip_socket_listen(mp_obj_t self_in, mp_obj_t backlog_in) {
     int8_t ret = lwip_listen(self->sock_fd, backlog);
 
     if(ret < 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Listen failed"));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     }
 
     return mp_const_none;
@@ -104,7 +104,7 @@ STATIC mp_obj_t lwip_socket_accept(mp_obj_t self_in) {
     client_fd = lwip_accept(self->sock_fd, (struct sockaddr *) &cli_addr, &client);
 
     if (client_fd < 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Accept failed"));
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "socket create failed"));
     }
 
     peer->sock_fd = client_fd;
@@ -136,7 +136,6 @@ STATIC mp_obj_t lwip_socket_connect(mp_obj_t self_in, mp_obj_t addr_in) {
     if (port < 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "port number error"));
     }
-
     ip_str = mp_obj_str_get_data(addr[0], &addr_len);
 
     self->addrinfo.sin_family = self->domain;
@@ -144,9 +143,8 @@ STATIC mp_obj_t lwip_socket_connect(mp_obj_t self_in, mp_obj_t addr_in) {
     self->addrinfo.sin_port = htons(port); 
 
     int8_t ret = connect(self->sock_fd, (struct sockaddr_in*)&(self->addrinfo), sizeof(struct sockaddr_in));
-
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Connection failed"));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     }
     return mp_const_none;
 }
@@ -158,7 +156,9 @@ STATIC mp_obj_t lwip_socket_send(mp_obj_t self_in, mp_obj_t buf_in) {
     mp_get_buffer_raise(buf_in, &bufinfo, MP_BUFFER_READ);
     int8_t ret = lwip_write(self->sock_fd, bufinfo.buf, bufinfo.len);
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, "send failed"));
+        if (ret == -1)
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_TimeoutError, mpexception_socket_timeout));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     }
     return mp_obj_new_int_from_uint(ret);
 }
@@ -179,7 +179,9 @@ STATIC mp_obj_t lwip_socket_sendto(mp_obj_t self_in, mp_obj_t data_in, mp_obj_t 
     mp_int_t ret = lwip_sendto(self->sock_fd, bufinfo.buf, bufinfo.len, 0, (struct sockaddr*)&peer_addr, sizeof(struct sockaddr_in));
 
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, "sendto failed"));
+        if (ret == -1)
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_TimeoutError, mpexception_socket_timeout));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     }
 
     return mp_obj_new_int(ret);
@@ -196,7 +198,9 @@ STATIC mp_obj_t lwip_socket_recv(mp_obj_t self_in, mp_obj_t len_in) {
     int8_t ret = lwip_recv(self->sock_fd, (int8_t*)vstr.buf, len, flags);
 
     if (ret < 0) {
-        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, "recv failed"));
+        if (ret == -1) 
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_TimeoutError, mpexception_socket_timeout));
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(ret)));
     } else if (ret == 0) {
         mp_const_empty_bytes;
     }
@@ -227,12 +231,68 @@ STATIC mp_obj_t lwip_socket_settimeout(mp_obj_t self_in, mp_obj_t timeout_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lwip_socket_settimeout_obj, lwip_socket_settimeout);
 
-STATIC mp_obj_t lwip_socket_setblocking(mp_obj_t self_in, mp_obj_t blocking_in) {
-    socket_obj_t *self = self_in;
-    self->blocking = mp_obj_is_true(blocking_in);
-    return mp_const_none;
+typedef struct _getaddrinfo_state_t {
+    volatile int status;
+    volatile ip_addr_t ipaddr;
+} getaddrinfo_state_t;
+
+static inline void poll_sockets(void) {
+#ifdef MICROPY_EVENT_POLL_HOOK
+    MICROPY_EVENT_POLL_HOOK;
+#else
+    mp_hal_delay_ms(1);
+#endif
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(lwip_socket_setblocking_obj, lwip_socket_setblocking);
+
+// Callback for incoming DNS requests.
+STATIC void lwip_getaddrinfo_cb(const char *name, ip_addr_t *ipaddr, void *arg) {
+    getaddrinfo_state_t *state = arg;
+    if (ipaddr != NULL) {
+        state->status = 1;
+        state->ipaddr = *ipaddr;
+    } else {
+        // error
+        state->status = -2;
+    }
+}
+
+STATIC mp_obj_t lwip_socket_getaddrinfo(mp_obj_t self_in, mp_obj_t host_in, mp_obj_t port_in) {
+    mp_uint_t hlen;
+    const int8_t *host = mp_obj_str_get_data(host_in, &hlen);
+    mp_int_t port = mp_obj_get_int(port_in);
+    getaddrinfo_state_t state;
+    state.status = 0;
+
+    err_t ret = dns_gethostbyname(host, (ip_addr_t*)&state.ipaddr, lwip_getaddrinfo_cb, &state);
+
+    switch (ret) {
+        case ERR_OK:
+            // cached
+            state.status = 1;
+            break;
+        case ERR_INPROGRESS:
+            while (state.status == 0) {
+                poll_sockets();
+            }
+            break;
+        default:
+            state.status = ret;
+    }
+    if (state.status < 0) {
+        // TODO: CPython raises gaierror, we raise with native lwIP negative error
+        // values, to differentiate from normal errno's at least in such way.
+        nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(state.status)));
+    }
+    mp_obj_tuple_t *tuple = mp_obj_new_tuple(5, NULL);
+    tuple->items[0] = MP_OBJ_NEW_SMALL_INT(PF_INET);
+    tuple->items[1] = MP_OBJ_NEW_SMALL_INT(SOCK_STREAM);
+    tuple->items[2] = MP_OBJ_NEW_SMALL_INT(0);
+    tuple->items[3] = MP_OBJ_NEW_QSTR(MP_QSTR_);
+    tuple->items[4] = netutils_format_inet_addr((uint8_t*)&state.ipaddr, port, NETUTILS_BIG);
+    return mp_obj_new_list(1, (mp_obj_t*)&tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(lwip_socket_getaddrinfo_obj, lwip_socket_getaddrinfo);
+
 
 STATIC const mp_map_elem_t ip_socket_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___del__),         (mp_obj_t)&lwip_socket_close_obj },
@@ -246,9 +306,10 @@ STATIC const mp_map_elem_t ip_socket_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_sendto),          (mp_obj_t)&lwip_socket_sendto_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_recvfrom),        (mp_obj_t)&lwip_socket_recvfrom_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_settimeout),      (mp_obj_t)&lwip_socket_settimeout_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_setblocking),     (mp_obj_t)&lwip_socket_setblocking_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getaddrinfo),     (mp_obj_t)&lwip_socket_getaddrinfo_obj },
 
     //constant
+    { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET),         MP_OBJ_NEW_SMALL_INT(AF_INET) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PF_INET),         MP_OBJ_NEW_SMALL_INT(PF_INET) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PF_UNSPEC),       MP_OBJ_NEW_SMALL_INT(PF_UNSPEC) },
 

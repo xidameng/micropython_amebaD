@@ -34,6 +34,7 @@
 #define MICROPY_PY_BUILTINS_SET                 (1)
 #define MICROPY_PY_BUILTINS_SLICE               (1)
 #define MICROPY_PY_BUILTINS_PROPERTY            (1)
+#define MICROPY_PY_BUILTINS_TIMEOUTERROR        (1)
 #define MICROPY_PY___FILE__                     (1)
 #define MICROPY_PY_GC                           (1)
 #define MICROPY_PY_ARRAY                        (1)
