@@ -34,18 +34,28 @@
 #include "bufhelper.h"
 #include "obji2c.h"
 
-#define I2C_SDA                             PD_7
-#define I2C_SCL                             PD_6
+#define I2C0_SDA                             PD_4
+#define I2C0_SCL                             PD_5
 
+#define I2C1_SDA                             PD_7
+#define I2C1_SCL                             PD_6
+
+#define I2C2_SDA                             PC_4
+#define I2C2_SCL                             PC_5
+
+#define I2C3_SDA                             PB_3
+#define I2C3_SCL                             PB_2
 // Declare RTK i2c struct data in heap. If you declare it in the stack, it will hang !
 
 // channe 0 (I2C 0) is mapped to (SDA, SCL) = (PD_4, PD_5) 
 // channe 1 (I2C 1) is mapped to (SDA, SCL) = (PD_7, PD_6), (PC_4, PC_5)
 // channe 2 (I2C 2) did not mapped to evm
 // channe 3 (I2C 3) is mapped to (SDA, SCL) = (PB_3, PB_2) 
-i2c_t i2c_channel0;
-i2c_t i2c_channel1;
-i2c_t i2c_channel3;
+//
+i2c_t i2c_channel0;     //(SDA, SCL) = (PD_4, PD_5) 
+i2c_t i2c_channel1;     //(SDA, SCL) = (PD_7, PD_6)
+i2c_t i2c_channel2;     //(SDA, SCL) = (PC_4, PC_5)
+i2c_t i2c_channel3;     //(SDA, SCL) = (PB_3, PB_2) 
 
 STATIC bool pyb_i2c_write(i2c_t *i2c, byte addr, byte *data, uint len, bool stop) {
     int8_t retval = true;
@@ -148,16 +158,17 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
         { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_mode,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = I2C_MASTER} },
         { MP_QSTR_baudrate,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = I2C_DEFAULT_BAUD_RATE_HZ} },
-        { MP_QSTR_pins,      MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     // parse args
     mp_map_t kw_args;
+    mp_uint_t PinSDA;
+    mp_uint_t PinSCL;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
     mp_arg_val_t args[MP_ARRAY_SIZE(i2c_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), i2c_init_args, args);
 
-    if (args[0].u_int < 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_resource_not_avaliable));
+    if ((args[0].u_int < 0) || (args[0].u_int > 4)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
     }   
 
     i2c_obj_t *self = m_new_obj(i2c_obj_t);
@@ -165,11 +176,35 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     self->id        = args[0].u_int;
     self->mode      = args[1].u_int;
     self->baudrate  = MIN(MAX(args[2].u_int, I2C_MIN_BAUD_RATE_HZ), I2C_MAX_BAUD_RATE_HZ);
-
-    self->obj = (void *)&i2c_channel1;
+    
+    switch(self->id) {
+        case 0:
+            self->obj = (void *)&i2c_channel0;
+            PinSDA = I2C0_SDA;
+            PinSCL = I2C0_SCL;
+            break;
+        case 1:
+            self->obj = (void *)&i2c_channel1;
+            PinSDA = I2C1_SDA;
+            PinSCL = I2C1_SCL;
+            break;
+        case 2:
+            self->obj = (void *)&i2c_channel2;
+            PinSDA = I2C2_SDA;
+            PinSCL = I2C2_SCL;
+            break;
+        case 3:
+            self->obj = (void *)&i2c_channel3;
+            PinSDA = I2C3_SDA;
+            PinSCL = I2C3_SCL;
+            break;
+        default:
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
+            break;
+    }
 
     // TODO: should check alternative pins 
-    i2c_init((i2c_t *)self->obj, I2C_SDA, I2C_SCL);
+    i2c_init((i2c_t *)self->obj, PinSDA, PinSCL);
 
     i2c_frequency((i2c_t *)self->obj, self->baudrate);
 
