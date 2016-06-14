@@ -37,6 +37,7 @@
 #define MICROPY_PY_BUILTINS_TIMEOUTERROR        (1)
 #define MICROPY_PY___FILE__                     (1)
 #define MICROPY_PY_GC                           (1)
+#define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
@@ -96,6 +97,7 @@ extern const struct _mp_obj_module_t mp_wireless_module;
 extern const struct _mp_obj_module_t mp_network_module;
 extern const struct _mp_obj_module_t mp_time_module;
 extern const struct _mp_obj_module_t mp_uos_module;
+extern const struct _mp_obj_module_t mp_module_lwip;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
@@ -103,6 +105,7 @@ extern const struct _mp_obj_module_t mp_uos_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),   (mp_obj_t)&mp_network_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),      (mp_obj_t)&mp_module_lwip },   \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
