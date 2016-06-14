@@ -57,7 +57,7 @@ STATIC void ip_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t 
     ipaddr  = xnetif[NETIF_STA_ID].ip_addr;
     netmask = xnetif[NETIF_STA_ID].netmask;
     gateway = xnetif[NETIF_STA_ID].gw;
-    mp_printf(print, "lwip(");
+    mp_printf(print, "ip(");
     mp_printf(print, "ip=%s ,", ip_ntoa(&ipaddr));
     mp_printf(print, "netmask=%s ,", ip_ntoa(&netmask));
     mp_printf(print, "gateway=%s ,", ip_ntoa(&gateway));
@@ -175,13 +175,12 @@ STATIC const mp_map_elem_t ip_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_inform),      (mp_obj_t)&ip_dhcp_inform_method },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_state),       (mp_obj_t)&ip_dhcp_state_method },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_stop),        (mp_obj_t)&ip_dhcp_stop_method },
-
 };
 STATIC MP_DEFINE_CONST_DICT(ip_locals_dict, ip_locals_dict_table);
 
 const mp_obj_type_t ip_type = {
     { &mp_type_type },
-    .name        = MP_QSTR_lwip,
+    .name        = MP_QSTR_ip,
     .print       = ip_print,
     .make_new    = ip_make_new,
     .locals_dict = (mp_obj_t)&ip_locals_dict,
