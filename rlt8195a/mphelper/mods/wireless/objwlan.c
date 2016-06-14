@@ -231,6 +231,12 @@ STATIC mp_obj_t wlan_connect_network(mp_uint_t n_args, const mp_obj_t *pos_args,
     mp_uint_t key_len;
     validate_key((uint8_t *)&key, &key_len, &security_type, args[1].u_obj);
 
+    // Override the key and ken_len in open security type
+    if (security_type == RTW_SECURITY_OPEN) {
+        key = NULL;
+        key_len = 0;
+    }
+
     int32_t timeout = -1;
     if (args[2].u_obj != mp_const_none) {
         timeout = mp_obj_get_int(args[2].u_obj);
