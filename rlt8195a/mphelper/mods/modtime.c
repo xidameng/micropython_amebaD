@@ -43,74 +43,38 @@ void rtc_init0(void) {
     rtc_init();
 }
 
-STATIC mp_obj_t time_datetime(mp_uint_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
     time_t datetime;
-    struct tm *timeinfo;
+    struct tm *timeinfo_read;
     if (n_args == 0 || args[0] == mp_const_none) {
         datetime = rtc_read();
-        timeinfo = localtime(&datetime);
+        timeinfo_read = localtime(&datetime);
         mp_obj_t tuple[8] = {
-            mp_obj_new_int(2000 + timeinfo->tm_year),
-            mp_obj_new_int(timeinfo->tm_mon),
-            mp_obj_new_int(timeinfo->tm_mday),
-            mp_obj_new_int(timeinfo->tm_hour),
-            mp_obj_new_int(timeinfo->tm_min),
-            mp_obj_new_int(timeinfo->tm_sec),
-            mp_obj_new_int(timeinfo->tm_wday),
-            mp_obj_new_int(timeutils_year_day(2000 + timeinfo->tm_year, timeinfo->tm_mon, timeinfo->tm_mday)),
+            mp_obj_new_int(timeinfo_read->tm_year + 1900),
+            mp_obj_new_int(timeinfo_read->tm_mon),
+            mp_obj_new_int(timeinfo_read->tm_mday),
+            mp_obj_new_int(timeinfo_read->tm_hour),
+            mp_obj_new_int(timeinfo_read->tm_min),
+            mp_obj_new_int(timeinfo_read->tm_sec),
+            mp_obj_new_int(timeinfo_read->tm_wday),
+            mp_obj_new_int(timeutils_year_day(timeinfo_read->tm_year, timeinfo_read->tm_mon, timeinfo_read->tm_mday)),
         };
         return mp_obj_new_tuple(8, tuple);
     } else {
         mp_obj_t *items;
-        mp_obj_get_array_fixed_n(args[1], 8, &items);
-
-        timeinfo->tm_year = mp_obj_get_int(items[0]) - 2000;
-        timeinfo->tm_mon = mp_obj_get_int(items[1]);
-        timeinfo->tm_mday = mp_obj_get_int(items[2]);
-        timeinfo->tm_hour = mp_obj_get_int(items[3]);
-        timeinfo->tm_min = mp_obj_get_int(items[4]);
-        timeinfo->tm_sec = mp_obj_get_int(items[5]);
-        timeinfo->tm_wday = mp_obj_get_int(items[6]);
-        timeinfo->tm_yday = mp_obj_get_int(items[7]);
-        datetime = mktime(timeinfo);
+        struct tm timeinfo_write;
+        mp_obj_get_array_fixed_n(args[0], 8, &items);
+        timeinfo_write.tm_year = mp_obj_get_int(items[0]) - 1900;
+        timeinfo_write.tm_mon = mp_obj_get_int(items[1]);
+        timeinfo_write.tm_mday = mp_obj_get_int(items[2]);
+        timeinfo_write.tm_hour = mp_obj_get_int(items[3]);
+        timeinfo_write.tm_min = mp_obj_get_int(items[4]);
+        timeinfo_write.tm_sec = mp_obj_get_int(items[5]);
+        timeinfo_write.tm_wday = mp_obj_get_int(items[6]);
+        timeinfo_write.tm_yday = mp_obj_get_int(items[7]);
+        datetime = mktime(&timeinfo_write);
         rtc_write(datetime);
         return mp_const_none;
-    }
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_datetime_obj, 0, 1, time_datetime);
-
-STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
-    if (n_args == 0 || args[0] == mp_const_none) {
-        time_t datetime;
-        struct tm *timeinfo;
-        datetime = rtc_read();
-        timeinfo = localtime(&datetime);
-        mp_obj_t tuple[8] = {
-            mp_obj_new_int(2000 + timeinfo->tm_year),
-            mp_obj_new_int(timeinfo->tm_mon),
-            mp_obj_new_int(timeinfo->tm_mday),
-            mp_obj_new_int(timeinfo->tm_hour),
-            mp_obj_new_int(timeinfo->tm_min),
-            mp_obj_new_int(timeinfo->tm_sec),
-            mp_obj_new_int(timeinfo->tm_wday),
-            mp_obj_new_int(timeutils_year_day(2000 + timeinfo->tm_year, timeinfo->tm_mon, timeinfo->tm_mday)),
-        };
-        return mp_obj_new_tuple(8, tuple);
-    } else {
-        mp_int_t seconds = mp_obj_get_int(args[0]);
-        timeutils_struct_time_t tm;
-        timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
-        mp_obj_t tuple[8] = {
-            tuple[0] = mp_obj_new_int(tm.tm_year),
-            tuple[1] = mp_obj_new_int(tm.tm_mon),
-            tuple[2] = mp_obj_new_int(tm.tm_mday),
-            tuple[3] = mp_obj_new_int(tm.tm_hour),
-            tuple[4] = mp_obj_new_int(tm.tm_min),
-            tuple[5] = mp_obj_new_int(tm.tm_sec),
-            tuple[6] = mp_obj_new_int(tm.tm_wday),
-            tuple[7] = mp_obj_new_int(tm.tm_yday),
-        };
-        return mp_obj_new_tuple(8, tuple);
     }
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
@@ -132,6 +96,16 @@ STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
             mp_obj_get_int(elem[4]), mp_obj_get_int(elem[5])));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(time_mktime_obj, time_mktime);
+
+STATIC mp_obj_t time_ctime(void) {
+    time_t seconds;
+    int8_t *ctime_val;
+    seconds = rtc_read();
+    ctime_val = ctime(&seconds);
+    return mp_obj_new_str(ctime_val, strlen(ctime_val), false);;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(time_ctime_obj, time_ctime);
+
 
 STATIC mp_obj_t time_sleep(mp_obj_t seconds_o) {
 #if MICROPY_PY_BUILTINS_FLOAT
@@ -168,9 +142,9 @@ MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
 
 STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_datetime),        (mp_obj_t)&time_datetime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),       (mp_obj_t)&time_localtime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),          (mp_obj_t)&time_mktime_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ctime),           (mp_obj_t)&time_ctime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep),           (mp_obj_t)&time_sleep_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_ms),        (mp_obj_t)&time_sleep_ms_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_us),        (mp_obj_t)&time_sleep_us_obj },
