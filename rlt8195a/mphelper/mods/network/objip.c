@@ -84,6 +84,7 @@ STATIC mp_obj_t ip_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint
     memset(self, 0x0, sizeof(*self));
 
     self->base.type = &ip_type;
+    netif_set_default(&xnetif[NETIF_STA_ID]);
     netif_set_up(&xnetif[NETIF_STA_ID]);
 
     return (mp_obj_t)self;
