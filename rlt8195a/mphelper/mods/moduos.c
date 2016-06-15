@@ -295,17 +295,19 @@ STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_rmdir), (mp_obj_t)&os_rmdir_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_stat), (mp_obj_t)&os_stat_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_statvfs), (mp_obj_t)&os_statvfs_obj },
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
 
     /// \constant sep - separation character used in paths
     { MP_OBJ_NEW_QSTR(MP_QSTR_sep), MP_OBJ_NEW_QSTR(MP_QSTR__slash_) },
-
-    // these are MicroPython extensions
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mod_os_dupterm_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mount), (mp_obj_t)&fsuser_mount_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_umount), (mp_obj_t)&fsuser_umount_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs), (mp_obj_t)&fsuser_mkfs_obj },
+#if 0
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
+
+    // these are MicroPython extensions
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mod_os_dupterm_obj },
+    
+
 #endif
 };
 
