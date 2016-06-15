@@ -56,7 +56,7 @@
 #define MICROPY_PY_OS_DUPTERM                   (0)
 #define MICROPY_PY_MACHINE_PULSE                (0)
 #define MICROPY_PY_MACHINE                      (0)
-#define MICROPY_PY_BUILTINS_FLOAT               (0)
+#define MICROPY_PY_BUILTINS_FLOAT               (1)
 
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
