@@ -1,8 +1,4 @@
 /**** from arduino core ****/
-*b64.o(.text*)
-*itoa.o(.text*)
-*WMath.o(.text*)
-*WString.o(.text*)
 
 /**** from lib_ameba.a ****/
 *analogin_api.o(.text*)
@@ -125,3 +121,9 @@
 *dwc_otg_hcd_ddma.o(.text*)
 *dwc_otg_hcd_intr.o(.text*)
 *dwc_otg_hcd_queue.o(.text*)
+
+
+
+/*** from micropython ***/
+*mod*.o(.text*)
+*obj*.o(.text*)
