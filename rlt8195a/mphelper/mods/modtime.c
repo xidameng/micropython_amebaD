@@ -77,7 +77,7 @@ STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
         return mp_const_none;
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
 
 STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
 
@@ -95,7 +95,7 @@ STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
             mp_obj_get_int(elem[1]), mp_obj_get_int(elem[2]), mp_obj_get_int(elem[3]),
             mp_obj_get_int(elem[4]), mp_obj_get_int(elem[5])));
 }
-MP_DEFINE_CONST_FUN_OBJ_1(time_mktime_obj, time_mktime);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_mktime_obj, time_mktime);
 
 STATIC mp_obj_t time_ctime(void) {
     time_t seconds;
@@ -104,7 +104,7 @@ STATIC mp_obj_t time_ctime(void) {
     ctime_val = ctime(&seconds);
     return mp_obj_new_str(ctime_val, strlen(ctime_val), false);;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(time_ctime_obj, time_ctime);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(time_ctime_obj, time_ctime);
 
 
 STATIC mp_obj_t time_sleep(mp_obj_t seconds_o) {
@@ -119,7 +119,7 @@ STATIC mp_obj_t time_sleep(mp_obj_t seconds_o) {
 #endif
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_obj, time_sleep);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_obj, time_sleep);
 
 STATIC mp_obj_t time_sleep_ms(mp_obj_t ms_in) {
     mp_int_t ms = mp_obj_get_int(ms_in);
@@ -128,7 +128,7 @@ STATIC mp_obj_t time_sleep_ms(mp_obj_t ms_in) {
     }
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_ms_obj, time_sleep_ms);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_ms_obj, time_sleep_ms);
 
 STATIC mp_obj_t time_sleep_us(mp_obj_t usec_in) {
     mp_int_t usec = mp_obj_get_int(usec_in);
@@ -137,8 +137,7 @@ STATIC mp_obj_t time_sleep_us(mp_obj_t usec_in) {
     }
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
 
 STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
