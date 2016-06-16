@@ -32,6 +32,8 @@
 #include "extmod/vfs_fat_file.h"
 #include "extmod/fsusermount.h"
 
+#include "sys_api.h"
+
 STATIC const qstr os_uname_info_fields[] = {
     MP_QSTR_sysname, MP_QSTR_nodename,
     MP_QSTR_release, MP_QSTR_version, MP_QSTR_machine
@@ -56,6 +58,11 @@ STATIC mp_obj_t os_uname(void) {
     return (mp_obj_t)&os_uname_info_obj;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_uname_obj, os_uname);
+
+STATIC mp_obj_t os_reset(void) {
+    sys_reset();
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_reset_obj, os_reset);
 
 STATIC mp_obj_t os_listdir(mp_uint_t n_args, const mp_obj_t *args) {
     bool is_str_type = true;
@@ -285,6 +292,7 @@ STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_uname), (mp_obj_t)&os_uname_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&os_reset_obj },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_listdir), (mp_obj_t)&os_listdir_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_getcwd), (mp_obj_t)&os_getcwd_obj },
