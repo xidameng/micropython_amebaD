@@ -10,8 +10,7 @@ __min_heap_size__ = 128K;
 MEMORY
 {
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 65536
-  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 13368
-  RECY_RAM (rwx)  : ORIGIN = 0x10002114, LENGTH = 16108
+  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000000, LENGTH = 0x5FFF
   BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 434176
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
 }
@@ -71,6 +70,7 @@ SECTIONS
     __sdram_data_start__ = .;
     *(.mon.ram.text*)
     INCLUDE "sdram_obj_list.txt"
+    *(.sdram.text*)
     *(.sdram.data*)
     __sdram_data_end__ = .;
 
