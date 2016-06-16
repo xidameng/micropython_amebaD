@@ -38,6 +38,8 @@ Q(search)
 Q(match)
 Q(group)
 Q(TimeoutError)
+Q(watchdog)
+Q(refresh)
 
 Q(iterable)
 Q(real)
