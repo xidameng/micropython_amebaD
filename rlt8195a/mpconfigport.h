@@ -19,7 +19,7 @@
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (1)
 #define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_NONE)
-#define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_NONE)
+#define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_ENABLE_DOC_STRING               (1)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_DETAILED)
 #define MICROPY_REPL_AUTO_INDENT                (1)
