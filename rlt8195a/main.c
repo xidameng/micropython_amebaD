@@ -49,15 +49,18 @@
 #include "flash.h"
 
 #include "flash_api.h"
+#include "osdep_api.h"
+
 
 
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
 osThreadId main_tid = 0;
+osThreadId ftpd_tid = 0;
 fs_user_mount_t fs_user_mount_flash;
 static const char fresh_main_py[] =
-"# main.py -- put your code here!\r\n"
+"# main.py -- put your code here! The script in main.py will be executed when boot up !\r\n"
 ;
 
 /*****************************************************************************
@@ -78,6 +81,13 @@ void main_task(void const *arg) {
     if (pyexec_friendly_repl() != 0) {
         DiagPrintf("Soft reset\r\n");
         sys_reset();
+    }
+}
+
+void ftpd_task(void const *arg) {
+    ftpd_init();
+    while(1) {
+        mdelay(10);
     }
 }
 
@@ -111,7 +121,9 @@ int main(void)
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     DiagPrintf("Starting main task\n");
     // Create main task
-    osThreadDef(main_task, osPriorityRealtime, 1, 8152);
+    osThreadDef(main_task, osPriorityHigh, 1, 8152);
+    osThreadDef(ftpd_task, osPriorityNormal, 1, 3072);
+    ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
     main_tid = osThreadCreate (osThread (main_task), NULL);
     osKernelStart();
     while(1);

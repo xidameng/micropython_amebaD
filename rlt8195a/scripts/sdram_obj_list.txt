@@ -126,4 +126,6 @@
 
 /*** from micropython ***/
 *mod*.o(.text*)
+*vfs.o(.text*)
 *obj*.o(.text*)
+*ftpd.o(.text*)
