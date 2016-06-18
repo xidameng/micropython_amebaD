@@ -175,6 +175,8 @@ SRC_C += \
 	lib/fatfs/ff.c \
 	lib/fatfs/option/ccsbcs.c \
 	lib/timeutils/timeutils.c \
+	ftp/vfs.c \
+	ftp/ftpd.c \
 	$(STM_SRC_C)
 
 SRC_S += $(wildcard $(HELPER)/gccollect/*.s)
