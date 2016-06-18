@@ -26,9 +26,9 @@ void storage_init(void) {
 }
 
 void storage_flush(void) {
+    //TODO should check the write status
     int32_t data = 0;
     data = flash_get_status(&flash_obj);
-    DiagPrintf("data is 0x%x\n", data);
 }
 
 uint32_t storage_get_block_count(void) {
