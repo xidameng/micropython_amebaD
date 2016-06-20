@@ -5,8 +5,8 @@
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
-#define MICROPY_EMIT_THUMB                      (1)
-#define MICROPY_EMIT_INLINE_THUMB               (1)
+#define MICROPY_EMIT_THUMB                      (0)
+#define MICROPY_EMIT_INLINE_THUMB               (0)
 #define MICROPY_COMP_MODULE_CONST               (1)
 #define MICROPY_COMP_CONST                      (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (0)
@@ -43,12 +43,14 @@
 #define MICROPY_PY_COLLECTIONS                  (1)
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_CMATH                        (0)
-#define MICROPY_PY_IO                           (0)
+#define MICROPY_PY_IO                           (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UZLIB                        (1)
-#define MICROPY_PY_UHASHLIB                     (1)
+#define MICROPY_PY_UZLIB                        (0)
+#define MICROPY_PY_UHEAPQ                       (0)
+#define MICROPY_PY_UHASHLIB                     (0)
+#define MICROPY_PY_UCTYPES                      (0)
 #define MICROPY_PY_UJSON                        (1)
-#define MICROPY_PY_URANDOM                      (1)
+#define MICROPY_PY_URANDOM                      (0)
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
@@ -56,7 +58,7 @@
 #define MICROPY_PY_OS_DUPTERM                   (0)
 #define MICROPY_PY_MACHINE_PULSE                (0)
 #define MICROPY_PY_MACHINE                      (0)
-#define MICROPY_PY_BUILTINS_FLOAT               (1)
+#define MICROPY_PY_BUILTINS_FLOAT               (0)
 
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
@@ -88,9 +90,10 @@ typedef long mp_off_t;
 #define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
 
 // extra built in names to add to the global namespace
-extern const struct _mp_obj_fun_builtin_t mp_builtin_open_obj;
 #define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_input), (mp_obj_t)&mp_builtin_input_obj }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_help), (mp_obj_t)&mp_builtin_help_obj }, \
 
 extern const struct _mp_obj_module_t mp_hardware_module;
 extern const struct _mp_obj_module_t mp_wireless_module;
@@ -121,7 +124,7 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
 #include <alloca.h>
 
 #define MICROPY_HW_BOARD_NAME "Ameba Board"
-#define MICROPY_HW_MCU_NAME "RT8195A"
+#define MICROPY_HW_MCU_NAME "RTL8195A"
 
 #define MICROPY_PORT_ROOT_POINTERS      \
     const char *readline_hist[8];       \
