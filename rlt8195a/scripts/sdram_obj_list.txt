@@ -129,3 +129,6 @@
 *vfs.o(.text*)
 *obj*.o(.text*)
 *ftpd.o(.text*)
+*help.o(.text*)
+*pyhelp.o(.text*)
+*input.o(.text*)

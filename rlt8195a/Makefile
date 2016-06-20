@@ -170,6 +170,7 @@ SRC_C += \
 	main.c \
 	lib/libc/string0.c \
 	lib/utils/pyexec.c \
+	lib/utils/pyhelp.c \
 	lib/mp-readline/readline.c \
 	lib/netutils/netutils.c \
 	lib/fatfs/ff.c \
