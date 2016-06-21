@@ -294,3 +294,8 @@ Q(getvalue)
 Q(StringIO)
 Q(BytesIO)
 Q(uctypes)
+ 
+Q(UART)
+Q(bits)
+Q(stop)
+Q(parity)
