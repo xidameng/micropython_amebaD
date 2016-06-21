@@ -224,12 +224,14 @@ $(GEN_PINS_SRC) $(GEN_PINS_HDR) $(GEN_PINS_QSTR): $(BOARD_PINS) $(MAKE_PINS) $(A
 $(BUILD)/pins.o: $(BUILD)/pins.c
 	$(call compile_c)
 
-image: 
+$(BUILD)/firmware.map:$(BUILD)/firmware.elf
+	$(Q)$(RM) -f $(BUILD)/firmware.map
+	$(Q)$(CROSS_COMPILE)nm $(BUILD)/firmware.elf | sort > $(BUILD)/firmware.map
+
+image: $(BUILD)/firmware.map
 	$(Q)$(ECHO) "CREATING IMAGE"
 	$(Q)$(RM) -f $(BUILD)/firmware.asm 
-	$(Q)$(RM) -f $(BUILD)/firmware.map
 	$(Q)$(RM) -f $(BUILD)/*.bin
-	$(Q)$(CROSS_COMPILE)nm $(BUILD)/firmware.elf | sort > $(BUILD)/firmware.map
 	$(Q)$(CROSS_COMPILE)objdump -d $(BUILD)/firmware.elf >  $(BUILD)/firmware.asm
 	$(Q)$(eval RAM2_START_ADDR = 0x$(shell grep __ram_image2_text $(BUILD)/firmware.map | grep _start__ | awk '{print $$1}'))
 	$(Q)$(eval RAM2_END_ADDR = 0x$(shell grep __ram_image2_text $(BUILD)/firmware.map | grep _end__ | awk '{print $$1}'))

@@ -41,7 +41,7 @@ typedef struct {
     uint8_t   bits;
     uint8_t   stop;
     uint8_t   parity;
-    uint16_t  baudrate;
+    uint32_t  baudrate;
 } uart_obj_t;
 
 #endif  // OBJUART_H_
