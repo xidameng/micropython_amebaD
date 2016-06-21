@@ -34,18 +34,18 @@
 #include "bufhelper.h"
 #include "objuart.h"
 
-#define UART0_TX                             PA_6
-#define UART0_RX                             PA_7
+#define UART0_TX                             PA_7
+#define UART0_RX                             PA_6
 
 #define UART1_TX                             PB_5
 #define UART1_RX                             PB_4
 
-#define UART2_TX                             PA_4
-#define UART2_RX                             PA_1
+#define UART2_TX                             PA_1
+#define UART2_RX                             PA_4
 
-serial_t uart_channel0;     //(TX, RX) = (PA_6, PA_7) 
-serial_t uart_channel1;     //(TX, RX) = (PB_5, PB_4)
-serial_t uart_channel2;     //(TX, RX) = (PA_4, PA_1)
+serial_t uart_channel0;     //(RX, TX) = (PA_6, PA_7) 
+serial_t uart_channel1;     //(RX, TX) = (PB_5, PB_4)
+serial_t uart_channel2;     //(RX, TX) = (PA_4, PA_1)
 
 STATIC mp_obj_t mp_uart_clear(mp_obj_t self_in) {
     uart_obj_t *self = (uart_obj_t *)&self_in;
@@ -71,8 +71,10 @@ STATIC mp_obj_t uart_send(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *
 
     // send the data
     size_t i = 0;
+    char *ptr = 0;
+    ptr = bufinfo.buf;
     for (i = 0; i < bufinfo.len; i++) {
-        serial_putc((serial_t *)self->obj, bufinfo.buf+i);
+        serial_putc((serial_t *)self->obj, ptr[i]);
     }
 
     // return the number of bytes written
@@ -105,7 +107,7 @@ STATIC mp_obj_t uart_recv(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *
     // return the received data
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(uart_recv_obj, 3, uart_recv);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(uart_recv_obj, 1, uart_recv);
 
 
 
@@ -141,7 +143,6 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->bits      = args[2].u_int;
     self->stop      = args[3].u_int;
     self->parity    = args[4].u_int;
-
     
     switch(self->id) {
         case 0:
