@@ -51,7 +51,7 @@
 #include "flash_api.h"
 #include "osdep_api.h"
 
-
+#include "gpio_irq_api.h"
 
 /*****************************************************************************
  *                              Internal variables
@@ -84,7 +84,24 @@ void main_task(void const *arg) {
     }
 }
 
+void gpio_irq(uint32_t id, gpio_irq_event event) {
+    DiagPrintf("gp pg gp!\n");
+    DiagPrintf("id = %d\n", id);
+}
+
 void ftpd_task(void const *arg) {
+#if 0
+    DiagPrintf("start\r\n");
+    gpio_t pa_0 ;
+    gpio_init(&pa_0, PA_0);
+    gpio_dir(&pa_0, PIN_INPUT);
+    DiagPrintf("start2\r\n");
+    gpio_irq_t button;
+    gpio_irq_init(&button, PA_0, gpio_irq, 10);
+    gpio_irq_set(&button, IRQ_FALL, 1);
+    gpio_irq_enable(&button);
+#endif
+
     ftpd_init();
     while(1) {
         mdelay(10);

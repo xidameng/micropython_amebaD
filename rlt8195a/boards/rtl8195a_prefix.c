@@ -56,7 +56,7 @@
     .pin_num        = (p_pin_num), \
     .dir            = PIN_INPUT, \
     .value          = 0, \
-    .used           = false, \
-    .irq_trigger    = 0, \
-    .irq_flags      = 0, \
+    .irq_registered = false, \
+    .irq_masked     = false, \
+    .isr_handler    = mp_const_none, \
 }
