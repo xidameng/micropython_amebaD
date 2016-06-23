@@ -70,6 +70,7 @@ void gpio_mp_irq_handler(pin_obj_t *self, gpio_irq_event event) {
             nlr_pop();
         } else {
             pin_irq_unregister(self);
+            mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
         }
         gc_unlock();
     }
