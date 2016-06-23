@@ -52,12 +52,27 @@ STATIC void pin_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args);
 STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
-
+STATIC mp_obj_t pin_irq_unregister(mp_obj_t self_in);
 
 /********************** function bodies ***************************************/
 
 void pin_init0(void) {
     // TODO: Ameba board pin hardware init 
+}
+
+void gpio_mp_irq_handler(pin_obj_t *self, gpio_irq_event event) {
+    if (self->isr_handler != mp_const_none) {
+        gc_lock();
+        nlr_buf_t nlr;
+        if (nlr_push(&nlr) == 0) {
+            //TODO shuld pass argument
+            mp_call_function_1(self->isr_handler, self->id);
+            nlr_pop();
+        } else {
+            pin_irq_unregister(self);
+        }
+        gc_unlock();
+    }
 }
 
 STATIC void pin_validate_dir (uint dir) {
@@ -100,53 +115,51 @@ pin_obj_t *pin_find(mp_obj_t user_obj) {
 }
 
 STATIC uint8_t pin_get_value (const pin_obj_t* self) {
-    uint32_t value;
+    int value;
     bool setdir = false;
     if (self->dir == PullNone || self->dir == OpenDrain) {
         setdir = true;
         // configure the direction to IN for a moment in order to read the pin value
-        gpio_dir(&(self->obj), PIN_INPUT);
+        gpio_dir((gpio_t *)&(self->obj), PIN_INPUT);
     }
     // now get the value
-    value = gpio_read(&(self->obj));
+    value = gpio_read((gpio_t *)&(self->obj));
+
     if (setdir) {
         // set the direction back to output
-        gpio_dir(&(self->obj), PIN_OUTPUT);
+        gpio_dir((gpio_t *)&(self->obj), PIN_OUTPUT);
         if (self->value) {
-            gpio_write(&(self->obj), 1);
+            gpio_write((gpio_t *)&(self->obj), 1);
         } else {
-            gpio_write(&(self->obj), 0);
+            gpio_write((gpio_t *)&(self->obj), 0);
         }
     }
     // return it
     return value ? 1 : 0;
 }
 
-STATIC const mp_arg_t pin_init_args[] = {
-    { MP_QSTR_dir,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-    { MP_QSTR_pull,                        MP_ARG_OBJ, {.u_obj = mp_const_none} },
-    { MP_QSTR_value,    MP_ARG_KW_ONLY  |  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-};
-
-#define pin_INIT_NUM_ARGS MP_ARRAY_SIZE(pin_init_args)
-
 STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    STATIC const mp_arg_t pin_init_args[] = {
+        { MP_QSTR_dir,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_pull,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_value,    MP_ARG_KW_ONLY  |  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
     // parse args
-    mp_arg_val_t args[pin_INIT_NUM_ARGS];
-    mp_arg_parse_all(n_args, pos_args, kw_args, pin_INIT_NUM_ARGS, pin_init_args, args);
+    mp_arg_val_t args[MP_ARRAY_SIZE(pin_init_args)];
+    mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(pin_init_args), pin_init_args, args);
 
     // get the io mode, default is input
     uint dir = PIN_INPUT;
     if (args[0].u_obj != MP_OBJ_NULL) {
         dir = mp_obj_get_int(args[0].u_obj);
-        pin_validate_dir (dir);
+        pin_validate_dir(dir);
     }
 
     // get the pull type, default is pull none
     uint pull = PullNone;
-    if (args[1].u_obj != mp_const_none) {
+    if (args[1].u_obj != MP_OBJ_NULL) {
         pull = mp_obj_get_int(args[1].u_obj);
-        pin_validate_pull (pull);
+        pin_validate_pull(pull);
     }
 
     // get the value, default is 0
@@ -167,26 +180,23 @@ STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_
         self->value = value;
 
     // config pin hardware
-    gpio_init(&(self->obj), self->id);
-    gpio_dir(&(self->obj), self->dir);
-    gpio_mode(&(self->obj), self->pull);
-
-    // Initial finished, mark it as in used
-    self->used = true;
-
+    gpio_init((gpio_t *)&(self->obj), self->id);
+    gpio_dir((gpio_t *)&(self->obj), self->dir);
+    gpio_mode((gpio_t *)&(self->obj), self->pull);
+    //
     return mp_const_none;
 }
 
 STATIC void pin_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     pin_obj_t *self = self_in;
-    uint32_t pull = self->pull;
+    uint pull = self->pull;
 
     // pin name
     mp_printf(print, "Pin('%q'", self->name);
 
     // pin mode
     qstr dir_qst;
-    uint32_t dir = self->dir;
+    uint dir = self->dir;
     if (dir == PIN_INPUT) {
         dir_qst = MP_QSTR_IN;
     } else if (dir == PIN_OUTPUT) {
@@ -242,10 +252,9 @@ STATIC mp_obj_t pin_dir(mp_uint_t n_args, const mp_obj_t *args) {
     if (n_args == 1) {
         return mp_obj_new_int(self->dir);
     } else {
-        uint32_t dir = mp_obj_get_int(args[1]);
-        pin_validate_dir (dir);
+        uint dir = mp_obj_get_int(args[1]);
+        pin_validate_dir(dir);
         self->dir = dir;
-        /*pin_obj_configure(self);*/
         return mp_const_none;
     }
 }
@@ -254,20 +263,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pin_dir_obj, 1, 2, pin_dir);
 STATIC mp_obj_t pin_pull(mp_uint_t n_args, const mp_obj_t *args) {
     pin_obj_t *self = args[0];
     if (n_args == 1) {
-        if (self->pull == PullNone) {
-            return mp_const_none;
-        }
         return mp_obj_new_int(self->pull);
     } else {
-        uint32_t pull;
-        if (args[1] == mp_const_none) {
-            pull = PullNone;
-        } else {
-            pull = mp_obj_get_int(args[1]);
-            pin_validate_pull (pull);
-        }
+        uint pull = mp_obj_get_int(args[1]);
+        pin_validate_pull (pull);
         self->pull = pull;
-        /*pin_obj_configure(self);*/
         return mp_const_none;
     }
 }
@@ -305,6 +305,59 @@ STATIC mp_obj_t pin_toggle(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_toggle_obj, pin_toggle);
 
+STATIC mp_obj_t pin_irq_register(mp_obj_t self_in, mp_obj_t callback_in, mp_obj_t irq_event_in) {
+    pin_obj_t *self = self_in;
+    uint irq_event = mp_obj_get_int(irq_event_in);
+    if (irq_event != IRQ_NONE && irq_event != IRQ_RISE && irq_event != IRQ_FALL) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Unsupport type IRQ event"));
+    }
+    if (self->irq_registered == true) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "ISR has already registered"));
+    }
+    
+    if (!MP_OBJ_IS_FUN(callback_in)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error function type"));
+    }
+
+    gpio_irq_init((gpio_irq_t *)&(self->irq_obj), self->id, gpio_mp_irq_handler, self);
+    gpio_irq_set((gpio_irq_t *)&(self->irq_obj), irq_event, true);
+    gpio_irq_enable((gpio_irq_t *)&(self->irq_obj));
+    self->irq_registered = true;
+    self->irq_masked = false;
+    self->isr_handler = callback_in;
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(pin_irq_register_obj, pin_irq_register);
+
+STATIC mp_obj_t pin_irq_unregister(mp_obj_t self_in) {
+    pin_obj_t *self = self_in;
+    if (self->irq_registered == true) {
+        self->irq_registered = false;
+        self->isr_handler = mp_const_none;
+        gpio_irq_free((gpio_irq_t *)&(self->irq_obj));
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_irq_unregister_obj, pin_irq_unregister);
+
+STATIC mp_obj_t pin_irq_mask(mp_obj_t self_in, mp_obj_t enable) {
+    pin_obj_t *self = self_in;
+    if (self->irq_registered == false) {
+        //TODO exception type
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "ISR has not registered"));
+    }
+    if (mp_obj_is_true(enable)) {
+        self->irq_masked = false;
+        gpio_irq_disable((gpio_irq_t *)&(self->irq_obj));
+    } else {
+        self->irq_masked = true;
+        gpio_irq_enable((gpio_irq_t *)&(self->irq_obj));
+       
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(pin_irq_mask_obj, pin_irq_mask);
+
 STATIC void pin_named_pins_obj_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     pin_named_pins_obj_t *self = self_in;
     mp_printf(print, "<Pin.%q>", self->name);
@@ -319,22 +372,30 @@ const mp_obj_type_t pin_board_pins_obj_type = {
 
 STATIC const mp_map_elem_t pin_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_id),                      (mp_obj_t)&pin_id_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dir),                     (mp_obj_t)&pin_dir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pull),                    (mp_obj_t)&pin_pull_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_value),                   (mp_obj_t)&pin_value_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_toggle),                  (mp_obj_t)&pin_toggle_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_id),             (mp_obj_t)&pin_id_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dir),            (mp_obj_t)&pin_dir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pull),           (mp_obj_t)&pin_pull_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_value),          (mp_obj_t)&pin_value_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_toggle),         (mp_obj_t)&pin_toggle_obj },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_irq_register),   (mp_obj_t)&pin_irq_register_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_irq_unregister), (mp_obj_t)&pin_irq_unregister_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_irq_mask),       (mp_obj_t)&pin_irq_mask_obj },
 
     // class attributes
-    { MP_OBJ_NEW_QSTR(MP_QSTR_board),                   (mp_obj_t)&pin_board_pins_obj_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_board),          (mp_obj_t)&pin_board_pins_obj_type },
 
     // class constants
-    { MP_OBJ_NEW_QSTR(MP_QSTR_IN),                      MP_OBJ_NEW_SMALL_INT(PIN_INPUT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_OUT),                     MP_OBJ_NEW_SMALL_INT(PIN_OUTPUT) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_NONE),               MP_OBJ_NEW_SMALL_INT(PullNone) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_UP),                 MP_OBJ_NEW_SMALL_INT(PullUp) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_DOWN),               MP_OBJ_NEW_SMALL_INT(PullDown) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_OPEN_DRAIN),              MP_OBJ_NEW_SMALL_INT(OpenDrain) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_IN),             MP_OBJ_NEW_SMALL_INT(PIN_INPUT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_OUT),            MP_OBJ_NEW_SMALL_INT(PIN_OUTPUT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_NONE),      MP_OBJ_NEW_SMALL_INT(PullNone) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_UP),        MP_OBJ_NEW_SMALL_INT(PullUp) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_DOWN),      MP_OBJ_NEW_SMALL_INT(PullDown) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_OPEN_DRAIN),     MP_OBJ_NEW_SMALL_INT(OpenDrain) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_IRQ_NONE),       MP_OBJ_NEW_SMALL_INT(IRQ_NONE) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_IRQ_RISE),       MP_OBJ_NEW_SMALL_INT(IRQ_RISE) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_IRQ_FALL),       MP_OBJ_NEW_SMALL_INT(IRQ_FALL) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(pin_locals_dict, pin_locals_dict_table);
