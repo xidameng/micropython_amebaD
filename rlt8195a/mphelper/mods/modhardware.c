@@ -39,6 +39,8 @@
 #include "hardware/obji2c.h"
 #include "hardware/objuart.h"
 #include "hardware/objspi.h"
+#include "hardware/objadc.h"
+#include "hardware/objdac.h"
 
 
 /*****************************************************************************
@@ -50,6 +52,8 @@ STATIC const mp_map_elem_t hardware_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),                 (mp_obj_t)&i2c_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),                (mp_obj_t)&uart_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),                 (mp_obj_t)&spi_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),                 (mp_obj_t)&adc_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),                 (mp_obj_t)&dac_type },
 };
 STATIC MP_DEFINE_CONST_DICT(hardware_module_globals, hardware_module_globals_table);
 
