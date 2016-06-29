@@ -38,15 +38,19 @@ void ip_init0(void) {
     // It can only be init once 
     tcpip_init(NULL, NULL);
 
-    IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
-    IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
-    IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
-    netif_add(&xnetif[NETIF_STA_ID], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
-
     IP4_ADDR(&ipaddr, DEFAULT_AP_IP_ADDR0, DEFAULT_AP_IP_ADDR1, DEFAULT_AP_IP_ADDR2, DEFAULT_AP_IP_ADDR3);
     IP4_ADDR(&netmask, DEFAULT_AP_NETMASK_ADDR0, DEFAULT_AP_NETMASK_ADDR1, DEFAULT_AP_NETMASK_ADDR2, DEFAULT_AP_NETMASK_ADDR3);
     IP4_ADDR(&gateway, DEFAULT_AP_GW_ADDR0, DEFAULT_AP_GW_ADDR1, DEFAULT_AP_GW_ADDR2, DEFAULT_AP_GW_ADDR3);
     netif_add(&xnetif[NETIF_AP_ID], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_set_up(&xnetif[NETIF_AP_ID]);
+
+    IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
+    IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
+    IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
+    netif_add(&xnetif[NETIF_STA_ID], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_set_up(&xnetif[NETIF_STA_ID]);
+
+    netif_set_default(&xnetif[NETIF_STA_ID]);
 }
 
 STATIC void ip_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
@@ -84,8 +88,6 @@ STATIC mp_obj_t ip_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint
     memset(self, 0x0, sizeof(*self));
 
     self->base.type = &ip_type;
-    netif_set_default(&xnetif[NETIF_STA_ID]);
-    netif_set_up(&xnetif[NETIF_STA_ID]);
 
     return (mp_obj_t)self;
 }

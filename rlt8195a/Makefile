@@ -81,6 +81,7 @@ INC += -I$(HELPER)
 INC += -I$(HELPER)/gccollect
 INC += -I$(HELPER)/hal
 INC += -I$(HELPER)/mods
+INC += -I$(HELPER)/mods/network
 
 INC += -I../stmhal
 

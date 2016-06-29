@@ -132,3 +132,8 @@
 *help.o(.text*)
 *pyhelp.o(.text*)
 *input.o(.text*)
+*ff.o(.text*)
+*asm*.o(.text*)
+*bufhelper.o(.text*)
+*stackctrl.o(.text*)
+*smallint.o(.text*)
