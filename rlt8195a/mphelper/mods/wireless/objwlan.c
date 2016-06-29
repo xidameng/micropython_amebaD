@@ -26,6 +26,9 @@
  */
 
 #include "objwlan.h"
+#include "objip.h"
+
+extern struct netif xnetif[NET_IF_NUM];
 
 /*****************************************************************************
  *                              Local variables
@@ -40,6 +43,15 @@ uint8_t  ScanNetworkChannelCache[WLAN_MAX_SCAN_NETWORKS]                 = {0};
 uint8_t  ScanNetworkBandCache[WLAN_MAX_SCAN_NETWORKS]                    = {0};
 uint32_t ScanNetworkRssiCache[WLAN_MAX_SCAN_NETWORKS]                    = {0};
 
+STATIC wlan_obj_t wlan_obj = {
+    .base.type      = &wlan_type,
+    .idx            = 0,
+    .mode           = RTW_MODE_AP,
+    .security_type  = RTW_SECURITY_OPEN,
+    .channel        = 6,
+    .ssid           = MICROPY_WLAN_AP_DEFAULT_SSID, 
+    .key            = MICROPY_WLAN_AP_DEFAULT_PASS
+};
 
 /*****************************************************************************
  *                              Local functions
@@ -261,45 +273,140 @@ STATIC mp_obj_t wlan_disconnect_network(mp_obj_t self_in) {
     if (ret != RTW_SUCCESS) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
     }
-
+    
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_disconnect_obj, wlan_disconnect_network);
 
+STATIC mp_obj_t wlan_on_network(mp_obj_t self_in) {
+    uint8_t ret = RTW_ERROR;
+    wlan_obj_t *self = self_in;
+    ret = wifi_on(self->mode);
+
+    if (ret != RTW_SUCCESS) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
+    }
+    
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_on_obj, wlan_on_network);
+
+STATIC mp_obj_t wlan_off_network(mp_obj_t self_in) {
+    uint8_t ret = RTW_ERROR;
+    ret = wifi_off();
+
+    if (ret != RTW_SUCCESS) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_off_obj, wlan_off_network);
+
+STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
+    uint8_t ret = RTW_ERROR;
+    mp_obj_t result = mp_const_false;
+    ret = wifi_is_connected_to_ap();
+
+    if (ret == RTW_SUCCESS) {
+        result = mp_const_true;
+    }
+
+    return result;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_is_connect_to_ap_obj, wlan_is_connect_to_ap);
+
 STATIC void wlan_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     wlan_obj_t *self = self_in;
-    mp_printf(print, "Wifi");
+    qstr wlan_qstr;
+    qstr security_qstr;
+    switch (self->mode) {
+        case RTW_MODE_AP:
+            wlan_qstr = MP_QSTR_AP;
+            break;
+        case RTW_MODE_STA:
+            wlan_qstr = MP_QSTR_STA;
+            break;
+        case RTW_MODE_STA_AP:
+            wlan_qstr = MP_QSTR_STA_AP;
+            break;
+        case RTW_MODE_P2P:
+            wlan_qstr = MP_QSTR_P2P;
+            break;
+        case RTW_MODE_PROMISC:
+            wlan_qstr = MP_QSTR_PROMISC;
+            break;
+    }
+
+    switch(self->security_type) {
+        case RTW_SECURITY_OPEN:
+            security_qstr = MP_QSTR_OPEN;
+            break;
+        case RTW_SECURITY_WEP_PSK:
+            security_qstr = MP_QSTR_WEP_PSK;
+            break;
+        case RTW_SECURITY_WEP_SHARED:
+            security_qstr = MP_QSTR_WEP_SHARED;
+            break;
+        case RTW_SECURITY_WPS_OPEN:
+            security_qstr = MP_QSTR_WPS_OPEN;
+            break;
+        case RTW_SECURITY_WPS_SECURE:
+            security_qstr = MP_QSTR_WPS_SECURE;
+            break;
+        case RTW_SECURITY_WPA_AES_PSK:
+            security_qstr = MP_QSTR_WPA_AES_PSK;
+            break;
+        case RTW_SECURITY_WPA2_AES_PSK:
+            security_qstr = MP_QSTR_WPA2_AES_PSK;
+            break;
+        case RTW_SECURITY_WPA_TKIP_PSK:
+            security_qstr = MP_QSTR_WPA_TKIP_PSK;
+            break;
+        case RTW_SECURITY_WPA2_TKIP_PSK:
+            security_qstr = MP_QSTR_WPA2_TKIP_PSK;
+            break;
+        case RTW_SECURITY_WPA2_MIXED_PSK:
+            security_qstr = MP_QSTR_WPA2_MIXED_PSK;
+            break;
+        case RTW_SECURITY_WPA_WPA2_MIXED:
+            security_qstr = MP_QSTR_WPA_WPA2_MIXED;
+            break;
+    }
+
+    mp_printf(print, "WLAN(mode=%q", wlan_qstr);
+    mp_printf(print, ", AP_ssid=%s", self->ssid); 
+    mp_printf(print, ", AP_security_type=%q", security_qstr);
+    mp_printf(print, ", AP_channel=%d)", self->channel);
 }
 
 STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
     STATIC const mp_arg_t wlan_init_args[] = {
-        { MP_QSTR_mode,         MP_ARG_REQUIRED | MP_ARG_INT,  {.u_int = RTW_MODE_STA} },
+        { MP_QSTR_mode,         MP_ARG_REQUIRED | MP_ARG_INT,  {.u_int = RTW_MODE_AP} },
         { MP_QSTR_ssid,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_auth,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
-        { MP_QSTR_channel,      MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = 1} },
+        { MP_QSTR_channel,      MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = 6} },
     };
     mp_map_t kw_args;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
     mp_arg_val_t args[MP_ARRAY_SIZE(wlan_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), wlan_init_args, args);
 
-    wlan_obj_t *self = m_new_obj(wlan_obj_t);
-    memset(self, 0x0, sizeof(*self));
-
-    self->base.type = &wlan_type;
+    wlan_obj_t *self = &wlan_obj;
 
     // Verify ssid or raise exception
     int8_t *ssid = NULL;
     validate_ssid(&ssid, args[1].u_obj);
-    memcpy(self->ssid, ssid, strlen(ssid)+1);
+    if (ssid != NULL)
+        memcpy(self->ssid, ssid, strlen(ssid)+1);
 
     // Verify security type and password
     int8_t *key = NULL;
-    int32_t security_type = RTW_SECURITY_OPEN;
+    int32_t security_type = self->security_type;
     mp_uint_t key_len = 0;
     validate_key(&key, &key_len, &security_type, args[2].u_obj);
     self->security_type = security_type;
-    memcpy(self->key, key, strlen(key)+1);
+    if (key != NULL)
+        memcpy(self->key, key, strlen(key)+1);
 
     // Verify channel
     self->channel = args[3].u_int;
@@ -315,20 +422,52 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     if (self->mode == RTW_MODE_STA_AP ||
         self->mode == RTW_MODE_AP) {
 
-        if (args[1].u_obj == MP_OBJ_NULL || args[2].u_obj == mp_const_none) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_value_invalid_arguments));
-        }
-
         if (self->security_type == RTW_SECURITY_OPEN ||
             self->security_type == RTW_SECURITY_WPA_TKIP_PSK ||
             self->security_type == RTW_SECURITY_WPA2_AES_PSK ||
             self->security_type == RTW_SECURITY_WPA2_MIXED_PSK) {
 
             ret = wifi_on(self->mode);
+
             if (ret != RTW_SUCCESS) {
                 nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
             }
+
+            int8_t  *wlan_name;
+            uint8_t id = NETIF_AP_ID;
+
+            if (self->mode == RTW_MODE_STA_AP) {
+                wlan_name = "wlan1";
+                id = NETIF_AP_ID;
+            } else {
+                wlan_name = "wlan0";
+                id = NETIF_STA_ID;
+            }
+
+            dhcps_deinit();
+
+            dhcps_init(&xnetif[id]);
+
             ret = wifi_start_ap(self->ssid, self->security_type, self->key, strlen(self->ssid), key_len, self->channel);
+
+            int16_t timeout = 20;
+
+            while (1) {
+                int8_t essid[33];
+                if (wext_get_ssid(wlan_name, (uint8_t *) essid) > 0) {
+                    if (strcmp(essid, self->ssid) == 0) {
+                        break;
+                    }
+                }
+
+                if (timeout == 0) {
+                    ret = RTW_ERROR;
+                }
+
+                vTaskDelay(1 * configTICK_RATE_HZ);
+                timeout --;
+            }
+
             if (ret != RTW_SUCCESS) {
                 wifi_off();
                 nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
@@ -339,7 +478,7 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         }
     }
     else {
-        ret =wifi_on(self->mode);
+        ret = wifi_on(self->mode);
         if (ret != RTW_SUCCESS) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, mpexception_os_request_not_possible));
         }
@@ -354,6 +493,9 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_mac),                       (mp_obj_t)&wlan_mac_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),                   (mp_obj_t)&wlan_connect_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),                (mp_obj_t)&wlan_disconnect_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_on),                        (mp_obj_t)&wlan_on_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_off),                       (mp_obj_t)&wlan_off_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap),          (mp_obj_t)&wlan_is_connect_to_ap_obj },
 
     // class constants
     
