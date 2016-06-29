@@ -123,8 +123,11 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
 
-#define MICROPY_HW_BOARD_NAME "Ameba Board"
-#define MICROPY_HW_MCU_NAME "RTL8195A"
+#define MICROPY_HW_BOARD_NAME       "Ameba Board"
+#define MICROPY_HW_MCU_NAME         "RTL8195A"
+
+#define MICROPY_WLAN_AP_DEFAULT_SSID   "mpiot-ap"
+#define MICROPY_WLAN_AP_DEFAULT_PASS   "1234567890"
 
 #define MICROPY_PORT_ROOT_POINTERS      \
     const char *readline_hist[8];       \

@@ -84,24 +84,7 @@ void main_task(void const *arg) {
     }
 }
 
-void gpio_irq(uint32_t id, gpio_irq_event event) {
-    DiagPrintf("gp pg gp!\n");
-    DiagPrintf("id = %d\n", id);
-}
-
 void ftpd_task(void const *arg) {
-#if 0
-    DiagPrintf("start\r\n");
-    gpio_t pa_0 ;
-    gpio_init(&pa_0, PA_0);
-    gpio_dir(&pa_0, PIN_INPUT);
-    DiagPrintf("start2\r\n");
-    gpio_irq_t button;
-    gpio_irq_init(&button, PA_0, gpio_irq, 10);
-    gpio_irq_set(&button, IRQ_FALL, 1);
-    gpio_irq_enable(&button);
-#endif
-
     ftpd_init();
     while(1) {
         mdelay(10);
@@ -138,7 +121,7 @@ int main(void)
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     DiagPrintf("Starting main task\n");
     // Create main task
-    osThreadDef(main_task, osPriorityHigh, 1, 8152);
+    osThreadDef(main_task, osPriorityHigh, 1, 9000);
     osThreadDef(ftpd_task, osPriorityNormal, 1, 3072);
     ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
     main_tid = osThreadCreate (osThread (main_task), NULL);
