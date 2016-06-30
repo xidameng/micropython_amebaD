@@ -108,7 +108,7 @@ int main(void)
     mp_obj_list_init(mp_sys_argv, 0);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
 
-    mp_hal_log_uart_init();
+    log_uart_init0();
     pin_init0();
     ip_init0();
     rtc_init0();
@@ -189,5 +189,12 @@ mp_import_stat_t mp_import_stat(const char *path) {
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return fat_vfs_lexer_new_from_file(filename);
 }
+void mp_keyboard_interrupt(void) {
+    MP_STATE_VM(mp_pending_exception) = MP_STATE_PORT(mp_kbd_exception);
+}
 
-MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, fatfs_builtin_open);
+mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
+    return fatfs_builtin_open(n_args, args, kwargs);
+}
+
+MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);

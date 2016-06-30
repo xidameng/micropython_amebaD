@@ -28,11 +28,15 @@
 #include "py/mpstate.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
+#include "py/stream.h"
+#include "py/ringbuf.h"
 
+#include "py/mperrno.h"
 #include "exception.h"
 
 #include "bufhelper.h"
 #include "objuart.h"
+#include "rtc_api.h"
 
 #define UART0_TX                             PA_7
 #define UART0_RX                             PA_6
@@ -47,69 +51,70 @@ serial_t uart_channel0;     //(RX, TX) = (PA_6, PA_7)
 serial_t uart_channel1;     //(RX, TX) = (PB_5, PB_4)
 serial_t uart_channel2;     //(RX, TX) = (PA_4, PA_1)
 
-STATIC mp_obj_t mp_uart_clear(mp_obj_t self_in) {
-    uart_obj_t *self = (uart_obj_t *)&self_in;
-    serial_clear((serial_t *)self->obj);
-    return mp_const_none;
+extern ringbuf_t input_buf;
+extern int interrupt_char;
+
+void uart_irq(uint32_t id, SerialIrq event) {
+    serial_t *sobj = (void *)id;
+    int c = serial_getc(sobj);
+    if (c == interrupt_char) {
+        mp_keyboard_interrupt();
+    } else {
+        ringbuf_put(&input_buf, c);
+    }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_clear_obj, mp_uart_clear);
 
-STATIC mp_obj_t uart_send(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    STATIC const mp_arg_t uart_send_args[] = {
-        { MP_QSTR_buf,     MP_ARG_REQUIRED | MP_ARG_OBJ,  },
-    };
+bool uart_rx_wait(uint32_t timeout_us) {
+    //TODO(Chester) should I use rtc_read or sys tick ?
+    time_t start = rtc_read();
+    for (;;) {
+        if (input_buf.iget != input_buf.iput) {
+            return true;
+        }
+        if (rtc_read() - start >= timeout_us) {
+            return false;
+        }
+    }
+}
 
-    uart_obj_t *self = pos_args[0];
-    // parse args
-    mp_arg_val_t args[MP_ARRAY_SIZE(uart_send_args)];
-    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(args), uart_send_args, args);
+int uart_rx_char(void) {
+    return ringbuf_get(&input_buf);
+}
 
-    // get the buffer to send from
-    mp_buffer_info_t bufinfo;
-    uint8_t data[1];
-    pyb_buf_get_for_send(args[0].u_obj, &bufinfo, data);
+STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+    uart_obj_t *self = self_in;
 
-    // send the data
-    size_t i = 0;
-    char *ptr = 0;
-    ptr = bufinfo.buf;
-    for (i = 0; i < bufinfo.len; i++) {
-        serial_putc((serial_t *)self->obj, ptr[i]);
+    if (size == 0) {
+        return 0;
     }
 
-    // return the number of bytes written
-    return mp_obj_new_int(bufinfo.len);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(uart_send_obj, 1, uart_send);
-
-STATIC mp_obj_t uart_recv(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    STATIC const mp_arg_t uart_recv_args[] = {
-        { MP_QSTR_nbytes,  MP_ARG_REQUIRED | MP_ARG_OBJ, },
-    };
-
-    uart_obj_t *self = pos_args[0];
-    // parse args
-    mp_arg_val_t args[MP_ARRAY_SIZE(uart_recv_args)];
-    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(args), uart_recv_args, args);
-
-    vstr_t vstr;
-
-    // get the buffer to receive into
-    pyb_buf_get_for_recv(args[0].u_obj, &vstr);
-
-    size_t i = 0;
-
-    // receive the data
-    for (i = 0; i < vstr.len; i++) {
-        vstr.buf[i] = serial_getc((serial_t *)self->obj);
+    // wait for first char to become available
+    if (!uart_rx_wait(self->timeout * 1000)) {
+        *errcode = MP_EAGAIN;
+        return MP_STREAM_ERROR;
     }
 
-    // return the received data
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t *buf = buf_in;
+
+    for (;;) {
+        *buf++ = uart_rx_char();       
+        if (--size == 0 || !uart_rx_wait(self->timeout_char * 1000)) {
+            return buf - (uint8_t *)buf_in;
+        }
+    }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(uart_recv_obj, 1, uart_recv);
 
+STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
+    uart_obj_t *self = self_in;
+    const uint8_t *buf = buf_in;
 
+    size_t i = 0;
+    for (i = 0; i < size; i++) {
+        serial_putc((serial_t *)self->obj, buf[i]);
+    }
+
+    return size;
+}
 
 STATIC void uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     uart_obj_t *self = self_in;
@@ -123,6 +128,8 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         { MP_QSTR_bits,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 8} },
         { MP_QSTR_stop,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 1} },
         { MP_QSTR_parity,    MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = ParityNone} },
+        { MP_QSTR_timeout,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_timeout_char, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
     };
     // parse args
     mp_map_t kw_args;
@@ -137,12 +144,14 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     }   
 
     uart_obj_t *self = m_new_obj(uart_obj_t);
-    self->base.type = &uart_type;
-    self->id        = args[0].u_int;
-    self->baudrate  = MIN(MAX(args[1].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
-    self->bits      = args[2].u_int;
-    self->stop      = args[3].u_int;
-    self->parity    = args[4].u_int;
+    self->base.type     = &uart_type;
+    self->id            = args[0].u_int;
+    self->baudrate      = MIN(MAX(args[1].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
+    self->bits          = args[2].u_int;
+    self->stop          = args[3].u_int;
+    self->parity        = args[4].u_int;
+    self->timeout       = args[5].u_int;
+    self->timeout_char  = args[6].u_int;
     
     switch(self->id) {
         case 0:
@@ -172,23 +181,37 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
 
     serial_format((serial_t *)self->obj, self->bits, self->parity, self->stop);
 
+    serial_irq_handler((serial_t *)self->obj, uart_irq, (uint32_t)self->obj);
+    serial_irq_set((serial_t *)self->obj, RxIrq, true);
+
     return (mp_obj_t)self;
 }
 
-
 STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_clear),               (mp_obj_t)&uart_clear_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_send),                (mp_obj_t)&uart_send_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_recv),                (mp_obj_t)&uart_recv_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_write),    (mp_obj_t)&mp_stream_write_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),     (mp_obj_t)&mp_stream_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readall),  (mp_obj_t)(&mp_stream_readall_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readline), (mp_obj_t)(&mp_stream_unbuffered_readline_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto), (mp_obj_t)(&mp_stream_readinto_obj) },
+
     // class constants
 };
 STATIC MP_DEFINE_CONST_DICT(uart_locals_dict, uart_locals_dict_table);
+
+STATIC const mp_stream_p_t uart_stream_p = {
+    .read  = uart_recv,
+    .write = uart_send,
+    .is_text = false,
+};
 
 const mp_obj_type_t uart_type = {
     { &mp_type_type },
     .name        = MP_QSTR_UART,
     .print       = uart_print,
     .make_new    = uart_make_new,
+    .getiter     = mp_identity,
+    .iternext    = mp_stream_unbuffered_iter,
+    .protocol    = &uart_stream_p,
     .locals_dict = (mp_obj_t)&uart_locals_dict,
 };

@@ -42,6 +42,8 @@ typedef struct {
     uint8_t   stop;
     uint8_t   parity;
     uint32_t  baudrate;
+    uint16_t  timeout;
+    uint16_t  timeout_char;
 } uart_obj_t;
 
 #endif  // OBJUART_H_

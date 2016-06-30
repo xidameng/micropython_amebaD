@@ -38,19 +38,18 @@
 #define MICROPY_PY___FILE__                     (1)
 #define MICROPY_NLR_SETJMP                      (1)
 #define MICROPY_PY_GC                           (1)
-#define MICROPY_PY_GC                           (1)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
 #define MICROPY_PY_MATH                         (1)
-#define MICROPY_PY_CMATH                        (0)
 #define MICROPY_PY_IO                           (1)
+#define MICROPY_PY_OS_DUPTERM                   (1)
+#define MICROPY_PY_WEBSOCKET                    (1)
+#define MICROPY_PY_WEBREPL                      (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UZLIB                        (0)
-#define MICROPY_PY_UHEAPQ                       (0)
-#define MICROPY_PY_UHASHLIB                     (0)
-#define MICROPY_PY_UCTYPES                      (0)
+#define MICROPY_PY_UHASHLIB                     (1)
+#define MICROPY_PY_UCTYPES                      (1)
 #define MICROPY_PY_UJSON                        (1)
 #define MICROPY_PY_URANDOM                      (0)
 #define MICROPY_PY_URE                          (1)
@@ -58,10 +57,7 @@
 #define MICROPY_PY_SYS                          (1)
 #define MICROPY_PY_THREAD                       (0)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_OS_DUPTERM                   (0)
-#define MICROPY_PY_MACHINE_PULSE                (0)
-#define MICROPY_PY_MACHINE                      (0)
-#define MICROPY_PY_BUILTINS_FLOAT               (0)
+#define MICROPY_PY_BUILTINS_FLOAT               (1)
 
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
@@ -135,6 +131,8 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
 #define MICROPY_PORT_ROOT_POINTERS      \
     const char *readline_hist[8];       \
     mp_obj_t mp_const_user_interrupt;   \
+    mp_obj_t mp_kbd_exception; \
+    struct _pyb_uart_obj_t *pyb_stdio_uart; \
 
 #include "FreeRTOS.h"
 #include <semphr.h>

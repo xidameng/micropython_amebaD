@@ -29,10 +29,12 @@
 #include "py/objstr.h"
 #include "genhdr/mpversion.h"
 #include "lib/fatfs/ff.h"
+#include "extmod/misc.h"
 #include "extmod/vfs_fat_file.h"
 #include "extmod/fsusermount.h"
 
 #include "sys_api.h"
+#include "objuart.h"
 
 STATIC const qstr os_uname_info_fields[] = {
     MP_QSTR_sysname, MP_QSTR_nodename,
@@ -309,12 +311,10 @@ STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_mount), (mp_obj_t)&fsuser_mount_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_umount), (mp_obj_t)&fsuser_umount_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs), (mp_obj_t)&fsuser_mkfs_obj },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mp_uos_dupterm_obj },
 #if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
-
-    // these are MicroPython extensions
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mod_os_dupterm_obj },
-    
 
 #endif
 };
