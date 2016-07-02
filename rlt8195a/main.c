@@ -121,8 +121,8 @@ int main(void)
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     DiagPrintf("Starting main task\n");
     // Create main task
-    osThreadDef(main_task, osPriorityHigh, 1, 9000);
-    osThreadDef(ftpd_task, osPriorityNormal, 1, 3072);
+    osThreadDef(main_task, osPriorityHigh, 1, 10240);
+    osThreadDef(ftpd_task, osPriorityNormal, 1, 2048);
     ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
     main_tid = osThreadCreate (osThread (main_task), NULL);
     osKernelStart();

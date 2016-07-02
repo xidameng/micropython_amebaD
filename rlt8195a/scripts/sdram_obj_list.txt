@@ -125,6 +125,8 @@
 
 
 /*** from micropython ***/
+*emit*.o(.text*)
+*buf*.o(.text*)
 *mod*.o(.text*)
 *vfs.o(.text*)
 *obj*.o(.text*)

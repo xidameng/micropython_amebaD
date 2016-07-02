@@ -27,6 +27,7 @@
 #include "py/mpstate.h"
 #include "py/objtuple.h"
 #include "py/objstr.h"
+#include "py/ringbuf.h"
 #include "genhdr/mpversion.h"
 #include "lib/fatfs/ff.h"
 #include "extmod/misc.h"
@@ -35,6 +36,9 @@
 
 #include "sys_api.h"
 #include "objuart.h"
+
+extern int interrupt_char;
+extern ringbuf_t input_buf;
 
 STATIC const qstr os_uname_info_fields[] = {
     MP_QSTR_sysname, MP_QSTR_nodename,
@@ -290,6 +294,53 @@ error:
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_statvfs_obj, os_statvfs);
 
+static int call_dupterm_read(void) {
+    if (MP_STATE_PORT(term_obj) == NULL) {
+        return -1;
+    }
+
+    nlr_buf_t nlr;
+
+    if (nlr_push(&nlr) == 0) {
+        mp_obj_t read_m[3];
+        mp_load_method(MP_STATE_PORT(term_obj), MP_QSTR_read, read_m);
+        read_m[2] = MP_OBJ_NEW_SMALL_INT(1);
+        mp_obj_t res = mp_call_method_n_kw(1, 0, read_m);
+        if (res == mp_const_none) {
+            nlr_pop();
+            return -2;
+        }
+        mp_buffer_info_t bufinfo;
+        mp_get_buffer_raise(res, &bufinfo, MP_BUFFER_READ);
+        if (bufinfo.len == 0) {
+            mp_uos_deactivate("dupterm: EOF received, deactivating\n", MP_OBJ_NULL);
+            nlr_pop();
+            return -1;
+        }
+        nlr_pop();
+        return *(byte*)bufinfo.buf;
+    } else {
+        //TODO(chester) always throw OSError 11, it's very weird
+        //mp_uos_deactivate("dupterm: Exception in read() method, deactivating: ", nlr.ret_val);
+    }
+
+    return -1;
+}
+
+STATIC mp_obj_t os_dupterm_notify(mp_obj_t obj_in) {
+    (void)obj_in;
+    while (1) {
+        int c = call_dupterm_read();
+        if (c < 0) {
+            break;
+        }
+        ringbuf_put(&input_buf, c);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
+
+
 STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
 
@@ -313,6 +364,7 @@ STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs), (mp_obj_t)&fsuser_mkfs_obj },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mp_uos_dupterm_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify), (mp_obj_t)&os_dupterm_notify_obj },
 #if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
 
