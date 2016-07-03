@@ -38,46 +38,40 @@
  *                              External variables
  * ***************************************************************************/
 
-STATIC mp_obj_t watchdog_init0(mp_obj_t msec_in) {
+STATIC mp_obj_t wdt_start(mp_obj_t msec_in) {
     mp_int_t msec = mp_obj_get_int(msec_in);
     if (msec > 0) {
         watchdog_init(msec);
     } else {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "millisecond must > 0"));
     }
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(watchdog_init_obj, watchdog_init0);
-
-STATIC mp_obj_t watchdog_start0(void) {
     watchdog_start();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(watchdog_start_obj, watchdog_start0);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_start_obj, wdt_start);
 
-STATIC mp_obj_t watchdog_stop0(void) {
+STATIC mp_obj_t wdt_stop(void) {
     watchdog_stop();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(watchdog_stop_obj, watchdog_stop0);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(wdt_stop_obj, wdt_stop);
 
-STATIC mp_obj_t watchdog_refresh0(void) {
-    watchdog_stop();
+STATIC mp_obj_t wdt_refresh(void) {
+    watchdog_refresh();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(watchdog_refresh_obj, watchdog_refresh0);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(wdt_refresh_obj, wdt_refresh);
 
-STATIC const mp_map_elem_t watchdog_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_init),            (mp_obj_t)&watchdog_init_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_start),           (mp_obj_t)&watchdog_start_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stop),            (mp_obj_t)&watchdog_stop_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_refresh),         (mp_obj_t)&watchdog_refresh_obj },
+STATIC const mp_map_elem_t wdt_module_globals_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_wdt) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_start),           (mp_obj_t)&wdt_start_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_stop),            (mp_obj_t)&wdt_stop_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_refresh),         (mp_obj_t)&wdt_refresh_obj },
 };
-STATIC MP_DEFINE_CONST_DICT(watchdog_module_globals, watchdog_module_globals_table);
+STATIC MP_DEFINE_CONST_DICT(wdt_module_globals, wdt_module_globals_table);
 
 const mp_obj_module_t mp_watchdog_module = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_watchdog,
-    .globals = (mp_obj_dict_t*)&watchdog_module_globals,
+    .name    = MP_QSTR_wdt,
+    .globals = (mp_obj_dict_t*)&wdt_module_globals,
 };

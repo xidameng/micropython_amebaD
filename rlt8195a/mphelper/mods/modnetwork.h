@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Galen Hazelwood
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,9 +24,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef OBJIP_H_
-#define OBJIP_H_
-
+#ifndef MODNETWORK_H_
+#define MODNETWORK_H_
 #include "py/runtime.h"
 
 #include "exception.h"
@@ -49,8 +46,6 @@
 #include "wifi_ind.h"
 
 #include "lwip/dhcp.h"
-
-extern const mp_obj_type_t ip_type;
 
 #define NETIF_STA_ID                0
 #define NETIF_AP_ID                 1
@@ -87,12 +82,5 @@ extern const mp_obj_type_t ip_type;
 #define DEFAULT_AP_GW_ADDR1         168
 #define DEFAULT_AP_GW_ADDR2         4
 #define DEFAULT_AP_GW_ADDR3         1
-
-typedef struct {
-    mp_obj_base_t base;
-    uint8_t  wifi_mode;
-    uint8_t  dhcp;
-} lwip_obj_t;
-
 
 #endif

@@ -3,7 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,14 +24,16 @@
  * THE SOFTWARE.
  */
 
-#ifndef OBJARP_H_
-#define OBJARP_H_
+#ifndef OBJNETIF_H_
+#define OBJNETIF_H_
 
-#include "lwip/opt.h"
-#include "netif/etharp.h"
+#include "modnetwork.h"
 
-#include "objip.h"
+extern const mp_obj_type_t netif_type;
 
-extern const mp_obj_type_t ip_arp_type;
+typedef struct {
+    mp_obj_base_t   base;
+    uint8_t         index;      // index will be shared with the nic number ex:index = 0 -> wlan0
+} netif_obj_t;
 
 #endif

@@ -106,7 +106,7 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),      (mp_obj_t)&mp_module_lwip },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_watchdog),  (mp_obj_t)&mp_watchdog_module },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },   \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via

@@ -110,7 +110,7 @@ int main(void)
 
     log_uart_init0();
     pin_init0();
-    ip_init0();
+    network_init0();
     rtc_init0();
     // wifi should br init after lwip init, or it will hang.
     wlan_init0(); 
@@ -121,8 +121,8 @@ int main(void)
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     DiagPrintf("Starting main task\n");
     // Create main task
-    osThreadDef(main_task, osPriorityHigh, 1, 10240);
-    osThreadDef(ftpd_task, osPriorityNormal, 1, 2048);
+    osThreadDef(main_task, osPriorityHigh, 1, 1024*12);
+    osThreadDef(ftpd_task, osPriorityNormal, 1, 1024*2);
     ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
     main_tid = osThreadCreate (osThread (main_task), NULL);
     osKernelStart();

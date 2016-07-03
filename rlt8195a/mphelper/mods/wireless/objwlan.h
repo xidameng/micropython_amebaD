@@ -27,32 +27,49 @@
 #define OBJWLAN_H_
 
 #include "py/runtime.h"
-
-#include "exception.h"
-
 #include "wifi_conf.h"
+#include "wireless.h"
+#include "modnetwork.h"
+#include "objnetif.h"
 
-#define WLAN_INTERFACE_NUMBER   2
+#define WLAN_IFNAME_MAX_LEN     10
 #define WLAN_MIN_SSID_LEN       3
 #define WLAN_MAX_SSID_LEN       32
 #define WLAN_MAC_LEN            6
-#define WLAN_KEY_LEN            65
+
+#define WLAN_WEP_MIN_PASS_CHAR_LEN  1
+#define WLAN_WEP_MAX_PASS_CHAR_LEN  13
+
+#define WLAN_WPA_MIN_PASS_CHAR_LEN  8
+#define WLAN_WPA_MAC_PASS_CHAR_LEN  63
+
 #define WLAN_MAX_SCAN_NETWORKS  50
+
+typedef enum {
+    RTW_ADAPTIVITY_DISABLE = 0,
+    RTW_ADAPTIVITY_NORMAL,
+    RTW_ADAPTIVITY_CARRIER_SENSE
+} rtw_adaptivity_mode_t;
 
 extern const mp_obj_type_t wlan_type;
 
 void wlan_init0(void);
+void validate_wlan_mode(uint8_t mode);
+void validate_ssid(int8_t **ssid, uint8_t *ssid_len, mp_obj_t obj);
+void validate_key(int8_t **key, uint8_t *key_len, uint32_t *sec_type, mp_obj_t obj);
+void validate_channel(uint8_t channel);
 
 typedef struct {
     mp_obj_base_t  base;
-    uint8_t        idx;                       // Reserved for RTl8195A cocurrency mode
-    uint8_t        mode;                      // Wlan mode, STA / AP / MIX
-    int32_t        security_type;             // Wlan security mode, WPA2 / WEP ...
-    uint8_t        channel;                   // Wlan channel 0 ~ 11
-    int8_t         mac[WLAN_MAC_LEN];         // Wlan mac address
-    int8_t         ssid[WLAN_MAX_SSID_LEN+1]; // Wlan ssid in *AP mode*
-    int8_t         bssid[WLAN_MAC_LEN];       // Wlan bssid in *AP mode*
-    int8_t         key[WLAN_KEY_LEN];         // Wlan key in *AP mode*
+    uint8_t        index;                               // WLAN index in RTL8195A, 0 or 1
+    uint8_t        mode;                                // WLAN mode, STA / AP / STA_AP 
+    int32_t        security_type;                       // WLAN security mode, WPA2 / WEP ...
+    uint8_t        channel;                             // WLAN channel 0 ~ 11
+    int8_t         ifname[WLAN_IFNAME_MAX_LEN];         // WLAN interface name 
+    int8_t         mac[WLAN_MAC_LEN];                   // WLAN mac address
+    int8_t         ssid[WLAN_MAX_SSID_LEN];             // WLAN ssid
+    int8_t         key[WLAN_WPA_MAC_PASS_CHAR_LEN+1];   // WLAN key
+    uint8_t        netif;
 } wlan_obj_t;
 
 #endif  // OBJWLAN_H_
