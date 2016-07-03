@@ -48,6 +48,29 @@ STATIC netif_obj_t netif_obj_1 = {
  *                              Local functions
  * ***************************************************************************/
 
+void netif_init0(void) {
+    struct ip_addr ipaddr;   
+    struct ip_addr netmask;   
+    struct ip_addr gateway;   
+
+    // It can only be init once 
+    tcpip_init(NULL, NULL);
+
+    IP4_ADDR(&ipaddr, DEFAULT_AP_IP_ADDR0, DEFAULT_AP_IP_ADDR1, DEFAULT_AP_IP_ADDR2, DEFAULT_AP_IP_ADDR3);
+    IP4_ADDR(&netmask, DEFAULT_AP_NETMASK_ADDR0, DEFAULT_AP_NETMASK_ADDR1, DEFAULT_AP_NETMASK_ADDR2, DEFAULT_AP_NETMASK_ADDR3);
+    IP4_ADDR(&gateway, DEFAULT_AP_GW_ADDR0, DEFAULT_AP_GW_ADDR1, DEFAULT_AP_GW_ADDR2, DEFAULT_AP_GW_ADDR3);
+
+    netif_add(&xnetif[netif_obj_0.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_set_up(&xnetif[netif_obj_0.index]);
+
+    IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
+    IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
+    IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
+
+    netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_set_up(&xnetif[netif_obj_1.index]);
+}
+
 STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     netif_obj_t *self = self_in;
     struct ip_addr ipaddr;   

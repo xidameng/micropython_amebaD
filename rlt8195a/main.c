@@ -111,6 +111,7 @@ int main(void)
     log_uart_init0();
     pin_init0();
     network_init0();
+    netif_init0();
     rtc_init0();
     // wifi should br init after lwip init, or it will hang.
     wlan_init0(); 

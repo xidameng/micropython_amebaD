@@ -41,29 +41,12 @@ extern struct netif xnetif[NET_IF_NUM];
  *                              Local functions
  * ***************************************************************************/
 void network_init0(void) {
-    struct ip_addr ipaddr;   
-    struct ip_addr netmask;   
-    struct ip_addr gateway;   
-
-    // It can only be init once 
-    tcpip_init(NULL, NULL);
-
-    IP4_ADDR(&ipaddr, DEFAULT_AP_IP_ADDR0, DEFAULT_AP_IP_ADDR1, DEFAULT_AP_IP_ADDR2, DEFAULT_AP_IP_ADDR3);
-    IP4_ADDR(&netmask, DEFAULT_AP_NETMASK_ADDR0, DEFAULT_AP_NETMASK_ADDR1, DEFAULT_AP_NETMASK_ADDR2, DEFAULT_AP_NETMASK_ADDR3);
-    IP4_ADDR(&gateway, DEFAULT_AP_GW_ADDR0, DEFAULT_AP_GW_ADDR1, DEFAULT_AP_GW_ADDR2, DEFAULT_AP_GW_ADDR3);
-    netif_add(&xnetif[NETIF_AP_ID], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
-    netif_set_up(&xnetif[NETIF_AP_ID]);
-
-    IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
-    IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
-    IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
-    netif_add(&xnetif[NETIF_STA_ID], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
-    netif_set_up(&xnetif[NETIF_STA_ID]);
+    // Init modnetwork here
 }
 
 STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),         (mp_obj_t)&netif_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),        (mp_obj_t)&netif_type },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_network_globals, mp_module_network_globals_table);
 
