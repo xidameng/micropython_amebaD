@@ -45,12 +45,6 @@
 
 #define WLAN_MAX_SCAN_NETWORKS  50
 
-typedef enum {
-    RTW_ADAPTIVITY_DISABLE = 0,
-    RTW_ADAPTIVITY_NORMAL,
-    RTW_ADAPTIVITY_CARRIER_SENSE
-} rtw_adaptivity_mode_t;
-
 extern const mp_obj_type_t wlan_type;
 
 void wlan_init0(void);

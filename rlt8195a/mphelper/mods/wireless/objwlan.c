@@ -27,10 +27,9 @@
 
 #include "objwlan.h"
 #include "modnetwork.h"
+#include "objnetif.h"
 
 extern struct netif xnetif[NET_IF_NUM];
-extern struct netif_obj_t netif_obj_0;
-extern struct netif_obj_t netif_obj_1;
 
 /*****************************************************************************
  *                              Local variables
@@ -377,9 +376,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(wlan_channel_obj, 1, 2, wlan_channel)
 
 STATIC mp_obj_t wlan_connect(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_ssid,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_auth,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_timeout,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 5} },
+        { MP_QSTR_ssid,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj  = MP_OBJ_NULL} },
+        { MP_QSTR_auth,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj  = mp_const_none} },
+        { MP_QSTR_timeout,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int  = 5} },
+        { MP_QSTR_dhcp,     MP_ARG_KW_ONLY  | MP_ARG_BOOL,{.u_bool = false} },
     };
     
     wlan_obj_t *self = pos_args[0];
@@ -422,6 +422,10 @@ STATIC mp_obj_t wlan_connect(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_
     ret = wifi_connect(self->ssid, self->security_type, self->key, strlen(self->ssid), strlen(self->key), 0, NULL);
 
     if (ret == RTW_SUCCESS) {
+        if (args[3].u_bool == true) {
+            if (dhcp_request_func(self->netif, timeout) == false)
+                nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "%s connect to AP failed", self->ifname));
+        }
         return mp_const_none;;
     }
     else {
@@ -444,6 +448,17 @@ STATIC mp_obj_t wlan_disconnect(mp_obj_t self_in) {
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_disconnect_obj, wlan_disconnect);
+
+STATIC mp_obj_t wlan_getnetif(mp_obj_t self_in) {
+    wlan_obj_t *self = self_in;
+
+    netif_obj_t *netif = m_new_obj(netif_obj_t);
+    netif->base.type = &netif_type;
+    netif->index = self->netif;
+    
+    return (mp_obj_t)netif;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_getnetif_obj, wlan_getnetif);
 
 STATIC mp_obj_t wlan_on(mp_obj_t self_in, mp_obj_t timeout_in) {
     uint8_t ret = RTW_ERROR;
@@ -640,11 +655,21 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         tuple[0] = self;
         tuple[1] = self_2;
 
+        if (ssid != NULL) 
+            memcpy(self_2->ssid, ssid, ssid_len);
+        self_2->security_type = security_type;
+        if (key != NULL)
+            memcpy(self_2->key, key, key_len);
+
         wlan_on((wlan_obj_t *)self_2, args[5].u_obj);
 
         self->mode = RTW_MODE_STA;
 
+        self->netif = 1;
+
         self_2->mode = RTW_MODE_AP;
+
+        self->netif = 0;
 
         return mp_obj_new_tuple(2, tuple);
     } else {
@@ -662,6 +687,7 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_channel),                         (mp_obj_t)&wlan_channel_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),                         (mp_obj_t)&wlan_connect_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),                      (mp_obj_t)&wlan_disconnect_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getnetif),                        (mp_obj_t)&wlan_getnetif_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),                              (mp_obj_t)&wlan_on_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_off),                             (mp_obj_t)&wlan_off_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap),                (mp_obj_t)&wlan_is_connect_to_ap_obj },
