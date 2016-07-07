@@ -47,9 +47,10 @@
 #define MICROPY_PY_OS_DUPTERM                   (1)
 #define MICROPY_PY_WEBSOCKET                    (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UHASHLIB                     (1)
+#define MICROPY_PY_UHASHLIB                     (0)
 #define MICROPY_PY_UCTYPES                      (1)
 #define MICROPY_PY_UJSON                        (1)
+#define MICROPY_PY_FRAMEBUF                     (1)
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
@@ -98,6 +99,7 @@ extern const struct _mp_obj_module_t mp_time_module;
 extern const struct _mp_obj_module_t mp_uos_module;
 extern const struct _mp_obj_module_t mp_module_lwip;
 extern const struct _mp_obj_module_t mp_watchdog_module;
+extern const struct _mp_obj_module_t mp_crypto_module;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
@@ -107,6 +109,7 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),      (mp_obj_t)&mp_module_lwip },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),    (mp_obj_t)&mp_crypto_module },   \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -118,6 +121,8 @@ extern const struct _mp_obj_module_t mp_watchdog_module;
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
+
+#define MICROPY_HW_PORT_VERSION     "v0.0.1"
 
 #define MICROPY_HW_BOARD_NAME       "Ameba Board"
 #define MICROPY_HW_MCU_NAME         "RTL8195A"

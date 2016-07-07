@@ -63,12 +63,15 @@ void netif_init0(void) {
     netif_add(&xnetif[netif_obj_0.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
     netif_set_up(&xnetif[netif_obj_0.index]);
 
+    netif_set_default(&xnetif[netif_obj_0.index]);
+
     IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
     IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
     IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
 
     netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
     netif_set_up(&xnetif[netif_obj_1.index]);
+
 }
 
 STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
@@ -79,38 +82,30 @@ STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind
     ipaddr  = xnetif[self->index].ip_addr;
     netmask = xnetif[self->index].netmask;
     gateway = xnetif[self->index].gw;
-    mp_printf(print, "NETIF(%d", self->index);
+    mp_printf(print, "NETIF(%d, ", self->index);
     mp_printf(print, "ip=%s ,", ip_ntoa(&ipaddr));
     mp_printf(print, "netmask=%s ,", ip_ntoa(&netmask));
     mp_printf(print, "gateway=%s)", ip_ntoa(&gateway));
 }
 
-STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
-    netif_obj_t *self = self_in;
+bool dhcp_request_func(uint8_t id, u_int timeout) {
     int8_t  err      = ERR_MEM;
     uint8_t counter  = 0;
-    uint16_t timeout = 0;
-
-    timeout = mp_obj_get_int(timeout_in);
-
     wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
+    xnetif[id].ip_addr.addr = 0;
+    xnetif[id].netmask.addr = 0;
+    xnetif[id].gw.addr      = 0;
 
-    xnetif[self->index].ip_addr.addr = 0;
-    xnetif[self->index].netmask.addr = 0;
-    xnetif[self->index].gw.addr      = 0;
-
-    err = dhcp_start(&xnetif[self->index]);
-
+    err = dhcp_start(&xnetif[id]);
     if (err != ERR_OK) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "NETIF(%d) DHCP start failed", self->index));
+        return false;
     }
-
     while(timeout) {
-        if (xnetif[self->index].ip_addr.addr != 0) {
+        if (xnetif[id].ip_addr.addr != 0) {
             wifi_reg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl, NULL);
 
-            dhcp_stop(&xnetif[self->index]);
-            return mp_const_none;
+            dhcp_stop(&xnetif[id]);
+            return true;
         }
         mp_hal_delay_ms(DHCP_FINE_TIMER_MSECS);
         dhcp_fine_tmr();
@@ -121,8 +116,21 @@ STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
             timeout--;
         }
     }
+    return false;
+}
 
-    nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TimeoutError, "NETIF(%d) DHCP request timeout", self->index));
+STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
+    netif_obj_t *self = self_in;
+    bool ret = false;
+
+    uint16_t timeout = 0;
+
+    timeout = mp_obj_get_int(timeout_in);
+    ret = dhcp_request_func(self->index, timeout);
+    if (ret == false)
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TimeoutError, "NETIF(%d) DHCP request timeout", self->index));
+    else 
+        return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(dhcp_request_obj, dhcp_request0);
 

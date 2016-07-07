@@ -56,13 +56,7 @@ bool storage_read_block(uint8_t *dest, uint32_t block) {
         return false;
     }
     //TODO need error handle
-    for (i = 0; i < FLASH_BLOCK_SIZE; i+= 4) {
-        flash_read_word(&flash_obj, flash_addr + i, &value);
-        dest[i+0] = (uint8_t)(value & 0xff);
-        dest[i+1] = (uint8_t)((value & 0xff00) >> 8);
-        dest[i+2] = (uint8_t)((value & 0xff0000) >> 16);
-        dest[i+3] = (uint8_t)((value & 0xff000000) >> 24);
-    }
+    flash_stream_read(&flash_obj, flash_addr, FLASH_BLOCK_SIZE, dest);
     return true;
 }
 
@@ -76,10 +70,7 @@ bool storage_write_block(const uint8_t *src, uint32_t block) {
     }
     //TODO need error handle
     flash_erase_sector(&flash_obj, flash_addr); 
-    for (i = 0;i < FLASH_BLOCK_SIZE; i+= 4) {
-        value = (src[i+3]<<24) + (src[i+2]<<16) + (src[i+1]<<8) + src[i];
-        flash_write_word(&flash_obj, flash_addr + i, value); 
-    }
+    flash_stream_write(&flash_obj, flash_addr, FLASH_BLOCK_SIZE, src);
     return true;
 }
 
@@ -143,9 +134,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(pyb_flash_ioctl_obj, pyb_flash_ioctl);
 
 
 STATIC const mp_map_elem_t pyb_flash_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readblocks), (mp_obj_t)&pyb_flash_readblocks_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readblocks),  (mp_obj_t)&pyb_flash_readblocks_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_writeblocks), (mp_obj_t)&pyb_flash_writeblocks_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ioctl), (mp_obj_t)&pyb_flash_ioctl_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ioctl),       (mp_obj_t)&pyb_flash_ioctl_obj },
 };
 
 STATIC MP_DEFINE_CONST_DICT(pyb_flash_locals_dict, pyb_flash_locals_dict_table);

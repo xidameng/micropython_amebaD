@@ -61,6 +61,8 @@ extern const mp_obj_type_t netif_type;
 #define DEFAULT_AP_GW_ADDR2         4
 #define DEFAULT_AP_GW_ADDR3         1
 
+STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in);
+
 typedef struct {
     mp_obj_base_t   base;
     uint8_t         index;      // index will be shared with the nic number ex:index = 0 -> wlan0
