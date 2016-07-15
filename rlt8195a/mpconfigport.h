@@ -49,6 +49,7 @@
 #define MICROPY_PY_UCTYPES                      (1)
 #define MICROPY_PY_UJSON                        (1)
 #define MICROPY_PY_FRAMEBUF                     (1)
+#define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
