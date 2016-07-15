@@ -36,7 +36,6 @@
 #define MICROPY_PY_BUILTINS_PROPERTY            (1)
 #define MICROPY_PY_BUILTINS_TIMEOUTERROR        (1)
 #define MICROPY_PY___FILE__                     (1)
-#define MICROPY_NLR_SETJMP                      (1)
 #define MICROPY_PY_GC                           (1)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_ARRAY                        (1)
@@ -47,7 +46,6 @@
 #define MICROPY_PY_OS_DUPTERM                   (1)
 #define MICROPY_PY_WEBSOCKET                    (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UHASHLIB                     (0)
 #define MICROPY_PY_UCTYPES                      (1)
 #define MICROPY_PY_UJSON                        (1)
 #define MICROPY_PY_FRAMEBUF                     (1)
@@ -83,14 +81,14 @@ typedef long mp_off_t;
 
 #define MP_STATE_PORT MP_STATE_VM
 
-// dummy print
-#define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
+extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_input), (mp_obj_t)&mp_builtin_input_obj }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_help), (mp_obj_t)&mp_builtin_help_obj }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_open),   (mp_obj_t)&mp_builtin_open_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_input),  (mp_obj_t)&mp_builtin_input_obj },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_help),   (mp_obj_t)&mp_builtin_help_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),   (mp_obj_t)&mp_builtin_ftpd_obj },   \
 
 extern const struct _mp_obj_module_t mp_hardware_module;
 extern const struct _mp_obj_module_t mp_wireless_module;
@@ -103,13 +101,13 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_wireless_module },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_wireless_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),   (mp_obj_t)&mp_network_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),      (mp_obj_t)&mp_module_lwip },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),    (mp_obj_t)&mp_crypto_module },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_lwip),      (mp_obj_t)&mp_module_lwip },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),    (mp_obj_t)&mp_crypto_module },    \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -122,22 +120,24 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
 
-#define MICROPY_HW_PORT_VERSION     "v0.0.1"
+#define MICROPY_HW_PORT_VERSION             "v0.0.1"
 
-#define MICROPY_HW_BOARD_NAME       "Ameba Board"
-#define MICROPY_HW_MCU_NAME         "RTL8195A"
+#define MICROPY_HW_BOARD_NAME               "Ameba Board"
+#define MICROPY_HW_MCU_NAME                 "RTL8195A"
 
-#define MICROPY_WLAN_AP_DEFAULT_SSID   "mpiot-ap"
-#define MICROPY_WLAN_AP_DEFAULT_PASS   "1234567890"
+#define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
+#define MICROPY_WLAN_AP_DEFAULT_PASS        "1234567890"
+
+#define MICROPY_FTPD_STACK_SIZE     512
+#define MICROPY_FTPD_TASK_PRIORITY  osPriorityBelowNormal
+
+#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 3
+#define MICROPY_MAIN_TASK_PRIORITY      osPriorityHigh
 
 #define MICROPY_PORT_ROOT_POINTERS      \
     const char *readline_hist[8];       \
     mp_obj_t mp_const_user_interrupt;   \
     mp_obj_t mp_kbd_exception; \
     struct _pyb_uart_obj_t *pyb_stdio_uart; \
-
-#include "FreeRTOS.h"
-#include <semphr.h>
-#include "errno.h"
 
 #define ENOTSUP 524

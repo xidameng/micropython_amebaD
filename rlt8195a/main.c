@@ -67,7 +67,7 @@ static const char fresh_main_py[] =
  *                              External functions
  * ***************************************************************************/
 void main_task(void const *arg) {
-     DiagPrintf("Starting executing main.py\n");
+    DiagPrintf("Starting executing main.py\n");
     const uint8_t *main_py = "main.py";
     FRESULT res = f_stat(main_py, NULL);
     if (res == FR_OK) {
@@ -86,9 +86,7 @@ void main_task(void const *arg) {
 
 void ftpd_task(void const *arg) {
     ftpd_init();
-    while(1) {
-        mdelay(10);
-    }
+    for(;;);
 }
 
 int main(void)
@@ -119,27 +117,23 @@ int main(void)
     mpexception_init0();
     readline_init0();
     flash_vfs_init0();
+    os_init0();
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
     DiagPrintf("Starting main task\n");
     // Create main task
-    osThreadDef(main_task, osPriorityHigh, 1, 1024*12);
-    osThreadDef(ftpd_task, osPriorityNormal, 1, 1024*2);
-    ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
+    osThreadDef(main_task, MICROPY_MAIN_TASK_PRIORITY, 1, MICROPY_MAIN_TASK_STACK_SIZE);
     main_tid = osThreadCreate (osThread (main_task), NULL);
     osKernelStart();
-    while(1);
+    for(;;);
     return 0;
 }
 
 void NORETURN __fatal_error(const char *msg) {
-    for (volatile uint delay = 0; delay < 10000000; delay++) {
-    }
     mp_hal_stdout_tx_strn("\nFATAL ERROR:\n", 14);
     mp_hal_stdout_tx_strn(msg, strlen(msg));
     for (uint i = 0;;) {
-        for (volatile uint delay = 0; delay < 10000000; delay++) {
-        }
+        for (volatile uint delay = 0; delay < 10000000; delay++);
     }
 }
 
@@ -198,5 +192,27 @@ void mp_keyboard_interrupt(void) {
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
     return fatfs_builtin_open(n_args, args, kwargs);
 }
-
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
+mp_obj_t mp_builtin_ftpd(mp_obj_t enable_in) {
+    bool enable = mp_obj_is_true(enable_in);
+    if (enable) {
+        if (ftpd_tid != NULL) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread has been created"));
+        }
+        osThreadDef(ftpd_task, MICROPY_FTPD_TASK_PRIORITY, 1, MICROPY_FTPD_STACK_SIZE);
+        ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
+    } else {
+        if (ftpd_tid == NULL) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread has not created"));
+        }
+        osStatus status = osThreadTerminate(ftpd_tid);
+        if (status == osOK) {
+            ftpd_tid = NULL;
+        } else {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread terminate failed"));
+        }
+    }
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(mp_builtin_ftpd_obj, mp_builtin_ftpd);

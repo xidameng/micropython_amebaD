@@ -37,6 +37,8 @@
 #include "sys_api.h"
 #include "objuart.h"
 
+#include "cmsis_os.h"
+
 extern int interrupt_char;
 extern ringbuf_t input_buf;
 
@@ -61,6 +63,10 @@ STATIC MP_DEFINE_ATTRTUPLE(
     (mp_obj_t)&os_uname_info_machine_obj,
     (mp_obj_t)&os_uname_info_machine_version_obj
 );
+
+
+void os_init0(void) {
+}
 
 STATIC mp_obj_t os_uname(void) {
     return (mp_obj_t)&os_uname_info_obj;
@@ -322,57 +328,59 @@ static int call_dupterm_read(void) {
         nlr_pop();
         return *(byte*)bufinfo.buf;
     } else {
-        //TODO(chester) always throw OSError 11, it's very weird
+        //TODO(chester) always throw OSError 11 after the line end, it's very weird
         //mp_uos_deactivate("dupterm: Exception in read() method, deactivating: ", nlr.ret_val);
     }
-
     return -1;
 }
 
-STATIC mp_obj_t os_dupterm_notify(mp_obj_t obj_in) {
-    (void)obj_in;
+void os_dupterm_notify_task(void *arg) {
     while (1) {
-        int c = call_dupterm_read();
+        int8_t c = call_dupterm_read();
         if (c < 0) {
             break;
         }
         ringbuf_put(&input_buf, c);
     }
+    osThreadTerminate(osThreadGetId());
+}
+
+STATIC mp_obj_t os_dupterm_notify(mp_obj_t obj_in) {
+    (void)obj_in;
+    osThreadDef(os_dupterm_notify_task, osPriorityNormal, 1, 2048);
+    osThreadCreate (osThread (os_dupterm_notify_task), NULL);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
 
-
 STATIC const mp_map_elem_t os_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uname), (mp_obj_t)&os_uname_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&os_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uname),    (mp_obj_t)&os_uname_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),    (mp_obj_t)&os_reset_obj },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_listdir), (mp_obj_t)&os_listdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_getcwd), (mp_obj_t)&os_getcwd_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mkdir), (mp_obj_t)&os_mkdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_chdir), (mp_obj_t)&os_chdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_remove), (mp_obj_t)&os_remove_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_rename),(mp_obj_t)&os_rename_obj},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_rmdir), (mp_obj_t)&os_rmdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stat), (mp_obj_t)&os_stat_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_statvfs), (mp_obj_t)&os_statvfs_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_listdir),  (mp_obj_t)&os_listdir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getcwd),   (mp_obj_t)&os_getcwd_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mkdir),    (mp_obj_t)&os_mkdir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_chdir),    (mp_obj_t)&os_chdir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_remove),   (mp_obj_t)&os_remove_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rename),   (mp_obj_t)&os_rename_obj},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rmdir),    (mp_obj_t)&os_rmdir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_stat),     (mp_obj_t)&os_stat_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_statvfs),  (mp_obj_t)&os_statvfs_obj },
 
     /// \constant sep - separation character used in paths
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sep), MP_OBJ_NEW_QSTR(MP_QSTR__slash_) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mount), (mp_obj_t)&fsuser_mount_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_umount), (mp_obj_t)&fsuser_umount_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs), (mp_obj_t)&fsuser_mkfs_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sep),             MP_OBJ_NEW_QSTR(MP_QSTR__slash_) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mount),           (mp_obj_t)&fsuser_mount_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umount),          (mp_obj_t)&fsuser_umount_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs),            (mp_obj_t)&fsuser_mkfs_obj },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm), (mp_obj_t)&mp_uos_dupterm_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify), (mp_obj_t)&os_dupterm_notify_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm),         (mp_obj_t)&mp_uos_dupterm_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify),  (mp_obj_t)&os_dupterm_notify_obj },
 #if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
-
 #endif
 };
-
 STATIC MP_DEFINE_CONST_DICT(os_module_globals, os_module_globals_table);
 
 const mp_obj_module_t mp_uos_module = {

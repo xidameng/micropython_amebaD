@@ -256,7 +256,7 @@ static inline void poll_sockets(void) {
 #ifdef MICROPY_EVENT_POLL_HOOK
     MICROPY_EVENT_POLL_HOOK;
 #else
-    mp_hal_delay_ms(1);
+    mp_hal_delay_us(200);
 #endif
 }
 
