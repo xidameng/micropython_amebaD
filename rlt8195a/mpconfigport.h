@@ -11,7 +11,6 @@
 #define MICROPY_COMP_CONST                      (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (0)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
-#define MICROPY_MEM_STATS                       (0)
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_GC                       (1)
 #define MICROPY_ENABLE_FINALISER                (1)
@@ -26,7 +25,7 @@
 #define MICROPY_OPT_COMPUTED_GOTO               (1)
 #define MICROPY_MODULE_WEAK_LINKS               (1)
 #define MICROPY_PY_BUILTINS_BYTEARRAY           (1)
-#define MICROPY_PY_BUILTINS_MEMORYVIEW          (0)
+#define MICROPY_PY_BUILTINS_MEMORYVIEW          (1)
 #define MICROPY_PY_BUILTINS_ENUMERATE           (1)
 #define MICROPY_PY_BUILTINS_FROZENSET           (1)
 #define MICROPY_PY_BUILTINS_REVERSED            (1)
@@ -53,6 +52,7 @@
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
+#define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 
@@ -83,6 +83,7 @@ typedef long mp_off_t;
 #define MP_STATE_PORT MP_STATE_VM
 
 extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
+extern const struct _mp_obj_fun_builtin_t mp_builtin_mdns_obj;
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
@@ -90,6 +91,7 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
     { MP_OBJ_NEW_QSTR(MP_QSTR_input),  (mp_obj_t)&mp_builtin_input_obj },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_help),   (mp_obj_t)&mp_builtin_help_obj },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),   (mp_obj_t)&mp_builtin_ftpd_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mdns),   (mp_obj_t)&mp_builtin_mdns_obj },   \
 
 extern const struct _mp_obj_module_t mp_hardware_module;
 extern const struct _mp_obj_module_t mp_wireless_module;

@@ -122,13 +122,13 @@
 *dwc_otg_hcd_intr.o(.text*)
 *dwc_otg_hcd_queue.o(.text*)
 
-
-
 /*** from micropython ***/
 *emit*.o(.text*)
 *buf*.o(.text*)
 *mod*.o(.text*)
 *vfs.o(.text*)
+*vfs_*.o(.text*)
+*fsusermount.o(.text*)
 *obj*.o(.text*)
 *ftpd.o(.text*)
 *help.o(.text*)
@@ -139,3 +139,4 @@
 *bufhelper.o(.text*)
 *stackctrl.o(.text*)
 *smallint.o(.text*)
+*/py/*.o(.text*)

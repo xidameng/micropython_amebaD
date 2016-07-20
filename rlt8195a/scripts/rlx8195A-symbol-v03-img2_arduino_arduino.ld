@@ -142,6 +142,7 @@ SECTIONS
     *(.fwu.rodata*)
     *(.fwu.text*)
     *(.otg.rom.text*)
+    *(.mdns.text*)
     *(.text*)
   } > BD_RAM
 
@@ -161,6 +162,7 @@ SECTIONS
     *(.hal.sdrc.data*)    
     *(.hal.gpio.data*)
     *(.fwu.data*)
+    *(.mdns.data*)
     *(.ram.otg.data.a*)
     *(.ram.otg.data.b*)
     *(.bss*)

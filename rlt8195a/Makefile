@@ -170,6 +170,7 @@ STM_SRC_C = $(addprefix stmhal/,\
 
 SRC_C += \
 	main.c \
+	mdns.c \
 	lib/libc/string0.c \
 	lib/utils/pyexec.c \
 	lib/utils/pyhelp.c \
