@@ -17,7 +17,7 @@
 #define MICROPY_HELPER_REPL                     (1)
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (1)
-#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_LONGLONG)
+#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_NONE)
 #define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_ENABLE_DOC_STRING               (1)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_DETAILED)
@@ -101,6 +101,7 @@ extern const struct _mp_obj_module_t mp_uos_module;
 extern const struct _mp_obj_module_t mp_module_lwip;
 extern const struct _mp_obj_module_t mp_watchdog_module;
 extern const struct _mp_obj_module_t mp_crypto_module;
+extern const struct _mp_obj_module_t mp_uvc_module;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
@@ -111,6 +112,7 @@ extern const struct _mp_obj_module_t mp_crypto_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_lwip },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),    (mp_obj_t)&mp_crypto_module },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uvc),       (mp_obj_t)&mp_uvc_module },       \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -134,7 +136,7 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 #define MICROPY_FTPD_STACK_SIZE     512
 #define MICROPY_FTPD_TASK_PRIORITY  osPriorityBelowNormal
 
-#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 3
+#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 6
 #define MICROPY_MAIN_TASK_PRIORITY      osPriorityHigh
 
 #define MICROPY_PORT_ROOT_POINTERS      \

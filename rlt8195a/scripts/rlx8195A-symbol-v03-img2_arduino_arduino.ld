@@ -4,8 +4,7 @@ ENTRY(Reset_Handler)
 
 INCLUDE "export-rom_v03.txt"
 
-__stack_size__    = 512K;       /* interrupts are handled within this stack */
-__min_heap_size__ = 128K;
+__stack_size__    = 512K;
 
 MEMORY
 {
@@ -14,8 +13,6 @@ MEMORY
   BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 434176
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
 }
-
-
 
 SECTIONS
 {
@@ -70,20 +67,11 @@ SECTIONS
     __sdram_data_start__ = .;
     *(.mon.ram.text*)
     INCLUDE "sdram_obj_list.txt"
-    *(.sdram.text*)
     *(.sdram.data*)
     __sdram_data_end__ = .;
 
   } > SDRAM_RAM
-  
-  .mp_data :
-  {
-/* define micropython heap start and end */
-    _mp_heap_head = .;
-    . = . + __min_heap_size__;
-    . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
-    _mp_heap_end = .;
-  } >  SDRAM_RAM
+ 
 
   .sdr_otg_bf_data : 
   {
@@ -92,13 +80,20 @@ SECTIONS
     __sdram_otg_buffer_data_end__ = .;
   } > SDRAM_RAM
 
+  .mp_data :
+  {
+    /* define micropython heap start and end */
+    _mp_gc_head = .;
+    . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
+    _mp_gc_end = .;
+  } >  SDRAM_RAM
   .sdr_bf_data : 
   {
     __sdram_buffer_data_start__ = .;
     *(.ossdram.heap*)
     __sdram_buffer_data_end__ = .;
   } > SDRAM_RAM
-
+ 
   .image2.start.table :
   {
     .image2.start.table1$$Base = .;
@@ -107,7 +102,6 @@ SECTIONS
     KEEP(*(SORT(.image2.ram.data*)))
     __image2_validate_code__ = .;
     KEEP(*(.image2.validate.rodata*))
-    
   } > BD_RAM
 
   .ram_image2.text :
@@ -142,7 +136,6 @@ SECTIONS
     *(.fwu.rodata*)
     *(.fwu.text*)
     *(.otg.rom.text*)
-    *(.mdns.text*)
     *(.text*)
   } > BD_RAM
 
@@ -162,7 +155,6 @@ SECTIONS
     *(.hal.sdrc.data*)    
     *(.hal.gpio.data*)
     *(.fwu.data*)
-    *(.mdns.data*)
     *(.ram.otg.data.a*)
     *(.ram.otg.data.b*)
     *(.bss*)
@@ -174,20 +166,19 @@ SECTIONS
     .ram.bss$$Limit = .;
   } > BD_RAM
 
-  .bf_data : 
-  {
-    __buffer_data_start__ = .;
-    *(.ossram.heap*)
-    __buffer_data_end__ = .;
-  } > BD_RAM
+    .bf_data : 
+    {
+      __buffer_data_start__ = .;
+      *(.ossram.heap*)
+      __buffer_data_end__ = .;
+    } > BD_RAM
 
- .heap :
- {
-	__end__ = .;
-	end = __end__;
-	*(.heap*)
-	__HeapLimit = .;
- } > BD_RAM
+    .heap :
+    {
+       __end__ = .;
+       *(.heap*)
+       __HeapLimit = .;
+    } > BD_RAM
 
 	/* .stack_dummy section doesn't contains any symbols. It is only
 	 * used for linker to calculate size of stack sections, and assign

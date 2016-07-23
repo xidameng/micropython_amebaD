@@ -93,11 +93,12 @@ void ftpd_task(void const *arg) {
 
 int main(void)
 {
+    __libc_init_array();
     // Get ARM's stack pointer
     uint32_t sp = gc_helper_get_sp();
     gc_collect_init (sp);
     // Init micropython gc from mp_heap_head to mp_heap_end
-    gc_init(&_mp_heap_head, &_mp_heap_end);
+    gc_init(&_mp_gc_head, &_mp_gc_end);
     
     // Kernel initialization
     osKernelInitialize();

@@ -26,8 +26,8 @@
  */
 
 // variables defining memory layout
-extern uint32_t _mp_heap_head;
-extern uint32_t _mp_heap_end;
+extern uint32_t _mp_gc_head;
+extern uint32_t _mp_gc_end;
 
 void gc_collect_init (uint32_t sp);
 void gc_collect(void);

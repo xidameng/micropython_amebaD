@@ -107,15 +107,14 @@ CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
 CFLAGS += -fomit-frame-pointer
 CFLAGS += -fno-short-enums
-CFLAGS += -nostdlib
+#CFLAGS += -nostdlib
 CFLAGS += -Werror
 CFLAGS += -Wundef
-#CFLAGS += -Wpointer-arith
-CFLAGS += -Wstrict-prototypes
+#CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wno-write-strings
 #CFLAGS += -fsingle-precision-constant
 #CFLAGS += -Wdouble-promotion
-CFLAGS += -nostartfiles
+#CFLAGS += -nostartfiles
 CFLAGS += -DCONFIG_PLATFORM_8195A $(INC)
 CFLAGS += $(CFLAGS_MOD)
 
@@ -140,7 +139,6 @@ ELF_LDFLAGS += -Wl,--gc-sections
 ELF_LDFLAGS += -Wl,--no-enum-size-warning
 ELF_LDFLAGS += -Wl,--no-wchar-size-warning
 ELF_LDFLAGS += -Wl,--entry=InfraStart
-ELF_LDFLAGS += -Wl,-nostdlib
 
 ELF_ARLIST += ./$(LIB)/lib_wlan.a
 ELF_ARLIST += ./$(LIB)/lib_wlan_mp.a 
@@ -149,6 +147,11 @@ ELF_ARLIST += ./$(LIB)/lib_mdns.a
 ELF_ARLIST += ./$(LIB)/lib_ameba.a
 ELF_ARLIST += ./$(LIB)/lib_rtlstd.a
 ELF_ARLIST += ./$(LIB)/lib_platform.a
+ELF_ARLIST += ./$(LIB)/lib_usb_drv.a
+ELF_ARLIST += ./$(LIB)/lib_usb_otg.a
+ELF_ARLIST += ./$(LIB)/lib_uvc.a
+ELF_ARLIST += ./$(LIB)/lib_usb_otg_linux.a
+ELF_ARLIST += ./$(LIB)/lib_sdcard.a
 
 #-------------------------------------------------------------------------------
 # C source files and objects
