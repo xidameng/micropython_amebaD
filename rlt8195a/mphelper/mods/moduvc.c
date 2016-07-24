@@ -35,10 +35,6 @@
 #include "usb.h"
 #include "uvc_intf.h"
 
-
-#define FMT_MJPEG   1
-#define FMT_H264    2
-
 STATIC mp_obj_t uvc_init(void) {
     _usb_init();
     if (wait_usb_ready() < 0) {
@@ -59,24 +55,26 @@ STATIC mp_obj_t uvc_deinit(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_deinit_obj, uvc_deinit);
 
-STATIC mp_obj_t uvc_stream_status(mp_uint_t n_args, const mp_obj_t *args) {
-    if (n_args == 0) {
-        if (uvc_is_stream_ready() < 0) 
-            return mp_const_false;
-        else
-            return mp_const_true;
-    } else {
-        bool enable = mp_obj_is_true(args[0]);
-        if (enable) {
-            if (uvc_stream_on() < 0)
-                nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "USB stream on failed"));
-        } else {
-            uvc_stream_off();
-        }
-    }
+STATIC mp_obj_t uvc_is_ready(void) {
+    if (uvc_is_stream_ready() < 0)
+        return mp_const_false;
+    else
+        return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_is_ready_obj, uvc_is_ready);
+
+STATIC mp_obj_t uvc_enable(void) {
+    if (uvc_stream_on() < 0)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "UVC enable stream failed"));
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(uvc_stream_status_obj, 0, 1, uvc_stream_status);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_enable_obj, uvc_enable);
+
+STATIC mp_obj_t uvc_disable(void) {
+    uvc_stream_off();
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_disable_obj, uvc_disable);
 
 STATIC mp_obj_t uvc_frame(void) {
     struct uvc_buf_context buf;
@@ -97,7 +95,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_frame_obj, uvc_frame);
 
 STATIC mp_obj_t uvc_format(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_format,   MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int  = FMT_MJPEG} },
+        { MP_QSTR_format,                     MP_ARG_INT, {.u_int  = UVC_FORMAT_MJPEG} },
         { MP_QSTR_width,    MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int  = 320} },
         { MP_QSTR_height,   MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int  = 240} },
         { MP_QSTR_frate,    MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int  = 30} },
@@ -105,13 +103,6 @@ STATIC mp_obj_t uvc_format(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t 
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args); 
-    DiagPrintf("fmt = %d, width = %d, height = %d, frate = %d, ratio = %d\r\n",
-            args[0].u_int,
-            args[1].u_int,
-            args[2].u_int,
-            args[3].u_int,
-            args[4].u_int
-            );
     if (uvc_set_param(args[0].u_int, args[1].u_int, args[2].u_int, args[3].u_int, args[4].u_int) < 0)
         nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "UVC set parameter failed"));
     return mp_const_none;
@@ -125,12 +116,14 @@ STATIC const mp_map_elem_t uvc_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_uvc) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_init),          (mp_obj_t)&uvc_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),        (mp_obj_t)&uvc_deinit_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stream),        (mp_obj_t)&uvc_stream_status_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_ready),      (mp_obj_t)&uvc_is_ready_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_enable),        (mp_obj_t)&uvc_enable_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_disable),       (mp_obj_t)&uvc_disable_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_frame),         (mp_obj_t)&uvc_frame_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_format),        (mp_obj_t)&uvc_format_obj },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_MJPEG),     MP_OBJ_NEW_SMALL_INT(FMT_MJPEG) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_H264),      MP_OBJ_NEW_SMALL_INT(FMT_H264) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_MJPEG),     MP_OBJ_NEW_SMALL_INT(UVC_FORMAT_MJPEG) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_H264),      MP_OBJ_NEW_SMALL_INT(UVC_FORMAT_H264) },
 };
 STATIC MP_DEFINE_CONST_DICT(uvc_module_globals, uvc_module_globals_table);
 
