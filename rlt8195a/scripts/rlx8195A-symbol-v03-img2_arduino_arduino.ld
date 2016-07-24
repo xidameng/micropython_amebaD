@@ -80,20 +80,21 @@ SECTIONS
     __sdram_otg_buffer_data_end__ = .;
   } > SDRAM_RAM
 
-  .mp_data :
-  {
-    /* define micropython heap start and end */
-    _mp_gc_head = .;
-    . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
-    _mp_gc_end = .;
-  } >  SDRAM_RAM
+
   .sdr_bf_data : 
   {
     __sdram_buffer_data_start__ = .;
     *(.ossdram.heap*)
     __sdram_buffer_data_end__ = .;
   } > SDRAM_RAM
- 
+
+ .mp_data :
+  {
+    /* define micropython heap start and end */
+    _mp_gc_head = .;
+    . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
+    _mp_gc_end = .;
+  } >  SDRAM_RAM
   .image2.start.table :
   {
     .image2.start.table1$$Base = .;
