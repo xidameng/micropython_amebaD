@@ -94,7 +94,7 @@ CFLAGS_MOD += -DMICROPY_PY_SOCKET=1
 SRC_MOD += modsocket.c
 endif
 ifeq ($(MICROPY_PY_THREAD),1)
-CFLAGS_MOD += -DMICROPY_PY_THREAD=1
+CFLAGS_MOD += -DMICROPY_PY_THREAD=1 -DMICROPY_PY_THREAD_GIL=0
 LDFLAGS_MOD += -lpthread
 endif
 
@@ -235,7 +235,11 @@ fast:
 
 # build a minimal interpreter
 minimal:
-	$(MAKE) COPT="-Os -DNDEBUG" CFLAGS_EXTRA='-DMP_CONFIGFILE="<mpconfigport_minimal.h>"' BUILD=build-minimal PROG=micropython_minimal MICROPY_PY_TERMIOS=0 MICROPY_PY_SOCKET=0 MICROPY_PY_FFI=0 MICROPY_USE_READLINE=0 MICROPY_FATFS=0
+	$(MAKE) COPT="-Os -DNDEBUG" CFLAGS_EXTRA='-DMP_CONFIGFILE="<mpconfigport_minimal.h>"' \
+	    BUILD=build-minimal PROG=micropython_minimal \
+	    MICROPY_PY_BTREE=0 MICROPY_PY_FFI=0 MICROPY_PY_SOCKET=0 MICROPY_PY_THREAD=0 \
+	    MICROPY_PY_TERMIOS=0 MICROPY_PY_USSL=0 \
+	    MICROPY_USE_READLINE=0 MICROPY_FATFS=0
 
 # build interpreter with nan-boxing as object model
 nanbox:
@@ -260,7 +264,7 @@ freedos:
 
 # build an interpreter for coverage testing and do the testing
 coverage:
-	$(MAKE) COPT="-O0" CFLAGS_EXTRA='-DMP_CONFIGFILE="<mpconfigport_coverage.h>" -fprofile-arcs -ftest-coverage -Wdouble-promotion -Wformat -Wmissing-declarations -Wmissing-prototypes -Wold-style-definition -Wpointer-arith -Wshadow -Wsign-compare -Wuninitialized -Wunused-parameter -DMICROPY_UNIX_COVERAGE' LDFLAGS_EXTRA='-fprofile-arcs -ftest-coverage' BUILD=build-coverage PROG=micropython_coverage
+	$(MAKE) COPT="-O0" MICROPY_PY_BTREE=0 CFLAGS_EXTRA='-DMP_CONFIGFILE="<mpconfigport_coverage.h>" -fprofile-arcs -ftest-coverage -Wdouble-promotion -Wformat -Wmissing-declarations -Wmissing-prototypes -Wold-style-definition -Wpointer-arith -Wshadow -Wsign-compare -Wuninitialized -Wunused-parameter -DMICROPY_UNIX_COVERAGE' LDFLAGS_EXTRA='-fprofile-arcs -ftest-coverage' BUILD=build-coverage PROG=micropython_coverage
 
 coverage_test: coverage
 	$(eval DIRNAME=$(notdir $(CURDIR)))
@@ -304,11 +308,14 @@ libffi:
 	../configure $(CROSS_COMPILE_HOST) --prefix=$$PWD/out --disable-structs CC="$(CC)" CXX="$(CXX)" LD="$(LD)" CFLAGS="-Os -fomit-frame-pointer -fstrict-aliasing -ffast-math -fno-exceptions"; \
 	make install-exec-recursive; make -C include install-data-am
 
-axtls: ../lib/axtls/README
+axtls: $(BUILD)/libaxtls.a
+
+$(BUILD)/libaxtls.a: ../lib/axtls/README | $(OBJ_DIRS)
 	cd ../lib/axtls; cp config/upyconfig config/.config
 	cd ../lib/axtls; make oldconfig -B
 	cd ../lib/axtls; make clean
 	cd ../lib/axtls; make all CC="$(CC)" LD="$(LD)"
+	cp ../lib/axtls/_stage/libaxtls.a $@
 
 ../lib/axtls/README:
 	@echo "You cloned without --recursive, fetching submodules for you."

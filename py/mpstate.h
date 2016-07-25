@@ -76,6 +76,11 @@ typedef struct _mp_state_mem_t {
     // you can still allocate/free memory and also explicitly call gc_collect.
     uint16_t gc_auto_collect_enabled;
 
+    #if MICROPY_GC_ALLOC_THRESHOLD
+    size_t gc_alloc_amount;
+    size_t gc_alloc_threshold;
+    #endif
+
     size_t gc_last_free_atb_index;
 
     #if MICROPY_PY_GC_COLLECT_RETVAL
@@ -143,6 +148,7 @@ typedef struct _mp_state_vm_t {
 
     #if MICROPY_PY_OS_DUPTERM
     mp_obj_t term_obj;
+    mp_obj_t dupterm_arr_obj;
     #endif
 
     #if MICROPY_PY_LWIP_SLIP

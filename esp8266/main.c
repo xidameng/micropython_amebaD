@@ -57,8 +57,10 @@ STATIC void mp_reset(void) {
     #endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     MP_STATE_PORT(term_obj) = MP_OBJ_NULL;
+    MP_STATE_PORT(dupterm_arr_obj) = MP_OBJ_NULL;
     pin_init0();
     readline_init0();
+    dupterm_task_init();
 #if MICROPY_MODULE_FROZEN
     pyexec_frozen_module("_boot.py");
     pyexec_file("boot.py");
@@ -84,7 +86,6 @@ void init_done(void) {
     #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
     #endif
-    dupterm_task_init();
 
     #if !MICROPY_REPL_EVENT_DRIVEN
 soft_reset:

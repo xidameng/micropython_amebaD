@@ -152,6 +152,12 @@ void gc_init(void *start, void *end) {
     // allow auto collection
     MP_STATE_MEM(gc_auto_collect_enabled) = 1;
 
+    #if MICROPY_GC_ALLOC_THRESHOLD
+    // by default, maxuint for gc threshold, effectively turning gc-by-threshold off
+    MP_STATE_MEM(gc_alloc_threshold) = (size_t)-1;
+    MP_STATE_MEM(gc_alloc_amount) = 0;
+    #endif
+
     #if MICROPY_PY_THREAD
     mp_thread_mutex_init(&MP_STATE_MEM(gc_mutex));
     #endif
@@ -294,6 +300,9 @@ STATIC void gc_sweep(void) {
 void gc_collect_start(void) {
     GC_ENTER();
     MP_STATE_MEM(gc_lock_depth)++;
+    #if MICROPY_GC_ALLOC_THRESHOLD
+    MP_STATE_MEM(gc_alloc_amount) = 0;
+    #endif
     MP_STATE_MEM(gc_stack_overflow) = 0;
     MP_STATE_MEM(gc_sp) = MP_STATE_MEM(gc_stack);
     // Trace root pointers.  This relies on the root pointers being organised
@@ -324,24 +333,17 @@ void gc_info(gc_info_t *info) {
     info->total = MP_STATE_MEM(gc_pool_end) - MP_STATE_MEM(gc_pool_start);
     info->used = 0;
     info->free = 0;
+    info->max_free = 0;
     info->num_1block = 0;
     info->num_2block = 0;
     info->max_block = 0;
-    for (size_t block = 0, len = 0; block < MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB; block++) {
+    bool finish = false;
+    for (size_t block = 0, len = 0, len_free = 0; !finish;) {
         size_t kind = ATB_GET_KIND(block);
-        if (kind == AT_FREE || kind == AT_HEAD) {
-            if (len == 1) {
-                info->num_1block += 1;
-            } else if (len == 2) {
-                info->num_2block += 1;
-            }
-            if (len > info->max_block) {
-                info->max_block = len;
-            }
-        }
         switch (kind) {
             case AT_FREE:
                 info->free += 1;
+                len_free += 1;
                 len = 0;
                 break;
 
@@ -358,6 +360,30 @@ void gc_info(gc_info_t *info) {
             case AT_MARK:
                 // shouldn't happen
                 break;
+        }
+
+        block++;
+        finish = (block == MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB);
+        // Get next block type if possible
+        if (!finish) {
+            kind = ATB_GET_KIND(block);
+        }
+
+        if (finish || kind == AT_FREE || kind == AT_HEAD) {
+            if (len == 1) {
+                info->num_1block += 1;
+            } else if (len == 2) {
+                info->num_2block += 1;
+            }
+            if (len > info->max_block) {
+                info->max_block = len;
+            }
+            if (finish || kind == AT_HEAD) {
+                if (len_free > info->max_free) {
+                    info->max_free = len_free;
+                }
+                len_free = 0;
+            }
         }
     }
 
@@ -388,6 +414,15 @@ void *gc_alloc(size_t n_bytes, bool has_finaliser) {
     size_t start_block;
     size_t n_free = 0;
     int collected = !MP_STATE_MEM(gc_auto_collect_enabled);
+
+    #if MICROPY_GC_ALLOC_THRESHOLD
+    if (!collected && MP_STATE_MEM(gc_alloc_amount) >= MP_STATE_MEM(gc_alloc_threshold)) {
+        GC_EXIT();
+        gc_collect();
+        GC_ENTER();
+    }
+    #endif
+
     for (;;) {
 
         // look for a run of n_blocks available blocks
@@ -438,6 +473,10 @@ found:
     // we must create this pointer before unlocking the GC so a collection can find it
     void *ret_ptr = (void*)(MP_STATE_MEM(gc_pool_start) + start_block * BYTES_PER_BLOCK);
     DEBUG_printf("gc_alloc(%p)\n", ret_ptr);
+
+    #if MICROPY_GC_ALLOC_THRESHOLD
+    MP_STATE_MEM(gc_alloc_amount) += n_blocks;
+    #endif
 
     GC_EXIT();
 
@@ -717,8 +756,8 @@ void gc_dump_info(void) {
     gc_info(&info);
     mp_printf(&mp_plat_print, "GC: total: %u, used: %u, free: %u\n",
         (uint)info.total, (uint)info.used, (uint)info.free);
-    mp_printf(&mp_plat_print, " No. of 1-blocks: %u, 2-blocks: %u, max blk sz: %u\n",
-           (uint)info.num_1block, (uint)info.num_2block, (uint)info.max_block);
+    mp_printf(&mp_plat_print, " No. of 1-blocks: %u, 2-blocks: %u, max blk sz: %u, max free sz: %u\n",
+           (uint)info.num_1block, (uint)info.num_2block, (uint)info.max_block, (uint)info.max_free);
 }
 
 void gc_dump_alloc_table(void) {

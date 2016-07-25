@@ -27,9 +27,10 @@ def rm_f(fname):
         os.remove(fname)
 
 def run_micropython(pyb, args, test_file):
+    special_tests = ('micropython/meminfo.py', 'basics/bytes_compare3.py')
     if pyb is None:
         # run on PC
-        if test_file.startswith(('cmdline/', 'feature_check/')) or test_file == 'micropython/meminfo.py':
+        if test_file.startswith(('cmdline/', 'feature_check/')) or test_file in special_tests :
             # special handling for tests of the unix cmdline program
 
             # check for any cmdline options needed for this test
@@ -200,6 +201,13 @@ def run_tests(pyb, tests, args):
         skip_tests.add('float/int_big_float.py')
         skip_tests.add('float/true_value.py')
         skip_tests.add('float/types.py')
+
+    # Some tests shouldn't be run on a PC
+    if pyb is None:
+        # unix build does not have the GIL so can't run thread mutation tests
+        for t in tests:
+            if t.startswith('thread/mutate_'):
+                skip_tests.add(t)
 
     # Some tests shouldn't be run on pyboard
     if pyb is not None:

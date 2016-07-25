@@ -26,15 +26,8 @@
 
 // options to control how Micro Python is built
 
-#define MICROPY_ALLOC_QSTR_CHUNK_INIT (64)
-#define MICROPY_ALLOC_PARSE_RULE_INIT (8)
-#define MICROPY_ALLOC_PARSE_RULE_INC  (8)
-#define MICROPY_ALLOC_PARSE_RESULT_INIT (8)
-#define MICROPY_ALLOC_PARSE_RESULT_INC (8)
-#define MICROPY_ALLOC_PARSE_CHUNK_INIT (64)
 #define MICROPY_ALLOC_PATH_MAX      (PATH_MAX)
 #define MICROPY_ENABLE_GC           (1)
-#define MICROPY_GC_ALLOC_THRESHOLD  (0)
 #define MICROPY_ENABLE_FINALISER    (0)
 #define MICROPY_STACK_CHECK         (0)
 #define MICROPY_COMP_CONST          (0)
@@ -84,7 +77,6 @@
 #define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_UCTYPES          (0)
-#define MICROPY_PY_UTIME            (0)
 #define MICROPY_PY_UZLIB            (0)
 #define MICROPY_PY_UJSON            (0)
 #define MICROPY_PY_URE              (0)

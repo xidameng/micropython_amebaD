@@ -1,9 +1,10 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
  *
  * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2014 Paul Sokolovsky
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,45 +24,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef __MICROPY_INCLUDED_PY_GC_H__
-#define __MICROPY_INCLUDED_PY_GC_H__
 
-#include <stdint.h>
+#ifndef __MICROPY_INCLUDED_PY_OBJARRAY_H__
+#define __MICROPY_INCLUDED_PY_OBJARRAY_H__
 
-#include "py/mpconfig.h"
-#include "py/misc.h"
+#include "py/obj.h"
 
-void gc_init(void *start, void *end);
+typedef struct _mp_obj_array_t {
+    mp_obj_base_t base;
+    mp_uint_t typecode : 8;
+    // free is number of unused elements after len used elements
+    // alloc size = len + free
+    mp_uint_t free : (8 * sizeof(mp_uint_t) - 8);
+    mp_uint_t len; // in elements
+    void *items;
+} mp_obj_array_t;
 
-// These lock/unlock functions can be nested.
-// They can be used to prevent the GC from allocating/freeing.
-void gc_lock(void);
-void gc_unlock(void);
-bool gc_is_locked(void);
-
-// A given port must implement gc_collect by using the other collect functions.
-void gc_collect(void);
-void gc_collect_start(void);
-void gc_collect_root(void **ptrs, size_t len);
-void gc_collect_end(void);
-
-void *gc_alloc(size_t n_bytes, bool has_finaliser);
-void gc_free(void *ptr); // does not call finaliser
-size_t gc_nbytes(const void *ptr);
-void *gc_realloc(void *ptr, size_t n_bytes, bool allow_move);
-
-typedef struct _gc_info_t {
-    size_t total;
-    size_t used;
-    size_t free;
-    size_t max_free;
-    size_t num_1block;
-    size_t num_2block;
-    size_t max_block;
-} gc_info_t;
-
-void gc_info(gc_info_t *info);
-void gc_dump_info(void);
-void gc_dump_alloc_table(void);
-
-#endif // __MICROPY_INCLUDED_PY_GC_H__
+#endif // __MICROPY_INCLUDED_PY_OBJARRAY_H__

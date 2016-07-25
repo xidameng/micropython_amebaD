@@ -20,8 +20,11 @@ INC += -I../lib
 INC += -I../lib/netutils
 
 ifeq ($(MICROPY_PY_USSL),1)
-CFLAGS_MOD += -DMICROPY_PY_USSL=1 -I../lib/axtls/ssl -I../lib/axtls/crypto -I../lib/axtls/config
-LDFLAGS_MOD += -L../lib/axtls/_stage -laxtls
+CFLAGS_MOD += -DMICROPY_PY_USSL=1
+ifeq ($(MICROPY_SSL_AXTLS),1)
+CFLAGS_MOD += -DMICROPY_SSL_AXTLS=1 -I../lib/axtls/ssl -I../lib/axtls/crypto -I../lib/axtls/config
+LDFLAGS_MOD += -Lbuild -laxtls
+endif
 endif
 
 #ifeq ($(MICROPY_PY_LWIP),1)
@@ -205,7 +208,7 @@ PY_O_BASENAME = \
 	../extmod/machine_pinbase.o \
 	../extmod/machine_pulse.o \
 	../extmod/machine_i2c.o \
-	../extmod/modussl.o \
+	../extmod/modussl_axtls.o \
 	../extmod/modurandom.o \
 	../extmod/modwebsocket.o \
 	../extmod/modwebrepl.o \
