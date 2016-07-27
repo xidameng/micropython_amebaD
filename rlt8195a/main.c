@@ -69,19 +69,24 @@ static const char fresh_main_py[] =
  *                              External functions
  * ***************************************************************************/
 void main_task(void const *arg) {
-    DiagPrintf("Starting executing main.py\n");
+    const char *msg_0 = "Starting to execute main.py\r\n";
+    const char *msg_1 = "Execute main.py error\r\n";
+    const char *msg_2 = "Can not find main.py, skipping\r\n";
+    const char *msg_3 = "Soft reset\r\n";
+
+    mp_hal_stdout_tx_strn_cooked(msg_0, strlen(msg_0));
     const uint8_t *main_py = "main.py";
     FRESULT res = f_stat(main_py, NULL);
     if (res == FR_OK) {
         int32_t ret = pyexec_file(main_py);
         if (!ret) {
-            DiagPrintf("main.py executing error");
+            mp_hal_stdout_tx_strn_cooked(msg_1, strlen(msg_1));
         }
     } else {
-        DiagPrintf("main.py not found, skipping\n");
+        mp_hal_stdout_tx_strn_cooked(msg_2, strlen(msg_2));
     }
     if (pyexec_friendly_repl() != 0) {
-        DiagPrintf("Soft reset\r\n");
+        mp_hal_stdout_tx_strn_cooked(msg_3, strlen(msg_3));
         sys_reset();
     }
 }
@@ -123,7 +128,6 @@ int main(void)
     os_init0();
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
-    DiagPrintf("Starting main task\n");
     // Create main task
     osThreadDef(main_task, MICROPY_MAIN_TASK_PRIORITY, 1, MICROPY_MAIN_TASK_STACK_SIZE);
     main_tid = osThreadCreate (osThread (main_task), NULL);

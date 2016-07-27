@@ -1,5 +1,5 @@
     .syntax unified
-    .cpu cortex-m4
+    .cpu cortex-m3
     .thumb
     .text
     .align  2

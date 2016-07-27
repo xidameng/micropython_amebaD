@@ -34,14 +34,13 @@
 
 #include "hal_crypto.h"
 
-
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-
 void crypto_init0(void) {
+    const char *error_str = "Crypto engine init failed\r\n";
     if (rtl_cryptoEngine_init() != 0)
-        DiagPrintf("Init crypto engine failed\r\n");
+        mp_hal_stdout_tx_strn_cooked(error_str, strlen(error_str));
 }
 
 STATIC mp_obj_t crypto_md5(mp_obj_t array_in) {
