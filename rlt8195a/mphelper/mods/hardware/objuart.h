@@ -50,6 +50,7 @@ typedef struct {
     uint32_t  baudrate;
     uint16_t  timeout;
     uint16_t  timeout_char;
+    mp_obj_t  isr_handler;
     pin_obj_t *tx;
     pin_obj_t *rx;
 } uart_obj_t;

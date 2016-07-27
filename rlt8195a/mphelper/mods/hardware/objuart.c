@@ -41,13 +41,27 @@
 extern ringbuf_t input_buf;
 extern int interrupt_char;
 
-void uart_irq(uint32_t id, SerialIrq event) {
-    serial_t *sobj = (void *)id;
+void term_irq(uart_obj_t *self, SerialIrq event) {
+    serial_t *sobj = &(self->obj);
     int c = serial_getc(sobj);
     if (c == interrupt_char) {
         mp_keyboard_interrupt();
     } else {
         ringbuf_put(&input_buf, c);
+    }
+}
+
+void uart_rx_irq_handler(uart_obj_t *self, SerialIrq event) {
+    if (self->isr_handler != mp_const_none) {
+        gc_lock();
+        nlr_buf_t nlr;
+        if (nlr_push(&nlr) == 0) {
+            mp_call_function_1(self->isr_handler, self->unit);
+            nlr_pop();
+        } else {
+            mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
+        }
+        gc_unlock();
     }
 }
 
@@ -181,11 +195,24 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_deinit_obj, uart_deinit0);
 STATIC mp_obj_t uart_dupterm_notify(mp_obj_t self_in, mp_obj_t enable_in) {
     uart_obj_t *self = self_in;
     bool enable = mp_obj_is_true(enable_in);
-    serial_irq_handler(&(self->obj), uart_irq, (uint32_t)&(self->obj));
+    serial_irq_handler(&(self->obj), term_irq, (uint32_t)&(self->obj));
     serial_irq_set(&(self->obj), RxIrq, enable);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_dupterm_notify_obj, uart_dupterm_notify);
+
+STATIC mp_obj_t uart_callback(mp_obj_t self_in, mp_obj_t func_in) {
+    uart_obj_t *self = self_in;
+    if (func_in == mp_const_none) {
+        serial_irq_handler(&(self->obj), NULL, (uint32_t)&(self->obj));
+        serial_irq_set(&(self->obj), RxIrq, false);
+    } else {
+        serial_irq_handler(&(self->obj), uart_rx_irq_handler, (uint32_t)&(self->obj));
+        serial_irq_set(&(self->obj), RxIrq, true);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_callback_obj, uart_callback);
 
 STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     // instance methods
@@ -197,6 +224,7 @@ STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_readline),        (mp_obj_t)(&mp_stream_unbuffered_readline_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),        (mp_obj_t)(&mp_stream_readinto_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify),  (mp_obj_t)(&uart_dupterm_notify_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_callback),        (mp_obj_t)(&uart_callback_obj) },
 
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_ParityNone),      MP_OBJ_NEW_SMALL_INT(ParityNone) },
