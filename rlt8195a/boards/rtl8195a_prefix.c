@@ -45,8 +45,7 @@
     .type = PIN_TYPE_ ## af_fn ## _ ## af_type, \
 }
 
-
-#define PIN(p_pin_name, p_port, p_pin_num) \
+#define PIN(p_pin_name, p_port, p_pin_num, p_num_afs) \
 { \
     { &pin_type }, \
     .name           = MP_QSTR_ ## p_pin_name, \
@@ -54,6 +53,8 @@
     .port           = PORT_ ## p_port, \
     .pull           = PullNone, \
     .pin_num        = (p_pin_num), \
+    .num_afs        = (p_num_afs), \
+    .af_list        = pin_af_ ## p_pin_name, \
     .dir            = PIN_INPUT, \
     .value          = 0, \
     .irq_registered = false, \

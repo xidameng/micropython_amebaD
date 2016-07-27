@@ -38,19 +38,6 @@
 #include "objuart.h"
 #include "rtc_api.h"
 
-#define UART0_TX                             PA_7
-#define UART0_RX                             PA_6
-
-#define UART1_TX                             PB_5
-#define UART1_RX                             PB_4
-
-#define UART2_TX                             PA_1
-#define UART2_RX                             PA_4
-
-serial_t uart_channel0;     //(RX, TX) = (PA_6, PA_7) 
-serial_t uart_channel1;     //(RX, TX) = (PB_5, PB_4)
-serial_t uart_channel2;     //(RX, TX) = (PA_4, PA_1)
-
 extern ringbuf_t input_buf;
 extern int interrupt_char;
 
@@ -65,20 +52,15 @@ void uart_irq(uint32_t id, SerialIrq event) {
 }
 
 bool uart_rx_wait(uint32_t timeout_us) {
-    //TODO(Chester) should I use rtc_read or sys tick ?
-    time_t start = rtc_read();
+    mp_uint_t start = xTaskGetTickCount();
     for (;;) {
         if (input_buf.iget != input_buf.iput) {
             return true;
         }
-        if (rtc_read() - start >= timeout_us) {
+        if (xTaskGetTickCount() - start >= timeout_us) {
             return false;
         }
     }
-}
-
-int uart_rx_char(void) {
-    return ringbuf_get(&input_buf);
 }
 
 STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
@@ -97,7 +79,7 @@ STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *e
     uint8_t *buf = buf_in;
 
     for (;;) {
-        *buf++ = uart_rx_char();       
+        *buf++ = ringbuf_get(&input_buf);       
         if (--size == 0 || !uart_rx_wait(self->timeout_char * 1000)) {
             return buf - (uint8_t *)buf_in;
         }
@@ -108,9 +90,8 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, 
     uart_obj_t *self = self_in;
     const uint8_t *buf = buf_in;
 
-    size_t i = 0;
-    for (i = 0; i < size; i++) {
-        serial_putc((serial_t *)self->obj, buf[i]);
+    for (size_t i=0; i<size; i++) {
+        serial_putc(&(self->obj), buf[i]);
     }
 
     return size;
@@ -118,90 +99,122 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, 
 
 STATIC void uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     uart_obj_t *self = self_in;
-    mp_printf(print, "UART(%d, baudrate=%u, bits=%d, stop=%d, parity=%d)", self->id, self->baudrate, self->bits, self->stop, self->parity);
+    mp_printf(print, "UART(%d, baudrate=%u, bits=%d, stop=%d, parity=%d, TX=%q, Rx=%q)", self->unit, \
+            self->baudrate, self->bits, self->stop, self->parity, self->tx->name, self->rx->name);
 }
 
 STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
+
+    // TODO: alloc a new tulpe ???
+    // TODO: CTS/RTS pin and flow control needed!
+    mp_obj_t tuple[2];
+    tuple[0] = &pin_PA_7;
+    tuple[1] = &pin_PA_6;
+
     const mp_arg_t uart_init_args[] = {
-        { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_baudrate,  MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = UART_DEFAULT_BAUD_RATE} },
-        { MP_QSTR_bits,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 8} },
-        { MP_QSTR_stop,      MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = 1} },
-        { MP_QSTR_parity,    MP_ARG_KW_ONLY  | MP_ARG_INT, {.u_int = ParityNone} },
-        { MP_QSTR_timeout,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_unit,                          MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_baudrate,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_BAUD_RATE} },
+        { MP_QSTR_bits,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
+        { MP_QSTR_stop,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
+        { MP_QSTR_parity,       MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ParityNone} },
+        { MP_QSTR_timeout,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_timeout_char, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_pins,         MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_obj_new_tuple(2, tuple)} },
     };
     // parse args
     mp_map_t kw_args;
-    mp_uint_t PinTX;
-    mp_uint_t PinRX;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
     mp_arg_val_t args[MP_ARRAY_SIZE(uart_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), uart_init_args, args);
 
-    if ((args[0].u_int < 0) || (args[0].u_int > 2)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
-    }   
+    mp_obj_t *pins;
 
-    uart_obj_t *self = m_new_obj(uart_obj_t);
+    mp_obj_get_array_fixed_n(args[7].u_obj, 2, &pins);
+
+    pin_obj_t *tx = pin_find(pins[0]);
+    pin_obj_t *rx = pin_find(pins[1]);
+
+    if (pin_obj_find_af(tx, PIN_FN_UART, args[0].u_int, PIN_TYPE_UART_TX) < 0) 
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid TX pin"));
+
+    if (pin_obj_find_af(rx, PIN_FN_UART, args[0].u_int, PIN_TYPE_UART_RX) < 0) 
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid RX pin"));
+
+    uart_obj_t *self    = m_new_obj(uart_obj_t);
     self->base.type     = &uart_type;
-    self->id            = args[0].u_int;
+    self->unit          = args[0].u_int;
+    self->is_inited     = false;
     self->baudrate      = MIN(MAX(args[1].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
     self->bits          = args[2].u_int;
     self->stop          = args[3].u_int;
     self->parity        = args[4].u_int;
     self->timeout       = args[5].u_int;
     self->timeout_char  = args[6].u_int;
-    
-    switch(self->id) {
-        case 0:
-            self->obj = (void *)&uart_channel0;
-            PinTX = UART0_TX;
-            PinRX = UART0_RX;
-            break;
-        case 1:
-            self->obj = (void *)&uart_channel1;
-            PinTX = UART1_TX;
-            PinRX = UART1_RX;
-            break;
-        case 2:
-            self->obj = (void *)&uart_channel2;
-            PinTX = UART2_TX;
-            PinRX = UART2_RX;
-            break;
-        default:
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
-            break;
-    }
-
-    // TODO: should check alternative pins 
-    serial_init((serial_t *)self->obj, PinTX, PinRX);
-
-    serial_baud((serial_t *)self->obj, self->baudrate);
-
-    serial_format((serial_t *)self->obj, self->bits, self->parity, self->stop);
-
-    serial_irq_handler((serial_t *)self->obj, uart_irq, (uint32_t)self->obj);
-    serial_irq_set((serial_t *)self->obj, RxIrq, true);
+    self->tx            = tx;
+    self->rx            = rx;
 
     return (mp_obj_t)self;
 }
 
+STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
+    uart_obj_t *self = self_in;
+    if (self->is_inited ==  true) 
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "UART object has init"));
+    serial_init(&(self->obj), self->tx->id, self->rx->id);
+    serial_baud(&(self->obj), self->baudrate);
+    serial_format(&(self->obj), self->bits, self->parity, self->stop);
+    self->is_inited = true;
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_init_obj, uart_init0);
+
+STATIC mp_obj_t uart_deinit0(mp_obj_t self_in) {
+    uart_obj_t *self = self_in;
+    if (self->is_inited == false)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "UART object has not init"));
+    serial_free(&(self->obj));
+    self->is_inited = false;
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_deinit_obj, uart_deinit0);
+
+STATIC mp_obj_t uart_dupterm_notify(mp_obj_t self_in, mp_obj_t enable_in) {
+    uart_obj_t *self = self_in;
+    bool enable = mp_obj_is_true(enable_in);
+    serial_irq_handler(&(self->obj), uart_irq, (uint32_t)&(self->obj));
+    serial_irq_set(&(self->obj), RxIrq, enable);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_dupterm_notify_obj, uart_dupterm_notify);
+
 STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_write),    (mp_obj_t)&mp_stream_write_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read),     (mp_obj_t)&mp_stream_read_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readall),  (mp_obj_t)(&mp_stream_readall_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readline), (mp_obj_t)(&mp_stream_unbuffered_readline_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto), (mp_obj_t)(&mp_stream_readinto_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_init),            (mp_obj_t)&uart_init_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),          (mp_obj_t)&uart_deinit_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_write),           (mp_obj_t)&mp_stream_write_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),            (mp_obj_t)&mp_stream_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readall),         (mp_obj_t)(&mp_stream_readall_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readline),        (mp_obj_t)(&mp_stream_unbuffered_readline_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),        (mp_obj_t)(&mp_stream_readinto_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify),  (mp_obj_t)(&uart_dupterm_notify_obj) },
 
     // class constants
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityNone),      MP_OBJ_NEW_SMALL_INT(ParityNone) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityOdd),       MP_OBJ_NEW_SMALL_INT(ParityOdd) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityEven),      MP_OBJ_NEW_SMALL_INT(ParityEven) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced1),   MP_OBJ_NEW_SMALL_INT(ParityForced1) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced0),   MP_OBJ_NEW_SMALL_INT(ParityForced0) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlNone),     MP_OBJ_NEW_SMALL_INT(FlowControlNone) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTS),      MP_OBJ_NEW_SMALL_INT(FlowControlRTS) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlCTS),      MP_OBJ_NEW_SMALL_INT(FlowControlCTS) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTSCTS),   MP_OBJ_NEW_SMALL_INT(FlowControlRTSCTS) },
 };
 STATIC MP_DEFINE_CONST_DICT(uart_locals_dict, uart_locals_dict_table);
 
 STATIC const mp_stream_p_t uart_stream_p = {
-    .read  = uart_recv,
-    .write = uart_send,
+    .read    = uart_recv,
+    .write   = uart_send,
     .is_text = false,
 };
 

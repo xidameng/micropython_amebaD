@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Generates the pins file for the rtl8195a."""
+"""Generates the pins file for the rtl8194a."""
 
 from __future__ import print_function
 
@@ -7,12 +7,15 @@ import argparse
 import sys
 import csv
 
-SUPPORTED_AFS = { 'UART': ('TX', 'RX', 'RTS', 'CTS'),
-                  'SPI': ('CLK', 'MOSI', 'MISO', 'CS0'),
-                  'I2C': ('SDA', 'SCL'),
-                  'ADC': ('CH1', 'CH2'),
-                  "DAC": "CH0"
-                }
+SUPPORTED_AFS = {
+    'UART': ('TX', 'RX', 'RTS', 'CTS'),
+    'SPI': ('CLK', 'MOSI', 'MISO', 'CS0', 'CS1', 'CS2'),
+    'I2C': ('SDA', 'SCL'),
+    'I2S': ('WS', 'CLK', 'SD_TX', 'MCK', 'SD_RX'),
+    'PCM': ('SYNC', 'CLK', 'TX', 'RX'),
+    'ADC': ('CH1', 'CH2'),
+    "DAC": "CH0",
+    }
 
 def parse_port_pin(name_str):
     """Parses a string and returns a (port, gpio_bit) tuple."""
@@ -48,22 +51,20 @@ class Pin:
         self.pin_num = pin_num
         self.board_pin = False
         self.afs = []
+        self.num_afs = 0
 
     def add_af(self, af):
         self.afs.append(af)
 
     def print(self):
         print('// {}'.format(self.name))
+        print('const pin_af_t pin_af_{}[] = {{'.format(self.name))
         if len(self.afs):
-            print('const pin_af_t pin_{}_af[] = {{'.format(self.name))
             for af in self.afs:
                 af.print()
-            print('};')
-            print('pin_obj_t pin_{:4s} = PIN({:4s}, {:1s}, {:2d});\n'.format(
-                   self.name, self.name, self.port, self.pin_num))
-        else:
-            print('pin_obj_t pin_{:4s} = PIN({:4s}, {:1s}, {:2d});\n'.format(
-                   self.name, self.name, self.port, self.pin_num))
+        print('};')
+        print('pin_obj_t pin_{:4s} = PIN({:4s}, {:1s}, {:2d}, {:2d});\n'.format(
+                self.name, self.name, self.port, self.pin_num, self.num_afs))
 
     def print_header(self, hdr_file):
         hdr_file.write('extern pin_obj_t pin_{:s};\n'.format(self.name))
@@ -99,7 +100,7 @@ class Pins:
                 if not row[pin_col].isdigit():
                     raise ValueError("Invalid pin number {:s} in row {:s}".format(row[pin_col]), row)
                 # Pin numbers must start from 0 when used with the TI API
-                pin_num = int(row[pin_col]) - 1;        
+                pin_num = int(row[pin_col]) - 1;
                 pin = Pin(row[pinname_col], port_num, pin_num)
                 self.board_pins.append(pin)
                 af_idx = 0
@@ -111,6 +112,7 @@ class Pins:
                         if type_name in SUPPORTED_AFS[fn_name]:
                             unit_idx = af_splitted[0][-1]
                             pin.add_af(AF(af, af_idx, fn_name, int(unit_idx), type_name))
+                            pin.num_afs += 1
                     af_idx += 1
 
     def parse_board_file(self, filename, cpu_pin_col):

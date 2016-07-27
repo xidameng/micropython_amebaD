@@ -30,9 +30,6 @@
 #include "py/obj.h"
 #include "py/runtime.h"
 
-/* Ameba sdk */
-#include "gpio_api.h"
-
 /* mphelper */
 #include "objpin.h"
 #include "exception.h"
@@ -44,9 +41,8 @@ const char mpexception_pin_invalid_dir_type[]  = "Invalid GPIO direction type";
 
 /********************** Local functions ***************************************/
 void pin_init0(void);
-
-STATIC void pin_validate_dir (uint dir);
-STATIC void pin_validate_pull (uint pull);
+void pin_validate_dir (uint dir);
+void pin_validate_pull (uint pull);
 STATIC void pin_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
 
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args);
@@ -76,13 +72,13 @@ void gpio_mp_irq_handler(pin_obj_t *self, gpio_irq_event event) {
     }
 }
 
-STATIC void pin_validate_dir (uint dir) {
+void pin_validate_dir (uint dir) {
     if (dir != PIN_INPUT && dir != PIN_OUTPUT) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_pin_invalid_dir_type));
     }
 }
 
-STATIC void pin_validate_pull (uint pull) {
+void pin_validate_pull (uint pull) {
     if (pull != PullNone && pull != PullUp && pull != PullDown && pull != OpenDrain) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_pin_invalid_pull_type));
     }
@@ -95,6 +91,15 @@ STATIC pin_obj_t *pin_find_named_pin(const mp_obj_dict_t *named_pins, mp_obj_t n
         return named_elem->value;
     }
     return NULL;
+}
+
+int8_t pin_obj_find_af(const pin_obj_t *pin, uint8_t fn, uint8_t unit, uint8_t type) {
+    for (size_t i=0; i<pin->num_afs; i++) {
+        if (pin->af_list[i].fn == fn && pin->af_list[i].unit == unit && pin->af_list[i].type == type) {
+            return pin->af_list[i].idx;
+        }
+    }
+    return -1;
 }
 
 // C API used to convert a user-supplied pin name into an ordinal pin number.

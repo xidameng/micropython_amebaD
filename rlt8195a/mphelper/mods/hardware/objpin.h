@@ -34,6 +34,60 @@
 extern const mp_obj_type_t pin_type;
 extern const mp_obj_dict_t pin_board_pins_locals_dict;
 
+enum {
+    PIN_FN_UART = 0,
+    PIN_FN_SPI,
+    PIN_FN_I2C,
+    PIN_FN_I2S,
+    PIN_FN_PCM,
+    PIN_FN_ADC,
+    PIN_FN_DAC,
+};
+
+enum {
+    PIN_TYPE_UART_TX = 0,
+    PIN_TYPE_UART_RX,
+    PIN_TYPE_UART_RTS,
+    PIN_TYPE_UART_CTS,
+};
+
+enum {
+    PIN_TYPE_SPI_CLK = 0,
+    PIN_TYPE_SPI_MOSI,
+    PIN_TYPE_SPI_MISO,
+    PIN_TYPE_SPI_CS0,
+    PIN_TYPE_SPI_CS1,
+    PIN_TYPE_SPI_CS2,
+};
+
+enum {
+    PIN_TYPE_I2C_SDA = 0,
+    PIN_TYPE_I2C_SCL,
+};
+
+enum {
+    PIN_TYPE_I2S_WS=0,
+    PIN_TYPE_I2S_CLK,
+    PIN_TYPE_I2S_SD_TX,
+    PIN_TYPE_I2S_MCK,
+    PIN_TYPE_I2S_SD_RX,
+};
+
+enum {
+    PIN_TYPE_PCM_SYNC=0,
+    PIN_TYPE_PCM_CLK,
+    PIN_TYPE_PCM_TX,
+    PIN_TYPE_PCM_RX,
+};
+
+typedef struct {
+  qstr name;
+  int8_t  idx;
+  uint8_t fn;
+  uint8_t unit;
+  uint8_t type;
+} pin_af_t;
+
 typedef struct {
     const mp_obj_base_t base;
     const qstr          name;
@@ -43,6 +97,8 @@ typedef struct {
     uint16_t            port;
     uint16_t            pull;
     const uint8_t       pin_num;
+    const pin_af_t      *af_list;
+    const uint8_t       num_afs;
     uint8_t             dir;         
     uint8_t             value;
     uint8_t             irq_registered;
@@ -60,6 +116,5 @@ typedef struct {
     qstr name;
     const pin_named_pin_t *named_pins;
 } pin_named_pins_obj_t;
-
 
 #endif  // OBJPIN_H_

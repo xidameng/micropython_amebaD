@@ -26,6 +26,10 @@
 #ifndef OBJUART_H_
 #define OBJUART_H_
 
+#include "objpin.h"
+
+#include "pins.h"
+
 #include "serial_api.h"
 
 #define UART_MIN_BAUD_RATE                (4800)
@@ -33,17 +37,21 @@
 #define UART_MAX_BAUD_RATE                (115200)
 
 extern const mp_obj_type_t uart_type;
+extern const mp_obj_dict_t pin_board_pins_locals_dict;
 
 typedef struct {
     mp_obj_base_t base;
-    void      *obj;
-    uint8_t   id;
+    serial_t  obj;
+    bool      is_inited;
+    uint8_t   unit;
     uint8_t   bits;
     uint8_t   stop;
     uint8_t   parity;
     uint32_t  baudrate;
     uint16_t  timeout;
     uint16_t  timeout_char;
+    pin_obj_t *tx;
+    pin_obj_t *rx;
 } uart_obj_t;
 
 #endif  // OBJUART_H_
