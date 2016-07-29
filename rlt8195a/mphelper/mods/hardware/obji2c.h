@@ -27,6 +27,16 @@
 #define OBJI2C_H_
 
 #include "i2c_api.h"
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
+
+#include "exception.h"
+
+#include "bufhelper.h"
+
+#include "objpin.h"
+#include "pins.h"
 
 #define I2C_MASTER                          (0)
 #define I2C_SLAVE                           (1)
@@ -38,10 +48,12 @@ extern const mp_obj_type_t i2c_type;
 
 typedef struct {
     mp_obj_base_t base;
-    void      *obj;
-    uint8_t   id;
+    i2c_t     *obj;
+    uint8_t   unit;
     uint8_t   mode;
     uint32_t  baudrate;
+    pin_obj_t *scl;
+    pin_obj_t *sda;
 } i2c_obj_t;
 
 #endif  // OBJPIN_H_
