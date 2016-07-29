@@ -38,9 +38,11 @@ dac_t dac_channel0;
 STATIC mp_obj_t dac_read(mp_obj_t self_in) {
     dac_obj_t *self = self_in;
     mp_obj_t tuple[2];
-    float readFloat = analogout_read((dac_t *)self->obj);
-    uint16_t readInt = analogout_read_u16((dac_t *)self->obj);
+    float readFloat = analogout_read(&(self->obj));
+    uint16_t readInt = analogout_read_u16(&(self->obj));
+#if MICROPY_PY_BUILTINS_FLOAT
     tuple[0] = mp_obj_new_float(readFloat);
+#endif
     tuple[1] = mp_obj_new_int(readInt);
     return mp_obj_new_tuple(2, tuple);
 }
@@ -50,10 +52,10 @@ STATIC mp_obj_t dac_write(mp_obj_t self_in, mp_obj_t val_in) {
     dac_obj_t *self = self_in;
     if (mp_obj_is_float(val_in)) {
         float writeVal = mp_obj_get_float(val_in);
-        analogout_write((dac_t *)self->obj, writeVal);
+        analogout_write(&(self->obj), writeVal);
     } else if (MP_OBJ_IS_INT(val_in)) {
         uint16_t writeVal = mp_obj_get_int(val_in);
-        analogout_write_u16((dac_t *)self->obj, writeVal);
+        analogout_write_u16(&(self->obj), writeVal);
     }
     else {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_value_invalid_arguments));
@@ -65,7 +67,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(dac_write_obj, dac_write);
 
 STATIC void dac_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     dac_obj_t *self = self_in;
-    mp_printf(print, "DAC(%d)", self->id);
+    mp_printf(print, "DAC(%d)", self->unit);
 }
 
 STATIC mp_obj_t dac_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
@@ -85,19 +87,9 @@ STATIC mp_obj_t dac_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 
     dac_obj_t *self = m_new_obj(dac_obj_t);
     self->base.type = &dac_type;
-    self->id        = args[0].u_int;
+    self->unit      = args[0].u_int;
 
-    switch(self->id) {
-        case 0:
-            self->obj = (void *)&dac_channel0;
-            PinDAC = DA_0;
-            break;
-        default:
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
-            break;
-
-    }
-    analogout_init((dac_t *)self->obj, PinDAC);
+    analogout_init(&(self->obj), DA_0);
 
     return (mp_obj_t)self;
 }

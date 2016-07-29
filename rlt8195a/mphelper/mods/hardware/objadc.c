@@ -34,16 +34,14 @@
 #include "objpin.h"
 #include "objadc.h"
 
-analogin_t adc_channel0;
-analogin_t adc_channel1;
-analogin_t adc_channel2;
-
 STATIC mp_obj_t adc_read(mp_obj_t self_in) {
     mp_obj_t tuple[2];
     adc_obj_t *self = self_in;
-    float readFloat = analogin_read((analogin_t *)self->obj);
-    uint16_t readInt = analogin_read_u16((analogin_t *)self->obj);
+    float readFloat = analogin_read(&(self->obj));
+    uint16_t readInt = analogin_read_u16(&(self->obj));
+#if MICROPY_PY_BUILTINS_FLOAT
     tuple[0] = mp_obj_new_float(readFloat);
+#endif
     tuple[1] = mp_obj_new_int(readInt);
     return mp_obj_new_tuple(2, tuple);
 }
@@ -51,7 +49,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(adc_read_obj, adc_read);
 
 STATIC void adc_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     adc_obj_t *self = self_in;
-    mp_printf(print, "ADC(%d)", self->id);
+    mp_printf(print, "ADC(%d)", self->unit);
 }
 
 STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
@@ -59,7 +57,6 @@ STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
         { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
     };
 
-    mp_uint_t PinADC;
     mp_map_t kw_args;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
     mp_arg_val_t args[MP_ARRAY_SIZE(adc_init_args)];
@@ -68,30 +65,14 @@ STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     if ((args[0].u_int < 0) || (args[0].u_int > 2)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
     }
+    
+    uint16_t pin_map[3] = {AD_1, AD_2, AD_3};
 
     adc_obj_t *self = m_new_obj(adc_obj_t);
     self->base.type = &adc_type;
-    self->id        = args[0].u_int;
+    self->unit      = args[0].u_int;
 
-    switch(self->id) {
-        case 0:
-            self->obj = (void *)&adc_channel0;
-            PinADC = AD_1;
-            break;
-        case 1:
-            self->obj = (void *)&adc_channel0;
-            PinADC = AD_2;
-            break;
-        case 2:
-            self->obj = (void *)&adc_channel0;
-            PinADC = AD_3;
-            break;
-        default:
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
-            break;
-
-    }
-    analogin_init((analogin_t *)self->obj, PinADC);
+    analogin_init(&(self->obj), pin_map[self->unit]);
 
     return (mp_obj_t)self;
 }

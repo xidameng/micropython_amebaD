@@ -32,8 +32,8 @@ extern const mp_obj_type_t adc_type;
 
 typedef struct {
     mp_obj_base_t base;
-    void      *obj;
-    uint8_t   id;
+    analogin_t    obj;
+    uint8_t       unit;
 } adc_obj_t;
 
 #endif  // OBJADC_H_
