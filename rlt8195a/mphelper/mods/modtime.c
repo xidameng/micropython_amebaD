@@ -43,6 +43,13 @@ void rtc_init0(void) {
     rtc_init();
 }
 
+STATIC mp_obj_t time_time(void) {
+    time_t time_sec;
+    time_sec = rtc_read();
+    return mp_obj_new_int(time_sec);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(time_time_obj, time_time);
+
 STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
     time_t datetime;
     struct tm *timeinfo_read;
@@ -63,16 +70,20 @@ STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
     } else {
         mp_obj_t *items;
         struct tm timeinfo_write;
-        mp_obj_get_array_fixed_n(args[0], 8, &items);
-        timeinfo_write.tm_year = mp_obj_get_int(items[0]) - 1900;
-        timeinfo_write.tm_mon = mp_obj_get_int(items[1]);
-        timeinfo_write.tm_mday = mp_obj_get_int(items[2]);
-        timeinfo_write.tm_hour = mp_obj_get_int(items[3]);
-        timeinfo_write.tm_min = mp_obj_get_int(items[4]);
-        timeinfo_write.tm_sec = mp_obj_get_int(items[5]);
-        timeinfo_write.tm_wday = mp_obj_get_int(items[6]);
-        timeinfo_write.tm_yday = mp_obj_get_int(items[7]);
-        datetime = mktime(&timeinfo_write);
+        if (MP_OBJ_IS_INT(args[0])) {
+            datetime = mp_obj_get_int(args[0]);
+        } else {
+            mp_obj_get_array_fixed_n(args[0], 8, &items);
+            timeinfo_write.tm_year = mp_obj_get_int(items[0]) - 1900;
+            timeinfo_write.tm_mon  = mp_obj_get_int(items[1]);
+            timeinfo_write.tm_mday = mp_obj_get_int(items[2]);
+            timeinfo_write.tm_hour = mp_obj_get_int(items[3]);
+            timeinfo_write.tm_min  = mp_obj_get_int(items[4]);
+            timeinfo_write.tm_sec  = mp_obj_get_int(items[5]);
+            timeinfo_write.tm_wday = mp_obj_get_int(items[6]);
+            timeinfo_write.tm_yday = mp_obj_get_int(items[7]);
+            datetime = mktime(&timeinfo_write);
+        }
         rtc_write(datetime);
         return mp_const_none;
     }
@@ -141,6 +152,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
 
 STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),            (mp_obj_t)&time_time_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),       (mp_obj_t)&time_localtime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),          (mp_obj_t)&time_mktime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ctime),           (mp_obj_t)&time_ctime_obj },
