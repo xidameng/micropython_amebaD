@@ -26,12 +26,22 @@
 #ifndef OBJSPI_H_
 #define OBJSPI_H_
 
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
+
+#include "exception.h"
+
+#include "bufhelper.h"
+#include "objpin.h"
+#include "pins.h"
+
 #include "spi_api.h"
 #include "spi_ex_api.h"
 
-#define SPI_MIN_BAUD_RATE                (4800)
-#define SPI_DEFAULT_BAUD_RATE            (9600)
-#define SPI_MAX_BAUD_RATE                (115200)
+#define SPI_MIN_BAUD_RATE                (10000000)
+#define SPI_DEFAULT_BAUD_RATE            (20000000)
+#define SPI_MAX_BAUD_RATE                (40000000)
 
 #define SPI_MASTER                      (0)
 #define SPI_SLAVE                       (1)
@@ -43,12 +53,16 @@ extern const mp_obj_type_t spi_type;
 
 typedef struct {
     mp_obj_base_t base;
-    void      *obj;
-    uint8_t   id;
+    spi_t     *obj;
+    uint8_t   unit;
     uint8_t   bits;
     uint8_t   trans_mode;
     uint8_t   spi_mode;
     uint32_t  baudrate;
+    pin_obj_t *clk;
+    pin_obj_t *miso;
+    pin_obj_t *mosi;
+    pin_obj_t *cs;
 } spi_obj_t;
 
 #endif  // OBJSPI_H_
