@@ -17,7 +17,7 @@
 #define MICROPY_HELPER_REPL                     (1)
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (1)
-#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_NONE)
+#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_ENABLE_DOC_STRING               (1)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_DETAILED)
@@ -87,11 +87,11 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_mdns_obj;
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_open),   (mp_obj_t)&mp_builtin_open_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_input),  (mp_obj_t)&mp_builtin_input_obj },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_help),   (mp_obj_t)&mp_builtin_help_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),   (mp_obj_t)&mp_builtin_ftpd_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mdns),   (mp_obj_t)&mp_builtin_mdns_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_open),        (mp_obj_t)&mp_builtin_open_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_input),       (mp_obj_t)&mp_builtin_input_obj },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_help),        (mp_obj_t)&mp_builtin_help_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),        (mp_obj_t)&mp_builtin_ftpd_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mdns),        (mp_obj_t)&mp_builtin_mdns_obj },   \
 
 extern const struct _mp_obj_module_t mp_hardware_module;
 extern const struct _mp_obj_module_t mp_wireless_module;
@@ -124,6 +124,8 @@ extern const struct _mp_obj_module_t mp_uvc_module;
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
+
+#define MICROPY_PY_SYS_PLATFORM             "RTL8195A"
 
 #define MICROPY_HW_PORT_VERSION             "v0.0.1"
 
