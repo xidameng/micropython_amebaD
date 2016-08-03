@@ -68,24 +68,20 @@ STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
         };
         return mp_obj_new_tuple(8, tuple);
     } else {
-        mp_obj_t *items;
-        struct tm timeinfo_write;
-        if (MP_OBJ_IS_INT(args[0])) {
-            datetime = mp_obj_get_int(args[0]);
-        } else {
-            mp_obj_get_array_fixed_n(args[0], 8, &items);
-            timeinfo_write.tm_year = mp_obj_get_int(items[0]) - 1900;
-            timeinfo_write.tm_mon  = mp_obj_get_int(items[1]);
-            timeinfo_write.tm_mday = mp_obj_get_int(items[2]);
-            timeinfo_write.tm_hour = mp_obj_get_int(items[3]);
-            timeinfo_write.tm_min  = mp_obj_get_int(items[4]);
-            timeinfo_write.tm_sec  = mp_obj_get_int(items[5]);
-            timeinfo_write.tm_wday = mp_obj_get_int(items[6]);
-            timeinfo_write.tm_yday = mp_obj_get_int(items[7]);
-            datetime = mktime(&timeinfo_write);
-        }
-        rtc_write(datetime);
-        return mp_const_none;
+        mp_int_t seconds = mp_obj_get_int(args[0]);
+        timeutils_struct_time_t tm;
+        timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
+        mp_obj_t tuple[8] = {
+            tuple[0] = mp_obj_new_int(tm.tm_year),
+            tuple[1] = mp_obj_new_int(tm.tm_mon),
+            tuple[2] = mp_obj_new_int(tm.tm_mday),
+            tuple[3] = mp_obj_new_int(tm.tm_hour),
+            tuple[4] = mp_obj_new_int(tm.tm_min),
+            tuple[5] = mp_obj_new_int(tm.tm_sec),
+            tuple[6] = mp_obj_new_int(tm.tm_wday),
+            tuple[7] = mp_obj_new_int(tm.tm_yday),
+        };
+        return mp_obj_new_tuple(8, tuple);
     }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
@@ -164,6 +160,6 @@ STATIC MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);
 
 const mp_obj_module_t mp_time_module = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_time,
+    .name    = MP_QSTR_utime,
     .globals = (mp_obj_dict_t*)&time_module_globals,
 };

@@ -107,12 +107,18 @@ extern const struct _mp_obj_module_t mp_uvc_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_wireless_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),   (mp_obj_t)&mp_network_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_time_module },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),     (mp_obj_t)&mp_time_module },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_uos_module },       \
     { MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_lwip },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),       (mp_obj_t)&mp_watchdog_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),    (mp_obj_t)&mp_crypto_module },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uvc),       (mp_obj_t)&mp_uvc_module },       \
+
+#define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_re),       (mp_obj_t)&mp_module_ure }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_json),     (mp_obj_t)&mp_module_ujson }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),     (mp_obj_t)&mp_time_module }, \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
