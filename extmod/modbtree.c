@@ -31,6 +31,8 @@
 
 #include "py/nlr.h"
 #include "py/runtime.h"
+#include "py/runtime0.h"
+#include "py/stream.h"
 
 #if MICROPY_PY_BTREE
 
@@ -291,6 +293,24 @@ STATIC mp_obj_t btree_subscr(mp_obj_t self_in, mp_obj_t index, mp_obj_t value) {
     }
 }
 
+STATIC mp_obj_t btree_binary_op(mp_uint_t op, mp_obj_t lhs_in, mp_obj_t rhs_in) {
+    mp_obj_btree_t *self = MP_OBJ_TO_PTR(lhs_in);
+    switch (op) {
+        case MP_BINARY_OP_IN: {
+            mp_uint_t v;
+            DBT key, val;
+            key.data = (void*)mp_obj_str_get_data(rhs_in, &v);
+            key.size = v;
+            int res = __bt_get(self->db, &key, &val, 0);
+            CHECK_ERROR(res);
+            return mp_obj_new_bool(res != RET_SPECIAL);
+        }
+        default:
+            // op not supported
+            return MP_OBJ_NULL;
+    }
+}
+
 STATIC const mp_rom_map_elem_t btree_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_close), MP_ROM_PTR(&btree_close_obj) },
     { MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&btree_get_obj) },
@@ -310,8 +330,16 @@ STATIC const mp_obj_type_t btree_type = {
     .print = btree_print,
     .getiter = btree_getiter,
     .iternext = btree_iternext,
+    .binary_op = btree_binary_op,
     .subscr = btree_subscr,
     .locals_dict = (void*)&btree_locals_dict,
+};
+
+STATIC FILEVTABLE btree_stream_fvtable = {
+    mp_stream_posix_read,
+    mp_stream_posix_write,
+    mp_stream_posix_lseek,
+    mp_stream_posix_fsync
 };
 
 STATIC mp_obj_t mod_btree_open(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
@@ -319,10 +347,8 @@ STATIC mp_obj_t mod_btree_open(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         { MP_QSTR_server_side, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
     };
 
-    const char *fname = NULL;
-    if (pos_args[0] != mp_const_none) {
-        fname = mp_obj_str_get_str(pos_args[0]);
-    }
+    // Make sure we got a stream object
+    mp_get_stream_raise(pos_args[0], MP_STREAM_OP_READ | MP_STREAM_OP_WRITE | MP_STREAM_OP_IOCTL);
 
     struct {
         mp_arg_val_t server_side;
@@ -330,7 +356,7 @@ STATIC mp_obj_t mod_btree_open(size_t n_args, const mp_obj_t *pos_args, mp_map_t
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
         MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
 
-    DB *db = __bt_open(fname, /*flags*/O_CREAT | O_RDWR, /*mode*/0770, /*openinfo*/NULL, /*dflags*/0);
+    DB *db = __bt_open(pos_args[0], &btree_stream_fvtable, /*openinfo*/NULL, /*dflags*/0);
     if (db == NULL) {
         nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(errno)));
     }

@@ -63,6 +63,7 @@
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_DOUBLE)
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_STREAMS_NON_BLOCK   (1)
+#define MICROPY_STREAMS_POSIX_API   (1)
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
 #ifndef MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE
 #define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (1)
@@ -301,3 +302,6 @@ void mp_unix_mark_exec(void);
 #ifndef _DIRENT_HAVE_D_INO
 #define _DIRENT_HAVE_D_INO (1)
 #endif
+
+// For debugging purposes, make printf() available to any source file.
+#include <stdio.h>

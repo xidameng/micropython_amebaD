@@ -69,7 +69,7 @@ endif
 
 ifeq ($(MICROPY_PY_BTREE),1)
 BTREE_DIR = lib/berkeley-db-1.xx
-CFLAGS_MOD += -D__DBINTERFACE_PRIVATE=1
+CFLAGS_MOD += -D__DBINTERFACE_PRIVATE=1 -Dmpool_error=printf -Dabort=abort_ -Dvirt_fd_t=mp_obj_t "-DVIRT_FD_T_HEADER=<py/obj.h>"
 INC += -I../$(BTREE_DIR)/PORT/include
 SRC_MOD += extmod/modbtree.c
 SRC_MOD += $(addprefix $(BTREE_DIR)/,\
@@ -221,6 +221,7 @@ PY_O_BASENAME = \
 	../extmod/vfs_fat_lexer.o \
 	../extmod/vfs_fat_misc.o \
 	../extmod/moduos_dupterm.o \
+	../lib/embed/abort_.o \
 
 # prepend the build destination prefix to the py object files
 PY_O = $(addprefix $(PY_BUILD)/, $(PY_O_BASENAME))
