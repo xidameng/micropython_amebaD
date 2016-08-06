@@ -44,12 +44,20 @@
 #include "machine/objpwm.h"
 #include "machine/objrtc.h"
 
+#include "sys_api.h"
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
+STATIC mp_obj_t machine_reset(void) {
+    sys_reset();
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
+
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_machine) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         (mp_obj_t)&machine_reset_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           (mp_obj_t)&i2c_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
