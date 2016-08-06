@@ -35,20 +35,21 @@
 #include "py/mphal.h"
 
 // local object headers
-#include "hardware/objpin.h"
-#include "hardware/obji2c.h"
-#include "hardware/objuart.h"
-#include "hardware/objspi.h"
-#include "hardware/objadc.h"
-#include "hardware/objdac.h"
-#include "hardware/objpwm.h"
+#include "machine/objpin.h"
+#include "machine/obji2c.h"
+#include "machine/objuart.h"
+#include "machine/objspi.h"
+#include "machine/objadc.h"
+#include "machine/objdac.h"
+#include "machine/objpwm.h"
+#include "machine/objrtc.h"
 
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-STATIC const mp_map_elem_t hardware_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_hardware) },
+STATIC const mp_map_elem_t machine_module_globals_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_machine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           (mp_obj_t)&i2c_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
@@ -56,11 +57,12 @@ STATIC const mp_map_elem_t hardware_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           (mp_obj_t)&adc_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           (mp_obj_t)&dac_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           (mp_obj_t)&rtc_type },
 };
-STATIC MP_DEFINE_CONST_DICT(hardware_module_globals, hardware_module_globals_table);
+STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 
-const mp_obj_module_t mp_hardware_module = {
+const mp_obj_module_t mp_machine_module = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_hardware,
-    .globals = (mp_obj_dict_t*)&hardware_module_globals,
+    .name    = MP_QSTR_machine,
+    .globals = (mp_obj_dict_t*)&machine_module_globals,
 };

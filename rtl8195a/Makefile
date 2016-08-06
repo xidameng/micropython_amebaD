@@ -82,7 +82,7 @@ INC += -I$(HELPER)/gccollect
 INC += -I$(HELPER)/hal
 INC += -I$(HELPER)/mods
 INC += -I$(HELPER)/mods/network
-INC += -I$(HELPER)/mods/hardware
+INC += -I$(HELPER)/mods/machine
 
 INC += -I../stmhal
 
@@ -160,7 +160,7 @@ SRC_C += $(wildcard $(HELPER)/*.c)
 SRC_C += $(wildcard $(HELPER)/gccollect/*.c)
 SRC_C += $(wildcard $(HELPER)/hal/*.c)
 SRC_C += $(wildcard $(HELPER)/mods/*.c)
-SRC_C += $(wildcard $(HELPER)/mods/hardware/*.c)
+SRC_C += $(wildcard $(HELPER)/mods/machine/*.c)
 SRC_C += $(wildcard $(HELPER)/mods/wireless/*.c)
 SRC_C += $(wildcard $(HELPER)/mods/network/*.c)
 

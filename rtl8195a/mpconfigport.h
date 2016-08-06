@@ -52,6 +52,7 @@
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
+#define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
@@ -93,7 +94,7 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_mdns_obj;
     { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),        (mp_obj_t)&mp_builtin_ftpd_obj },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_mdns),        (mp_obj_t)&mp_builtin_mdns_obj },   \
 
-extern const struct _mp_obj_module_t mp_hardware_module;
+extern const struct _mp_obj_module_t mp_machine_module;
 extern const struct _mp_obj_module_t mp_wireless_module;
 extern const struct _mp_obj_module_t mp_network_module;
 extern const struct _mp_obj_module_t mp_time_module;
@@ -104,7 +105,7 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 extern const struct _mp_obj_module_t mp_uvc_module;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_hardware),  (mp_obj_t)&mp_hardware_module },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_machine_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_wireless_module },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),   (mp_obj_t)&mp_network_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),     (mp_obj_t)&mp_time_module },      \

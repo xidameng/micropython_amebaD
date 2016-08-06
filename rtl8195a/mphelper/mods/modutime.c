@@ -34,55 +34,45 @@
 
 #include "rtc_api.h"
 #include "timeutils.h"
+#include "objrtc.h"
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
 
-void rtc_init0(void) {
-    rtc_init();
-}
-
 STATIC mp_obj_t time_time(void) {
     time_t time_sec;
     time_sec = rtc_read();
-    return mp_obj_new_int(time_sec);
+    return mp_obj_new_int_from_uint(time_sec - SECS_IN_30YEARS);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(time_time_obj, time_time);
 
 STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
-    time_t datetime;
-    struct tm *timeinfo_read;
-    if (n_args == 0 || args[0] == mp_const_none) {
-        datetime = rtc_read();
-        timeinfo_read = localtime(&datetime);
-        mp_obj_t tuple[8] = {
-            mp_obj_new_int(timeinfo_read->tm_year + 1900),
-            mp_obj_new_int(timeinfo_read->tm_mon),
-            mp_obj_new_int(timeinfo_read->tm_mday),
-            mp_obj_new_int(timeinfo_read->tm_hour),
-            mp_obj_new_int(timeinfo_read->tm_min),
-            mp_obj_new_int(timeinfo_read->tm_sec),
-            mp_obj_new_int(timeinfo_read->tm_wday),
-            mp_obj_new_int(timeutils_year_day(timeinfo_read->tm_year, timeinfo_read->tm_mon, timeinfo_read->tm_mday)),
-        };
-        return mp_obj_new_tuple(8, tuple);
+    clock_t secs =0;
+    if (n_args == 0) {
+        // Get time
+        secs = rtc_read();
+        // (Since RTL8195A use 1970 for it's start yaer, so I need to add the seconds of 30 years)
+        secs -= SECS_IN_30YEARS;
     } else {
-        mp_int_t seconds = mp_obj_get_int(args[0]);
-        timeutils_struct_time_t tm;
-        timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
-        mp_obj_t tuple[8] = {
-            tuple[0] = mp_obj_new_int(tm.tm_year),
-            tuple[1] = mp_obj_new_int(tm.tm_mon),
-            tuple[2] = mp_obj_new_int(tm.tm_mday),
-            tuple[3] = mp_obj_new_int(tm.tm_hour),
-            tuple[4] = mp_obj_new_int(tm.tm_min),
-            tuple[5] = mp_obj_new_int(tm.tm_sec),
-            tuple[6] = mp_obj_new_int(tm.tm_wday),
-            tuple[7] = mp_obj_new_int(tm.tm_yday),
-        };
-        return mp_obj_new_tuple(8, tuple);
+        secs = mp_obj_new_int_from_uint(args[0]);
     }
+
+    timeutils_struct_time_t tm;
+    timeutils_seconds_since_2000_to_struct_time(secs, &tm);
+
+    mp_obj_t tuple[8] = {
+        tuple[0] = mp_obj_new_int(tm.tm_year),
+        tuple[1] = mp_obj_new_int(tm.tm_mon),
+        tuple[2] = mp_obj_new_int(tm.tm_mday),
+        tuple[3] = mp_obj_new_int(tm.tm_hour),
+        tuple[4] = mp_obj_new_int(tm.tm_min),
+        tuple[5] = mp_obj_new_int(tm.tm_sec),
+        tuple[6] = mp_obj_new_int(tm.tm_wday),
+        tuple[7] = mp_obj_new_int(tm.tm_yday),
+    };
+
+    return mp_obj_new_tuple(8, tuple);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
 
@@ -147,7 +137,7 @@ STATIC mp_obj_t time_sleep_us(mp_obj_t usec_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_sleep_us_obj, time_sleep_us);
 
 STATIC const mp_map_elem_t time_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_time) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_utime) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),            (mp_obj_t)&time_time_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),       (mp_obj_t)&time_localtime_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),          (mp_obj_t)&time_mktime_obj },

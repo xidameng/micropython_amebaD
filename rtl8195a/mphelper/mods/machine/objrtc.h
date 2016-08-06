@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,38 +24,17 @@
  * THE SOFTWARE.
  */
 
-// rtl8195a_prefix.c becomes the initial portion of the generated pins file.
 
-#include <stdio.h>
-#include <stdint.h>
-
-#include "py/mpconfig.h"
+#include "py/nlr.h"
 #include "py/obj.h"
-#include "machine/objpin.h"
-#include "PinNames.h"
+#include "py/runtime.h"
+#include "timeutils.h"
+#include "rtc_api.h"
 
-#define AF(af_name, af_idx, af_fn, af_unit, af_type) \
-{ \
-    .name = MP_QSTR_ ## af_name, \
-    .idx = (af_idx), \
-    .fn = PIN_FN_ ## af_fn, \
-    .unit = (af_unit), \
-    .type = PIN_TYPE_ ## af_fn ## _ ## af_type, \
-}
+extern const mp_obj_type_t rtc_type;
 
-#define PIN(p_pin_name, p_port, p_pin_num, p_num_afs) \
-{ \
-    { &pin_type }, \
-    .name           = MP_QSTR_ ## p_pin_name, \
-    .id             = (p_pin_name), \
-    .port           = PORT_ ## p_port, \
-    .pull           = PullNone, \
-    .pin_num        = (p_pin_num), \
-    .num_afs        = (p_num_afs), \
-    .af_list        = pin_af_ ## p_pin_name, \
-    .dir            = PIN_INPUT, \
-    .value          = 0, \
-    .irq_registered = false, \
-    .irq_masked     = false, \
-    .isr_handler    = mp_const_none, \
-}
+#define SECS_IN_30YEARS (365*30+7)*24*60*60
+
+typedef struct {
+    mp_obj_base_t base;
+} rtc_obj_t;
