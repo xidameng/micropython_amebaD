@@ -28,7 +28,7 @@
 
 #include "objspi.h"
 
-spi_t spi_channel;
+spi_t spi_obj[3];
 
 STATIC mp_obj_t spi_transcation(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     STATIC const mp_arg_t spi_send_args[] = {
@@ -143,9 +143,9 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid CS pin"));
 
     spi_obj_t *self  = m_new_obj(spi_obj_t);
-    self->obj        = &spi_channel;
     self->base.type  = &spi_type;
     self->unit       = args[0].u_int;
+    self->obj        = &spi_obj[self->unit];
     self->baudrate   = MIN(MAX(args[1].u_int, SPI_MIN_BAUD_RATE), SPI_MAX_BAUD_RATE);
     self->spi_mode   = args[2].u_int;
     self->bits       = args[3].u_int;

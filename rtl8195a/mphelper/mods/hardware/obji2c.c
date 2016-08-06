@@ -28,7 +28,7 @@
 
 #include "obji2c.h"
 
-i2c_t i2c_channel;
+i2c_t i2c_obj[4];
 
 STATIC bool pyb_i2c_write(i2c_t *i2c, byte addr, byte *data, uint len, bool stop) {
     int8_t retval = true;
@@ -166,8 +166,7 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     self->sda       = sda;
     
     // Work around: alloc a new i2c_t memory to prevent from hang
-    self->obj       = &i2c_channel;
-    //self->obj       = malloc(sizeof(i2c_t));
+    self->obj       = &i2c_obj[self->unit];
 
     i2c_init(self->obj, self->sda->id, self->scl->id);
 
