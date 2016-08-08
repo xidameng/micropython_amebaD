@@ -51,6 +51,8 @@
 #define DEBUG_printf(...) (void)0
 #endif
 
+#define MICROPY_PY_LWIP 
+
 // For compatibilily with older lwIP versions.
 #ifndef ip_set_option
 #define ip_set_option(pcb, opt)   ((pcb)->so_options |= (opt))
@@ -1312,9 +1314,9 @@ STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_lwip_globals, mp_module_lwip_globals_table);
 
-const mp_obj_module_t mp_module_lwip = {
+const mp_obj_module_t mp_module_usocket = {
     .base = { &mp_type_module },
-    .name = MP_QSTR_socket,
+    .name = MP_QSTR_usocket,
     .globals = (mp_obj_dict_t*)&mp_module_lwip_globals,
 };
 

@@ -56,7 +56,7 @@ STATIC mp_obj_t machine_reset(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_machine) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         (mp_obj_t)&machine_reset_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           (mp_obj_t)&i2c_type },
@@ -69,8 +69,8 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 
-const mp_obj_module_t mp_machine_module = {
+const mp_obj_module_t mp_module_umachine = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_machine,
+    .name    = MP_QSTR_umachine,
     .globals = (mp_obj_dict_t*)&machine_module_globals,
 };
