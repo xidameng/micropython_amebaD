@@ -3,6 +3,8 @@
  *
  * The MIT License (MIT)
  *
+ * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,21 +26,14 @@
  * THE SOFTWARE.
  */
 
-/*****************************************************************************
- *                              Header includes
- * ***************************************************************************/
-// micropython headers
-#include "py/mpstate.h"
-#include "py/runtime.h"
-#include "py/mphal.h"
-
-#include "wdt_api.h"
+#include "objwdt.h"
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
+STATIC const mp_obj_base_t wdt_obj = {&wdt_type};
 
-STATIC mp_obj_t wdt_start(mp_obj_t msec_in) {
+STATIC mp_obj_t wdt_start(mp_obj_t self_in, mp_obj_t msec_in) {
     mp_int_t msec = mp_obj_get_int(msec_in);
     if (msec > 0) {
         watchdog_init(msec);
@@ -48,30 +43,39 @@ STATIC mp_obj_t wdt_start(mp_obj_t msec_in) {
     watchdog_start();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_start_obj, wdt_start);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(wdt_start_obj, wdt_start);
 
-STATIC mp_obj_t wdt_stop(void) {
+STATIC mp_obj_t wdt_stop(mp_obj_t self_in) {
     watchdog_stop();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(wdt_stop_obj, wdt_stop);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_stop_obj, wdt_stop);
 
-STATIC mp_obj_t wdt_refresh(void) {
+STATIC mp_obj_t wdt_refresh(mp_obj_t self_in) {
     watchdog_refresh();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(wdt_refresh_obj, wdt_refresh);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_refresh_obj, wdt_refresh);
 
-STATIC const mp_map_elem_t wdt_module_globals_table[] = {
+STATIC const mp_map_elem_t wdt_locals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_wdt) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start),           (mp_obj_t)&wdt_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_stop),            (mp_obj_t)&wdt_stop_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_refresh),         (mp_obj_t)&wdt_refresh_obj },
 };
-STATIC MP_DEFINE_CONST_DICT(wdt_module_globals, wdt_module_globals_table);
+STATIC MP_DEFINE_CONST_DICT(wdt_locals_dict, wdt_locals_table);
 
-const mp_obj_module_t mp_watchdog_module = {
-    .base    = { &mp_type_module },
-    .name    = MP_QSTR_wdt,
-    .globals = (mp_obj_dict_t*)&wdt_module_globals,
+STATIC mp_obj_t wdt_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    // check arguments
+    mp_arg_check_num(n_args, n_kw, 0, 0, false);
+
+    // return singleton object
+    return (mp_obj_t)&wdt_obj;
+}
+
+const mp_obj_type_t wdt_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_WDT,
+    .make_new = wdt_make_new,
+    .locals_dict = (mp_obj_t)&wdt_locals_dict,
 };

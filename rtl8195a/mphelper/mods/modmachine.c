@@ -44,6 +44,7 @@
 #include "machine/objpwm.h"
 #include "machine/objrtc.h"
 #include "machine/objsdio.h"
+#include "machine/objwdt.h"
 
 #include "sys_api.h"
 
@@ -68,6 +69,7 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           (mp_obj_t)&rtc_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO),          (mp_obj_t)&sdio_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),          (mp_obj_t)&wdt_type },
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 
