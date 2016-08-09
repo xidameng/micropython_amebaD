@@ -76,6 +76,7 @@ INC += -I$(SDK)/component/soc/realtek/8195a/fwlib/ram_lib/usb_otg/include
 INC += -I$(SDK)/component/common/video/v4l2/inc
 INC += -I$(SDK)/component/common/media/codec
 INC += -I$(SDK)/component/common/drivers/usb_class/host/uvc/inc
+INC += -I$(SDK)/component/common/drivers/sdio/realtek/sdio_host/inc/
 
 INC += -I$(HELPER)
 INC += -I$(HELPER)/gccollect

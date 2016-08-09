@@ -78,12 +78,18 @@ STATIC mp_obj_t spi_recv0(mp_obj_t self_in, mp_obj_t size_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(spi_recv_obj, spi_recv0);
 
-STATIC mp_obj_t spi_free0(mp_obj_t self_in) {
+STATIC mp_obj_t spi_deinit(mp_obj_t self_in) {
     spi_obj_t *self = self_in;
     spi_free(self->obj);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(spi_free_obj, spi_free0);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(spi_deinit_obj, spi_deinit);
+
+STATIC mp_obj_t spi_init0(mp_obj_t self_in) {
+    spi_obj_t *self = self_in;
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(spi_init_obj, spi_init0);
 
 STATIC void spi_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     spi_obj_t *self = self_in;
@@ -168,11 +174,11 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 
 STATIC const mp_map_elem_t spi_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR___del__),                 (mp_obj_t)&spi_free_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_send_recv),               (mp_obj_t)&spi_transcation_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_init),                    (mp_obj_t)&spi_init_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),                  (mp_obj_t)&spi_deinit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_send),                    (mp_obj_t)&spi_send_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_recv),                    (mp_obj_t)&spi_recv_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_format),                  (mp_obj_t)&spi_recv_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_send_recv),               (mp_obj_t)&spi_transcation_obj },
 
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_MASTER),                  MP_OBJ_NEW_SMALL_INT(SPI_MASTER) },

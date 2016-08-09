@@ -91,7 +91,7 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_mdns_obj;
     { MP_OBJ_NEW_QSTR(MP_QSTR_input),       (mp_obj_t)&mp_builtin_input_obj },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_help),        (mp_obj_t)&mp_builtin_help_obj },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),        (mp_obj_t)&mp_builtin_ftpd_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mdns),        (mp_obj_t)&mp_builtin_mdns_obj },   \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_mdns),        (mp_obj_t)&mp_builtin_mdns_obj },   \
 
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_utime;
@@ -112,8 +112,8 @@ extern const struct _mp_obj_module_t mp_uvc_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),    (mp_obj_t)&mp_network_module },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),        (mp_obj_t)&mp_watchdog_module },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uvc),        (mp_obj_t)&mp_uvc_module },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  (mp_obj_t)&mp_module_ubinascii },  \
