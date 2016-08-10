@@ -35,6 +35,8 @@
 #include "usb.h"
 #include "uvc_intf.h"
 
+STATIC struct uvc_buf_context buf;
+
 STATIC mp_obj_t uvc_init(void) {
     _usb_init();
     if (wait_usb_ready() < 0) {
@@ -76,22 +78,47 @@ STATIC mp_obj_t uvc_disable(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_disable_obj, uvc_disable);
 
-STATIC mp_obj_t uvc_frame(void) {
-    struct uvc_buf_context buf;
+STATIC mp_obj_t uvc_frame(mp_obj_t buf_in) {
     int16_t ret = 0;
-    vstr_t vstr;
-    ret = uvc_dqbuf(&buf);
-    if (buf.index < 0)
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Stream buffer index error"));
-    if ((uvc_buf_check(&buf) < 0) || (ret < 0))
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Check buffer failed"));
-    if (uvc_qbuf(&buf) < 0)
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "enqueu failed"));
-    pyb_buf_get_for_recv(mp_obj_new_int(buf.len), &vstr);
-    memcpy(&vstr.buf[0], buf.data, buf.len);
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+
+    mp_buffer_info_t bufinfo;
+
+    mp_get_buffer_raise(buf_in, &bufinfo, MP_BUFFER_WRITE);
+
+    if (bufinfo.len < buf.len)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Bytearray size is smaller than queue size"));
+
+    memcpy(bufinfo.buf, buf.data, buf.len);
+    
+    return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_frame_obj, uvc_frame);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(uvc_frame_obj, uvc_frame);
+
+STATIC mp_obj_t uvc_enqueue(void) {
+    int16_t ret = 0;
+    ret = uvc_qbuf(&buf);
+
+    if (ret < 0)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Enqueue failed"));
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_enqueue_obj, uvc_enqueue);
+
+STATIC mp_obj_t uvc_dequeue(void) {
+    int16_t ret = 0;
+
+    ret = uvc_dqbuf(&buf);
+
+    if (ret < 0)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Dequeue failed"));
+
+    if (uvc_buf_check(&buf) < 0)
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Check queue failed"));
+
+    return mp_obj_new_int(buf.len);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(uvc_dequeue_obj, uvc_dequeue);
 
 STATIC mp_obj_t uvc_format(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     STATIC const mp_arg_t allowed_args[] = {
@@ -119,8 +146,11 @@ STATIC const mp_map_elem_t uvc_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_ready),      (mp_obj_t)&uvc_is_ready_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_enable),        (mp_obj_t)&uvc_enable_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable),       (mp_obj_t)&uvc_disable_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_frame),         (mp_obj_t)&uvc_frame_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_format),        (mp_obj_t)&uvc_format_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_frame),         (mp_obj_t)&uvc_frame_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_enqueue),       (mp_obj_t)&uvc_enqueue_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dequeue),       (mp_obj_t)&uvc_dequeue_obj },
+
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_MJPEG),     MP_OBJ_NEW_SMALL_INT(UVC_FORMAT_MJPEG) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_H264),      MP_OBJ_NEW_SMALL_INT(UVC_FORMAT_H264) },

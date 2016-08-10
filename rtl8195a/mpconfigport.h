@@ -100,7 +100,6 @@ extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_usocket;
 
 extern const struct _mp_obj_module_t mp_network_module;
-extern const struct _mp_obj_module_t mp_watchdog_module;
 extern const struct _mp_obj_module_t mp_crypto_module;
 extern const struct _mp_obj_module_t mp_uvc_module;
 
@@ -111,7 +110,6 @@ extern const struct _mp_obj_module_t mp_uvc_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),        (mp_obj_t)&mp_module_uos },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),    (mp_obj_t)&mp_network_module },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_wdt),        (mp_obj_t)&mp_watchdog_module },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uvc),        (mp_obj_t)&mp_uvc_module },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
 
