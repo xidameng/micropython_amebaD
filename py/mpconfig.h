@@ -611,6 +611,11 @@ typedef double mp_float_t;
 #define MICROPY_PY_BUILTINS_STR_CENTER (0)
 #endif
 
+// Whether str.partition()/str.rpartition() method provided
+#ifndef MICROPY_PY_BUILTINS_STR_PARTITION
+#define MICROPY_PY_BUILTINS_STR_PARTITION (0)
+#endif
+
 // Whether str.splitlines() method provided
 #ifndef MICROPY_PY_BUILTINS_STR_SPLITLINES
 #define MICROPY_PY_BUILTINS_STR_SPLITLINES (0)
@@ -1066,6 +1071,11 @@ typedef double mp_float_t;
 // Modifier for functions which should be never inlined
 #ifndef MP_NOINLINE
 #define MP_NOINLINE __attribute__((noinline))
+#endif
+
+// Modifier for functions which should be always inlined
+#ifndef MP_ALWAYSINLINE
+#define MP_ALWAYSINLINE __attribute__((always_inline))
 #endif
 
 // Condition is likely to be true, to help branch prediction
