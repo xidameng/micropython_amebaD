@@ -26,6 +26,10 @@
 #ifndef OBJDAC_H_
 #define OBJDAC_H_
 
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
+#include "exception.h"
 #include "analogout_api.h"
 
 extern const mp_obj_type_t dac_type;
@@ -34,6 +38,7 @@ typedef struct {
     mp_obj_base_t base;
     dac_t     obj;
     uint8_t   unit;
+    uint8_t   resolution;
 } dac_obj_t;
 
-#endif  // OBJADC_H_
+#endif  // OBJDAC_H_
