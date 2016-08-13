@@ -26,6 +26,13 @@
 #ifndef OBJADC_H_
 #define OBJADC_H_
 
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
+
+#include "exception.h"
+
+#include "objpin.h"
 #include "analogin_api.h"
 
 extern const mp_obj_type_t adc_type;
@@ -34,6 +41,7 @@ typedef struct {
     mp_obj_base_t base;
     analogin_t    obj;
     uint8_t       unit;
+    uint16_t      pin;
 } adc_obj_t;
 
 #endif  // OBJADC_H_

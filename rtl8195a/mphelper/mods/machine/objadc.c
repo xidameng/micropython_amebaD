@@ -25,25 +25,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "py/mpstate.h"
-#include "py/runtime.h"
-#include "py/mphal.h"
-
-#include "exception.h"
-
-#include "objpin.h"
 #include "objadc.h"
 
+/*****************************************************************************
+ *                              External variables
+ * ***************************************************************************/
+
+/*****************************************************************************
+ *                              Internal functions
+ * ***************************************************************************/
+STATIC const adc_obj_t adc_obj[3] = {{.unit = 0, .pin = AD_1 },
+                                     {.unit = 1, .pin = AD_2 },
+                                     {.unit = 2, .pin = AD_3 }};
+
 STATIC mp_obj_t adc_read(mp_obj_t self_in) {
-    mp_obj_t tuple[2];
     adc_obj_t *self = self_in;
-    float readFloat = analogin_read(&(self->obj));
-    uint16_t readInt = analogin_read_u16(&(self->obj));
-#if MICROPY_PY_BUILTINS_FLOAT
-    tuple[0] = mp_obj_new_float(readFloat);
-#endif
-    tuple[1] = mp_obj_new_int(readInt);
-    return mp_obj_new_tuple(2, tuple);
+    uint16_t value = analogin_read_u16(&(self->obj));
+    return mp_obj_new_int(value);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(adc_read_obj, adc_read);
 
@@ -66,20 +64,17 @@ STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
     }
     
-    uint16_t pin_map[3] = {AD_1, AD_2, AD_3};
-
-    adc_obj_t *self = m_new_obj(adc_obj_t);
+    adc_obj_t *self = &adc_obj[args[0].u_int];
     self->base.type = &adc_type;
-    self->unit      = args[0].u_int;
 
-    analogin_init(&(self->obj), pin_map[self->unit]);
+    analogin_init(&(self->obj), self->pin);
 
-    return (mp_obj_t)self;
+    return self;
 }
 
 STATIC const mp_map_elem_t adc_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read),                (mp_obj_t)&adc_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),       (mp_obj_t)&adc_read_obj },
 };
 STATIC MP_DEFINE_CONST_DICT(adc_locals_dict, adc_locals_dict_table);
 
