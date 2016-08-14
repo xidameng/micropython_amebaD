@@ -224,12 +224,35 @@ STATIC mp_obj_t wlan_scan_network(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_scan_obj, wlan_scan_network);
 
-STATIC mp_obj_t wlan_start_ap(mp_obj_t self_in) {
+STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_ssid,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj  = MP_OBJ_NULL} },
+        { MP_QSTR_auth,     MP_ARG_KW_ONLY  | MP_ARG_OBJ, {.u_obj  = mp_const_none} },
+    };
     int16_t ret = RTW_ERROR;
-    wlan_obj_t *self = self_in;   
+    wlan_obj_t *self = pos_args[0];
 
     if (self->mode != RTW_MODE_AP && self->mode != RTW_MODE_STA_AP) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Only AP / STA_AP mode can start ap"));
+    }
+
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    int8_t *ssid = NULL;
+    uint8_t ssid_len = 0;
+    validate_ssid(&ssid, &ssid_len, args[0].u_obj);
+    if (ssid != NULL) {
+        memcpy(self->ssid, ssid, ssid_len);
+    }
+
+    int8_t   *key = NULL;
+    uint32_t  security_type = 0;
+    mp_uint_t key_len;
+    validate_key((uint8_t *)&key, &key_len, &security_type, args[1].u_obj);
+    if (key != NULL) {
+        self->security_type = security_type;
+        memcpy(self->key, key, key_len);
     }
 
     dhcps_deinit();
@@ -280,7 +303,7 @@ STATIC mp_obj_t wlan_start_ap(mp_obj_t self_in) {
     return mp_const_none;
 
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_start_ap_obj, wlan_start_ap);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(wlan_start_ap_obj, 0, wlan_start_ap);
 
 STATIC mp_obj_t wlan_rssi(mp_obj_t self_in) {
     int16_t ret = RTW_ERROR;
@@ -608,10 +631,6 @@ STATIC void wlan_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_
 STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
     STATIC const mp_arg_t wlan_init_args[] = {
         { MP_QSTR_mode,         MP_ARG_REQUIRED | MP_ARG_INT,  {.u_int = RTW_MODE_AP} },
-        { MP_QSTR_ssid,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_auth,         MP_ARG_KW_ONLY  | MP_ARG_OBJ,  {.u_obj = mp_const_none} },
-        { MP_QSTR_channel,      MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = 6} },
-        { MP_QSTR_timeout,      MP_ARG_KW_ONLY  | MP_ARG_INT,  {.u_int = 5} },
     };
 
     mp_map_t kw_args;
@@ -626,27 +645,7 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->mode = args[0].u_int;
     validate_wlan_mode(self->mode);
 
-    // Verify ssid or raise exception
-    int8_t *ssid = NULL;
-    uint8_t ssid_len = 0;
-    validate_ssid(&ssid, &ssid_len, args[1].u_obj);
-    if (ssid != NULL)
-        memcpy(self->ssid, ssid, ssid_len);
-
-    // Verify security type and password
-    int8_t *key = NULL;
-    int32_t security_type = self->security_type;
-    mp_uint_t key_len = 0;
-    validate_key(&key, &key_len, &security_type, args[2].u_obj);
-    self->security_type = security_type;
-    if (key != NULL)
-        memcpy(self->key, key, key_len);
-
-    // Verify channel
-    self->channel = args[3].u_int;
-    validate_channel(self->channel);
-
-    wlan_on((wlan_obj_t *)self, args[5].u_obj);
+    wlan_on((wlan_obj_t *)self, mp_obj_new_int(100));
 
     if (args[0].u_int == RTW_MODE_STA_AP) {
         // Prepare for the second wlan object
@@ -655,21 +654,15 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         tuple[0] = self;
         tuple[1] = self_2;
 
-        if (ssid != NULL) 
-            memcpy(self_2->ssid, ssid, ssid_len);
-        self_2->security_type = security_type;
-        if (key != NULL)
-            memcpy(self_2->key, key, key_len);
-
-        wlan_on((wlan_obj_t *)self_2, args[5].u_obj);
+        wlan_on((wlan_obj_t *)self_2, mp_obj_new_int(100));
 
         self->mode = RTW_MODE_STA;
 
-        self->netif = 1;
+        self->netif = 0;
 
         self_2->mode = RTW_MODE_AP;
 
-        self->netif = 0;
+        self_2->netif = 1;
 
         return mp_obj_new_tuple(2, tuple);
     } else {

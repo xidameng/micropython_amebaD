@@ -46,6 +46,7 @@
 #define WLAN_MAX_SCAN_NETWORKS  50
 
 extern const mp_obj_type_t wlan_type;
+extern struct netif xnetif[NET_IF_NUM];
 
 void wlan_init0(void);
 void validate_wlan_mode(uint8_t mode);
