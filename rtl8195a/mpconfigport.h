@@ -147,7 +147,7 @@ extern const struct _mp_obj_module_t mp_uvc_module;
 #define MICROPY_FTPD_STACK_SIZE     512
 #define MICROPY_FTPD_TASK_PRIORITY  osPriorityBelowNormal
 
-#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 6
+#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 20
 #define MICROPY_MAIN_TASK_PRIORITY      osPriorityHigh
 
 #define MICROPY_PORT_ROOT_POINTERS      \

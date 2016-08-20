@@ -69,7 +69,6 @@ int mp_hal_stdin_rx_chr(void) {
 }
 
 void mp_hal_stdout_tx_char(char c) {
-    //uart_tx_one_char(UART0, c);
     log_uart_putc(&log_uart_obj, c);
     mp_uos_dupterm_tx_strn(&c, 1);
 }

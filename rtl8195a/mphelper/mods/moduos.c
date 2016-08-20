@@ -40,6 +40,11 @@
 
 extern int interrupt_char;
 extern ringbuf_t input_buf;
+osThreadId os_dupterm_notify_tid = 0;
+
+#define REQ_SIGNAL_TERDUP 0x01
+
+void os_dupterm_notify_task(void *arg);
 
 STATIC const qstr os_uname_info_fields[] = {
     MP_QSTR_sysname, MP_QSTR_nodename,
@@ -65,6 +70,8 @@ STATIC MP_DEFINE_ATTRTUPLE(
 
 
 void os_init0(void) {
+    osThreadDef(os_dupterm_notify_task, osPriorityNormal, 1, 2048);
+    os_dupterm_notify_tid = osThreadCreate (osThread (os_dupterm_notify_task), NULL);
 }
 
 STATIC mp_obj_t os_uname(void) {
@@ -329,20 +336,23 @@ static int call_dupterm_read(void) {
 }
 
 void os_dupterm_notify_task(void *arg) {
+    osEvent evt;
     while (1) {
-        int8_t c = call_dupterm_read();
-        if (c < 0) {
-            break;
+        evt = osSignalWait(0, osWaitForever);
+        if (evt.status == osEventSignal) {
+            if (evt.value.signals & REQ_SIGNAL_TERDUP) {
+                int8_t c = call_dupterm_read();
+                if (c > 0)
+                    ringbuf_put(&input_buf, c);
+            }
         }
-        ringbuf_put(&input_buf, c);
     }
     osThreadTerminate(osThreadGetId());
 }
 
 STATIC mp_obj_t os_dupterm_notify(mp_obj_t obj_in) {
     (void)obj_in;
-    osThreadDef(os_dupterm_notify_task, osPriorityNormal, 1, 2048);
-    osThreadCreate (osThread (os_dupterm_notify_task), NULL);
+    osSignalSet(os_dupterm_notify_tid, REQ_SIGNAL_TERDUP);   
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
