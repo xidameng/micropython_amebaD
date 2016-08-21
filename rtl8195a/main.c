@@ -170,6 +170,10 @@ void flash_vfs_init0(void) {
         res = f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
         // TODO check we could write n bytes
         f_close(&fp);
+
+        if (FR_OK != f_chdir ("/flash/lib")) {
+            f_mkdir("/flash/lib");
+        }
     } else if (res == FR_OK) {
         // mount successful
     } else {
