@@ -1102,8 +1102,11 @@ STATIC mp_obj_t lwip_socket_makefile(mp_uint_t n_args, const mp_obj_t *args) {
     return args[0];
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lwip_socket_makefile_obj, 1, 3, lwip_socket_makefile);
-
+#if 0
 STATIC mp_uint_t lwip_socket_read(mp_obj_t self_in, void *buf, mp_uint_t size, int *errcode) {
+#else
+mp_uint_t lwip_socket_read(mp_obj_t self_in, void *buf, mp_uint_t size, int *errcode) {
+#endif
     lwip_socket_obj_t *socket = self_in;
 
     switch (socket->type) {
@@ -1116,7 +1119,11 @@ STATIC mp_uint_t lwip_socket_read(mp_obj_t self_in, void *buf, mp_uint_t size, i
     return MP_STREAM_ERROR;
 }
 
+#if 0
 STATIC mp_uint_t lwip_socket_write(mp_obj_t self_in, const void *buf, mp_uint_t size, int *errcode) {
+#else
+mp_uint_t lwip_socket_write(mp_obj_t self_in, const void *buf, mp_uint_t size, int *errcode) {
+#endif
     lwip_socket_obj_t *socket = self_in;
 
     switch (socket->type) {

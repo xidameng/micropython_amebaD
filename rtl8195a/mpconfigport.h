@@ -98,6 +98,7 @@ extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uwireless;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_usocket;
+extern const struct _mp_obj_module_t mp_module_ussl;
 
 extern const struct _mp_obj_module_t mp_network_module;
 extern const struct _mp_obj_module_t mp_crypto_module;
@@ -109,6 +110,7 @@ extern const struct _mp_obj_module_t mp_uvc_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),  (mp_obj_t)&mp_module_uwireless },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),        (mp_obj_t)&mp_module_uos },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),       (mp_obj_t)&mp_module_ussl },       \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),    (mp_obj_t)&mp_network_module },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uvc),        (mp_obj_t)&mp_uvc_module },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
@@ -122,6 +124,7 @@ extern const struct _mp_obj_module_t mp_uvc_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via

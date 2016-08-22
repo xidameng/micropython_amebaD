@@ -156,7 +156,7 @@ void flash_vfs_init0(void) {
     FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
 
     if (res == FR_NO_FILESYSTEM) {
-        res = f_mkfs("/flash", 0, 0);
+        res = f_mkfs("/flash", 1, 0);
         if (res == FR_OK) {
             // success creating fresh
         } else {
