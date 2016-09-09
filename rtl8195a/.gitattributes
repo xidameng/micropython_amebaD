@@ -1,2 +1,3 @@
 *.a binary
 *.bin binary
+*.dll binary
