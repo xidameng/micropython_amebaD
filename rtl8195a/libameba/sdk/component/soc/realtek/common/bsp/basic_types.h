@@ -90,9 +90,7 @@ typedef unsigned char           bool;
 
 #define UCHAR                   uint8_t
 #define USHORT                  uint16_t
-#if 0
 #define UINT                    uint32_t
-#endif
 #define ULONG                   uint32_t	
 
 typedef struct { volatile int counter; } atomic_t;
