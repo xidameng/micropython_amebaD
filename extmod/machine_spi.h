@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Damien P. George
+ * Copyright (c) 2016 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,21 +24,19 @@
  * THE SOFTWARE.
  */
 
-#ifndef __MICROPY_INCLUDED_STMHAL_MODMACHINE_H__
-#define __MICROPY_INCLUDED_STMHAL_MODMACHINE_H__
+#ifndef MICROPY_INCLUDED_EXTMOD_MACHINE_SPI_H
+#define MICROPY_INCLUDED_EXTMOD_MACHINE_SPI_H
 
-#include "py/mpstate.h"
-#include "py/nlr.h"
 #include "py/obj.h"
 
-void machine_init(void);
+// SPI protocol
+typedef struct _mp_machine_spi_p_t {
+    void (*transfer)(mp_obj_base_t *obj, size_t slen, const uint8_t *src, size_t dlen, uint8_t *dest);
+} mp_machine_spi_p_t;
 
-MP_DECLARE_CONST_FUN_OBJ(machine_info_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_unique_id_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_reset_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_bootloader_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_freq_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_sleep_obj);
-MP_DECLARE_CONST_FUN_OBJ(machine_deepsleep_obj);
+MP_DECLARE_CONST_FUN_OBJ(mp_machine_spi_read_obj);
+MP_DECLARE_CONST_FUN_OBJ(mp_machine_spi_readinto_obj);
+MP_DECLARE_CONST_FUN_OBJ(mp_machine_spi_write_obj);
+MP_DECLARE_CONST_FUN_OBJ(mp_machine_spi_write_readinto_obj);
 
-#endif // __MICROPY_INCLUDED_STMHAL_MODMACHINE_H__
+#endif // MICROPY_INCLUDED_EXTMOD_MACHINE_SPI_H

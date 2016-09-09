@@ -35,9 +35,12 @@
 #include "py/runtime.h"
 #include "py/stream.h"
 #include "py/mphal.h"
+#include "extmod/machine_spi.h"
 
 #include "hspi.h"
 
+mp_obj_t pyb_spi_make_new(const mp_obj_type_t *type, size_t n_args,
+                          size_t n_kw, const mp_obj_t *args);
 
 typedef struct _pyb_hspi_obj_t {
     mp_obj_base_t base;
@@ -47,18 +50,71 @@ typedef struct _pyb_hspi_obj_t {
 } pyb_hspi_obj_t;
 
 
+STATIC void hspi_transfer(mp_obj_base_t *self_in, size_t src_len, const uint8_t *src_buf, size_t dest_len, uint8_t *dest_buf) {
+    (void)self_in;
+
+    if (dest_len == 0) {
+        // fast case when we only need to write data
+        size_t chunk_size = 1024;
+        size_t count = src_len / chunk_size;
+        size_t i = 0;
+        for (size_t j = 0; j < count; ++j) {
+            for (size_t k = 0; k < chunk_size; ++k) {
+                spi_tx8fast(HSPI, src_buf[i]);
+                ++i;
+            }
+            ets_loop_iter();
+        }
+        while (i < src_len) {
+            spi_tx8fast(HSPI, src_buf[i]);
+            ++i;
+        }
+    } else {
+        // we need to read and write data
+
+        // Process data in chunks, let the pending tasks run in between
+        size_t chunk_size = 1024; // TODO this should depend on baudrate
+        size_t count = dest_len / chunk_size;
+        size_t i = 0;
+        for (size_t j = 0; j < count; ++j) {
+            for (size_t k = 0; k < chunk_size; ++k) {
+                uint32_t data_out;
+                if (src_len == 1) {
+                    data_out = src_buf[0];
+                } else {
+                    data_out = src_buf[i];
+                }
+                dest_buf[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8, data_out, 8, 0);
+                ++i;
+            }
+            ets_loop_iter();
+        }
+        while (i < dest_len) {
+            uint32_t data_out;
+            if (src_len == 1) {
+                data_out = src_buf[0];
+            } else {
+                data_out = src_buf[i];
+            }
+            dest_buf[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8, data_out, 8, 0);
+            ++i;
+        }
+    }
+}
+
 /******************************************************************************/
 // MicroPython bindings for HSPI
 
 STATIC void pyb_hspi_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     pyb_hspi_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "HSPI(baudrate=%u, polarity=%u, phase=%u)",
+    mp_printf(print, "HSPI(id=1, baudrate=%u, polarity=%u, phase=%u)",
         self->baudrate, self->polarity, self->phase);
 }
 
 STATIC void pyb_hspi_init_helper(pyb_hspi_obj_t *self, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_baudrate, ARG_polarity, ARG_phase };
+    enum { ARG_id, ARG_baudrate, ARG_polarity, ARG_phase };
     static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_id, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_polarity, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_phase, MP_ARG_INT, {.u_int = -1} },
@@ -107,7 +163,25 @@ STATIC void pyb_hspi_init_helper(pyb_hspi_obj_t *self, size_t n_args, const mp_o
 }
 
 mp_obj_t pyb_hspi_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, MP_OBJ_FUN_ARGS_MAX, true);
+    mp_arg_check_num(n_args, n_kw, 0, 1, true);
+    mp_int_t id = -1;
+    if (n_args > 0) {
+        id = mp_obj_get_int(args[0]);
+    }
+
+    if (id == -1) {
+        // Multiplex to bitbanging SPI
+        if (n_args > 0) {
+            args++;
+        }
+        return pyb_spi_make_new(type, 0, n_kw, args);
+    }
+
+    if (id != 1) {
+        // FlashROM is on SPI0, so far we don't support its usage
+        mp_raise_ValueError("");
+    }
+
     pyb_hspi_obj_t *self = m_new_obj(pyb_hspi_obj_t);
     self->base.type = &pyb_hspi_type;
     // set defaults
@@ -126,133 +200,25 @@ STATIC mp_obj_t pyb_hspi_init(size_t n_args, const mp_obj_t *args, mp_map_t *kw_
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(pyb_hspi_init_obj, 1, pyb_hspi_init);
 
-
-STATIC mp_obj_t pyb_hspi_read(size_t n_args, const mp_obj_t *args) {
-    vstr_t dest_buf;
-    vstr_init_len(&dest_buf, mp_obj_get_int(args[1]));
-    uint8_t write_byte = 0;
-    if (n_args == 3) {
-        write_byte = mp_obj_get_int(args[2]);
-    }
-    // Process data in chunks, let the pending tasks run in between
-    size_t chunk_size = 1024; // TODO this should depend on baudrate
-    size_t count = dest_buf.len / chunk_size;
-    size_t i = 0;
-    for (size_t j = 0; j < count; ++j) {
-        for (size_t k = 0; k < chunk_size; ++k) {
-            ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-                (uint32_t)write_byte, 8, 0);
-            ++i;
-        }
-        ets_loop_iter();
-    }
-    while (i < dest_buf.len) {
-        ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-            (uint32_t)write_byte, 8, 0);
-        ++i;
-    }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &dest_buf);
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_hspi_read_obj, 2, 3, pyb_hspi_read);
-
-
-STATIC mp_obj_t pyb_hspi_readinto(size_t n_args, const mp_obj_t *args) {
-    mp_buffer_info_t dest_buf;
-    mp_get_buffer_raise(args[1], &dest_buf, MP_BUFFER_WRITE);
-    uint8_t write_byte = 0;
-    if (n_args == 3) {
-        write_byte = mp_obj_get_int(args[2]);
-    }
-
-    size_t chunk_size = 1024;
-    size_t count = dest_buf.len / chunk_size;
-    size_t i = 0;
-    for (size_t j = 0; j < count; ++j) {
-        for (size_t k = 0; k < chunk_size; ++k) {
-            ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-                (uint32_t)write_byte, 8, 0);
-            ++i;
-        }
-        ets_loop_iter();
-    }
-    while (i < dest_buf.len) {
-        ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-            (uint32_t)write_byte, 8, 0);
-        ++i;
-    }
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_hspi_readinto_obj, 2, 3, pyb_hspi_readinto);
-
-
-STATIC mp_obj_t pyb_hspi_write(mp_obj_t self_in, mp_obj_t wr_buf_in) {
-    mp_buffer_info_t src_buf;
-    mp_get_buffer_raise(wr_buf_in, &src_buf, MP_BUFFER_READ);
-
-    size_t chunk_size = 1024;
-    size_t count = src_buf.len / chunk_size;
-    size_t i = 0;
-    for (size_t j = 0; j < count; ++j) {
-        for (size_t k = 0; k < chunk_size; ++k) {
-            spi_tx8fast(HSPI, ((const uint8_t*)src_buf.buf)[i]);
-            ++i;
-        }
-        ets_loop_iter();
-    }
-    while (i < src_buf.len) {
-        spi_tx8fast(HSPI, ((const uint8_t*)src_buf.buf)[i]);
-        ++i;
-    }
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(pyb_hspi_write_obj, pyb_hspi_write);
-
-
-STATIC mp_obj_t pyb_hspi_write_readinto(mp_obj_t self_in, mp_obj_t wr_buf_in, mp_obj_t rd_buf_in) {
-    mp_buffer_info_t src_buf;
-    mp_get_buffer_raise(wr_buf_in, &src_buf, MP_BUFFER_READ);
-    mp_buffer_info_t dest_buf;
-    mp_get_buffer_raise(rd_buf_in, &dest_buf, MP_BUFFER_WRITE);
-    if (src_buf.len != dest_buf.len) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-            "buffers must be the same length"));
-    }
-
-    size_t chunk_size = 1024;
-    size_t count = src_buf.len / chunk_size;
-    size_t i = 0;
-    for (size_t j = 0; j < count; ++j) {
-        for (size_t k = 0; k < chunk_size; ++k) {
-            ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-                (uint32_t)(((const uint8_t*)src_buf.buf)[i]), 8, 0);
-            ++i;
-        }
-        ets_loop_iter();
-    }
-    while (i < src_buf.len) {
-        ((uint8_t*)dest_buf.buf)[i] = spi_transaction(HSPI, 0, 0, 0, 0, 8,
-            (uint32_t)(((const uint8_t*)src_buf.buf)[i]), 8, 0);
-        ++i;
-    }
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_3(pyb_hspi_write_readinto_obj, pyb_hspi_write_readinto);
-
-
 STATIC const mp_rom_map_elem_t pyb_hspi_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&pyb_hspi_init_obj) },
-    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&pyb_hspi_read_obj) },
-    { MP_ROM_QSTR(MP_QSTR_readinto), MP_ROM_PTR(&pyb_hspi_readinto_obj) },
-    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&pyb_hspi_write_obj) },
-    { MP_ROM_QSTR(MP_QSTR_write_readinto), MP_ROM_PTR(&pyb_hspi_write_readinto_obj) },
+    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mp_machine_spi_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_readinto), MP_ROM_PTR(&mp_machine_spi_readinto_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mp_machine_spi_write_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write_readinto), MP_ROM_PTR(&mp_machine_spi_write_readinto_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(pyb_hspi_locals_dict, pyb_hspi_locals_dict_table);
+
+STATIC const mp_machine_spi_p_t pyb_hspi_p = {
+    .transfer = hspi_transfer,
+};
 
 const mp_obj_type_t pyb_hspi_type = {
     { &mp_type_type },
     .name = MP_QSTR_HSPI,
     .print = pyb_hspi_print,
     .make_new = pyb_hspi_make_new,
+    .protocol = &pyb_hspi_p,
     .locals_dict = (mp_obj_dict_t*)&pyb_hspi_locals_dict,
 };
