@@ -4,8 +4,6 @@ ENTRY(Reset_Handler)
 
 INCLUDE "export-rom_v03.txt"
 
-__stack_size__    = 512K;
-
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x100000
@@ -92,11 +90,11 @@ SECTIONS
     __sdram_buffer_data_end__ = .;
   } > SDRAM_RAM
 
-  .mp_data :
+  .mp_heap :
   {
     /* define micropython heap start and end */
     _mp_gc_head = .;
-    . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
+    . = ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM);
     _mp_gc_end = .;
   } >  SDRAM_RAM
 
