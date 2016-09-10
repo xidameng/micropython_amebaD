@@ -174,7 +174,6 @@ STM_SRC_C = $(addprefix stmhal/,\
 
 SRC_C += \
 	main.c \
-	mdns.c \
 	lib/libc/string0.c \
 	lib/utils/pyexec.c \
 	lib/utils/pyhelp.c \
@@ -248,15 +247,13 @@ image: $(BUILD)/firmware.map
 	$(Q)$(eval RAM3_START_ADDR = 0x$(shell grep __sdram_data_ $(BUILD)/firmware.map | grep _start__ | awk '{print $$1}'))
 	$(Q)$(eval RAM3_END_ADDR = 0x$(shell grep __sdram_data_ $(BUILD)/firmware.map | grep _end__ | awk '{print $$1}'))
 	$(Q)$(OBJCOPY) -j .image2.start.table -j .ram_image2.text -j .ram.data -Obinary $(BUILD)/firmware.elf $(BUILD)/ram_2.bin
-	$(Q)$(OBJCOPY) -j .image3 -j .ARM.exidx -j .sdr_data -Obinary $(BUILD)/firmware.elf $(BUILD)/sdram.bin
+	$(Q)$(OBJCOPY) -j .ARM.exidx -j .sdr_data -Obinary $(BUILD)/firmware.elf $(BUILD)/sdram.bin
 	$(Q)$(TOOLS)/mac/pick $(RAM2_START_ADDR) $(RAM2_END_ADDR) $(BUILD)/ram_2.bin $(BUILD)/ram_2.p.bin body+reset_offset+sig
 	$(Q)$(TOOLS)/mac/pick $(RAM2_START_ADDR) $(RAM2_END_ADDR) $(BUILD)/ram_2.bin $(BUILD)/ram_2.ns.bin body+reset_offset
 	$(Q)$(TOOLS)/mac/pick $(RAM3_START_ADDR) $(RAM3_END_ADDR) $(BUILD)/sdram.bin $(BUILD)/ram_3.p.bin body+reset_offset
 	$(Q)$(CP) $(TOOLS)/ram_1.p.bin $(BUILD)/ram_1.p.bin
 	$(Q)$(TOOLS)/mac/padding 44k 0xFF $(BUILD)/ram_1.p.bin
 	$(Q)cat $(BUILD)/ram_1.p.bin $(BUILD)/ram_2.p.bin $(BUILD)/ram_3.p.bin > $(BUILD)/ram_all.bin
-	$(Q)cat $(BUILD)/ram_2.ns.bin $(BUILD)/ram_3.p.bin > $(BUILD)/ota.bin
-	$(Q)$(TOOLS)/mac/checksum $(BUILD)/ota.bin
 dummy:
 	$(Q)$(CP) $(TOOLS)/ram_1.p.bin $(BUILD)/dummy.bin
 	$(Q)$(TOOLS)/mac/padding 1M 0xFF $(BUILD)/dummy.bin

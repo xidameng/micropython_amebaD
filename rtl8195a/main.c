@@ -150,7 +150,7 @@ void flash_vfs_init0(void) {
     vfs->len = 6;
     vfs->flags = 0;
     flash_init0(vfs);
-// put the flash device in slot 0 (it will be unused at this point)
+    // put the flash device in slot 0 (it will be unused at this point)
     MP_STATE_PORT(fs_user_mount)[0] = vfs;
 
     FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
@@ -163,23 +163,24 @@ void flash_vfs_init0(void) {
             MP_STATE_PORT(fs_user_mount)[0] = NULL;
             return;
         }
-        // create empty main.py
-        FIL fp;
-        res = f_open(&fp, "/flash/main.py", FA_WRITE | FA_CREATE_ALWAYS);
-        UINT n;
-        res = f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
-        // TODO check we could write n bytes
-        f_close(&fp);
-
-        if (FR_OK != f_chdir ("/flash/lib")) {
-            f_mkdir("/flash/lib");
-        }
+       
     } else if (res == FR_OK) {
         // mount successful
     } else {
         __fatal_error("PYB: can't mount flash\n");
         MP_STATE_PORT(fs_user_mount)[0] = NULL;
         return;
+    }
+
+    // create empty main.py
+    FIL fp;
+    res = f_open(&fp, "/flash/main.py", FA_WRITE | FA_CREATE_ALWAYS);
+    UINT n;
+    res = f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
+    // TODO check we could write n bytes
+    f_close(&fp);
+    if (FR_OK != f_chdir ("/flash/lib")) {
+        f_mkdir("/flash/lib");
     }
 }
 

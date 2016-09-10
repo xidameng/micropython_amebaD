@@ -8,14 +8,18 @@ __stack_size__    = 512K;
 
 MEMORY
 {
-  TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 65536
-  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000000, LENGTH = 0x5FFF
-  BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 434176
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x100000
+  TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
+  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000000, LENGTH = 0x6000
+  BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
 }
 
 SECTIONS
 {
+
+  __image1_flash_size__ = 0xB000;
+
   __rom_bss_start__ = 0x10000300;
   __rom_bss_end__ = 0x10000bc8;
 
@@ -88,13 +92,14 @@ SECTIONS
     __sdram_buffer_data_end__ = .;
   } > SDRAM_RAM
 
- .mp_data :
+  .mp_data :
   {
     /* define micropython heap start and end */
     _mp_gc_head = .;
     . = . + (ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM) - __stack_size__ - ABSOLUTE(.));
     _mp_gc_end = .;
   } >  SDRAM_RAM
+
   .image2.start.table :
   {
     .image2.start.table1$$Base = .;
@@ -198,6 +203,23 @@ SECTIONS
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 
+    .flash_map : 
+    {
+      __image1_flash_start__ = .;
+      . = . + __image1_flash_size__;
+      __image1_flash_end__ = .;
+      __image2_flash_start__ = .;
+      . = . + SIZEOF(.image2.start.table) + SIZEOF(.ram_image2.text) + SIZEOF(.ram.data);
+      __image2_flash_end__ = .;
+      __sdram_text_flash_start__ = .;
+      . = . + SIZEOF(.sdr_data);
+      __sdram_text_flash_end__ = .;
+      /* ALIGN flash address to 4K address because of the Ameba flash driver's restriction */
+      . = ALIGN(0x1000);
+      __fatfs_start_address__ = .;
+      . = ORIGIN(FLASH) + LENGTH(FLASH) - 1;
+      __fatfs_end_address__ = .;
+    } > FLASH
 }
 
 
