@@ -6,7 +6,7 @@ INCLUDE "export-rom_v03.txt"
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x100000
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0xFA000
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
   ROM_USED_RAM (rwx)  : ORIGIN = 0x10000000, LENGTH = 0x6000
   BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
@@ -217,6 +217,7 @@ SECTIONS
       __fatfs_start_address__ = .;
       . = ORIGIN(FLASH) + LENGTH(FLASH) - 1;
       __fatfs_end_address__ = .;
+      __fatfs_num_blocks__ = (__fatfs_end_address__ - __fatfs_start_address__ + 1) / 4096;
     } > FLASH
 }
 

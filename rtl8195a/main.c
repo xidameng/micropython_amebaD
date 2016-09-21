@@ -174,14 +174,19 @@ void flash_vfs_init0(void) {
 
     // create empty main.py
     FIL fp;
-    res = f_open(&fp, "/flash/main.py", FA_WRITE | FA_CREATE_ALWAYS);
     UINT n;
-    res = f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
-    // TODO check we could write n bytes
-    f_close(&fp);
+    res = f_open(&fp, "/flash/main.py", FA_WRITE | FA_CREATE_NEW);
+    if (res == FR_OK)
+    {
+        f_write(&fp, fresh_main_py, sizeof(fresh_main_py) - 1 /* don't count null terminator */, &n);
+        // TODO check we could write n bytes
+        f_close(&fp);
+    }
     if (FR_OK != f_chdir ("/flash/lib")) {
         f_mkdir("/flash/lib");
     }
+
+    f_chdir("/flash");
 }
 
 void nlr_jump_fail(void *val) {
