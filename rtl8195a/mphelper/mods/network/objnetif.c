@@ -71,7 +71,6 @@ void netif_init0(void) {
 
     netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
     netif_set_up(&xnetif[netif_obj_1.index]);
-
 }
 
 STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
@@ -118,6 +117,22 @@ bool dhcp_request_func(uint8_t id, u_int timeout) {
     }
     return false;
 }
+
+STATIC mp_obj_t ip_get(mp_obj_t self_in) {
+    netif_obj_t *self = self_in;
+    mp_obj_t tuple[8];
+    struct ip_addr ipaddr;   
+    struct ip_addr netmask;   
+    struct ip_addr gateway;
+    ipaddr  = xnetif[self->index].ip_addr;
+    netmask = xnetif[self->index].netmask;
+    gateway = xnetif[self->index].gw;
+    tuple[0] = mp_obj_new_str(ip_ntoa(&ipaddr), strlen(ip_ntoa(&ipaddr)), false);
+    tuple[1] = mp_obj_new_str(ip_ntoa(&netmask), strlen(ip_ntoa(&netmask)), false);
+    tuple[2] = mp_obj_new_str(ip_ntoa(&gateway), strlen(ip_ntoa(&gateway)), false);
+    return mp_obj_new_tuple(3, tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(ip_get_obj, ip_get);
 
 STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
     netif_obj_t *self = self_in;
@@ -206,6 +221,7 @@ STATIC mp_obj_t netif_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_u
 }
 
 STATIC const mp_map_elem_t netif_locals_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ip),           (mp_obj_t)&ip_get_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_request), (mp_obj_t)&dhcp_request_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_renew),   (mp_obj_t)&dhcp_renew_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_release), (mp_obj_t)&dhcp_release_obj },

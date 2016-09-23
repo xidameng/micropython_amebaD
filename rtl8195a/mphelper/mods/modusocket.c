@@ -45,9 +45,9 @@
 #include "lwip/dns.h"
 #include "lwip/tcp_impl.h"
 
-#if 0 // print debugging info
-#define DEBUG_printf DEBUG_printf
-#else // don't print debugging info
+#if 0 
+#define DEBUG_printf DiagPrintf
+#else 
 #define DEBUG_printf(...) (void)0
 #endif
 
@@ -60,109 +60,6 @@
 #ifndef ip_reset_option
 #define ip_reset_option(pcb, opt) ((pcb)->so_options &= ~(opt))
 #endif
-
-#ifdef MICROPY_PY_LWIP_SLIP
-#include "netif/slipif.h"
-#include "lwip/sio.h"
-#endif
-
-#ifdef MICROPY_PY_LWIP_SLIP
-/******************************************************************************/
-// Slip object for modlwip. Requires a serial driver for the port that supports
-// the lwip serial callback functions.
-
-typedef struct _lwip_slip_obj_t {
-    mp_obj_base_t base;
-    struct netif lwip_netif;
-} lwip_slip_obj_t;
-
-// Slip object is unique for now. Possibly can fix this later. FIXME
-STATIC lwip_slip_obj_t lwip_slip_obj;
-
-// Declare these early.
-void mod_lwip_register_poll(void (*poll)(void *arg), void *poll_arg);
-void mod_lwip_deregister_poll(void (*poll)(void *arg), void *poll_arg);
-
-STATIC void slip_lwip_poll(void *netif) {
-    slipif_poll((struct netif*)netif);
-}
-
-STATIC const mp_obj_type_t lwip_slip_type;
-
-// lwIP SLIP callback functions
-sio_fd_t sio_open(u8_t dvnum) {
-    // We support singleton SLIP interface, so just return any truish value.
-    return (sio_fd_t)1;
-}
-
-void sio_send(u8_t c, sio_fd_t fd) {
-    mp_obj_type_t *type = mp_obj_get_type(MP_STATE_VM(lwip_slip_stream));
-    int error;
-    type->stream_p->write(MP_STATE_VM(lwip_slip_stream), &c, 1, &error);
-}
-
-u32_t sio_tryread(sio_fd_t fd, u8_t *data, u32_t len) {
-    mp_obj_type_t *type = mp_obj_get_type(MP_STATE_VM(lwip_slip_stream));
-    int error;
-    mp_uint_t out_sz = type->stream_p->read(MP_STATE_VM(lwip_slip_stream), data, len, &error);
-    if (out_sz == MP_STREAM_ERROR) {
-        if (mp_is_nonblocking_error(error)) {
-            return 0;
-        }
-        // Can't do much else, can we?
-        return 0;
-    }
-    return out_sz;
-}
-
-// constructor lwip.slip(device=integer, iplocal=string, ipremote=string)
-STATIC mp_obj_t lwip_slip_make_new(mp_obj_t type_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 3, 3, false);
-
-    lwip_slip_obj.base.type = &lwip_slip_type;
-
-    MP_STATE_VM(lwip_slip_stream) = args[0];
-
-    ip_addr_t iplocal, ipremote;
-    if (!ipaddr_aton(mp_obj_str_get_str(args[1]), &iplocal)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "not a valid local IP"));
-    }
-    if (!ipaddr_aton(mp_obj_str_get_str(args[2]), &ipremote)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "not a valid remote IP"));
-    }
-
-    struct netif *n = &lwip_slip_obj.lwip_netif;
-    if (netif_add(n, &iplocal, IP_ADDR_BROADCAST, &ipremote, NULL, slipif_init, ip_input) == NULL) {
-       nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "out of memory"));
-    }
-    netif_set_up(n);
-    netif_set_default(n);
-    mod_lwip_register_poll(slip_lwip_poll, n);
-
-    return (mp_obj_t)&lwip_slip_obj;
-}
-
-STATIC mp_obj_t lwip_slip_status(mp_obj_t self_in) {
-    // Null function for now.
-    return mp_const_none;
-}
-
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(lwip_slip_status_obj, lwip_slip_status);
-
-STATIC const mp_map_elem_t lwip_slip_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_status), (mp_obj_t)&lwip_slip_status_obj },
-};
-
-STATIC MP_DEFINE_CONST_DICT(lwip_slip_locals_dict, lwip_slip_locals_dict_table);
-
-STATIC const mp_obj_type_t lwip_slip_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_slip,
-    .make_new = lwip_slip_make_new,
-    .locals_dict = (mp_obj_t)&lwip_slip_locals_dict,
-};
-
-#endif // MICROPY_PY_LWIP_SLIP
 
 /******************************************************************************/
 // Table to convert lwIP err_t codes to socket errno codes, from the lwIP
@@ -182,7 +79,6 @@ static const int error_lookup_table[] = {
     MP_EINPROGRESS,   /* ERR_INPROGRESS -5      Operation in progress    */
     MP_EINVAL,        /* ERR_VAL        -6      Illegal value.           */
     MP_EWOULDBLOCK,   /* ERR_WOULDBLOCK -7      Operation would block.   */
-
     MP_ECONNABORTED,  /* ERR_ABRT       -8      Connection aborted.      */
     MP_ECONNRESET,    /* ERR_RST        -9      Connection reset.        */
     MP_ENOTCONN,      /* ERR_CLSD       -10     Connection closed.       */
@@ -219,12 +115,14 @@ static const int error_lookup_table[] = {
 /*******************************************************************************/
 // The socket object provided by lwip.socket.
 
-#define MOD_NETWORK_AF_INET (2)
-#define MOD_NETWORK_AF_INET6 (10)
+#define MOD_NETWORK_AF_INET     (2)
+#define MOD_NETWORK_AF_INET6    (10)
 
 #define MOD_NETWORK_SOCK_STREAM (1)
-#define MOD_NETWORK_SOCK_DGRAM (2)
-#define MOD_NETWORK_SOCK_RAW (3)
+#define MOD_NETWORK_SOCK_DGRAM  (2)
+#define MOD_NETWORK_SOCK_RAW    (3)
+
+#define SOF_CALLBACK            (20)
 
 typedef struct _lwip_socket_obj_t {
     mp_obj_base_t base;
@@ -258,7 +156,7 @@ static inline void poll_sockets(void) {
 #ifdef MICROPY_EVENT_POLL_HOOK
     MICROPY_EVENT_POLL_HOOK;
 #else
-    mp_hal_delay_us(200);
+    mp_hal_delay_us(50);
 #endif
 }
 
@@ -1070,7 +968,7 @@ STATIC mp_obj_t lwip_socket_setsockopt(mp_uint_t n_args, const mp_obj_t *args) {
     lwip_socket_obj_t *socket = args[0];
 
     int opt = mp_obj_get_int(args[2]);
-    if (opt == 20) {
+    if (opt == SOF_CALLBACK) {
         if (args[3] == mp_const_none) {
             socket->callback = MP_OBJ_NULL;
         } else {
@@ -1297,26 +1195,25 @@ MP_DEFINE_CONST_FUN_OBJ_0(lwip_print_pcbs_obj, lwip_print_pcbs);
 #ifdef MICROPY_PY_LWIP
 
 STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_usocket) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&mod_lwip_reset_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_callback), (mp_obj_t)&mod_lwip_callback_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_getaddrinfo), (mp_obj_t)&lwip_getaddrinfo_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_print_pcbs), (mp_obj_t)&lwip_print_pcbs_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_usocket) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         (mp_obj_t)&mod_lwip_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_callback),      (mp_obj_t)&mod_lwip_callback_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getaddrinfo),   (mp_obj_t)&lwip_getaddrinfo_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_print_pcbs),    (mp_obj_t)&lwip_print_pcbs_obj },
     // objects
-    { MP_OBJ_NEW_QSTR(MP_QSTR_socket), (mp_obj_t)&lwip_socket_type },
-#ifdef MICROPY_PY_LWIP_SLIP
-    { MP_OBJ_NEW_QSTR(MP_QSTR_slip), (mp_obj_t)&lwip_slip_type },
-#endif
+    { MP_OBJ_NEW_QSTR(MP_QSTR_socket),        (mp_obj_t)&lwip_socket_type },
+
     // class constants
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET6), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET6) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET),       MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET6),      MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET6) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_STREAM), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_STREAM) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_DGRAM), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_DGRAM) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_RAW), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_RAW) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_STREAM),   MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_STREAM) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_DGRAM),    MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_DGRAM) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_RAW),      MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_RAW) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SOL_SOCKET), MP_OBJ_NEW_SMALL_INT(1) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR), MP_OBJ_NEW_SMALL_INT(SOF_REUSEADDR) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SOL_SOCKET),    MP_OBJ_NEW_SMALL_INT(1) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR),  MP_OBJ_NEW_SMALL_INT(SOF_REUSEADDR) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR),  MP_OBJ_NEW_SMALL_INT(SOF_CALLBACK) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_lwip_globals, mp_module_lwip_globals_table);
