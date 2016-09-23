@@ -186,6 +186,5 @@ STATIC MP_DEFINE_CONST_DICT(crypto_module_globals, crypto_module_globals_table);
 
 const mp_obj_module_t mp_crypto_module = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_crypto,
     .globals = (mp_obj_dict_t*)&crypto_module_globals,
 };

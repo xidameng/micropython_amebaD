@@ -41,6 +41,5 @@ STATIC MP_DEFINE_CONST_DICT(wireless_module_globals, wireless_module_globals_tab
 
 const mp_obj_module_t mp_module_uwireless = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_uwireless,
     .globals = (mp_obj_dict_t*)&wireless_module_globals,
 };

@@ -159,6 +159,5 @@ STATIC MP_DEFINE_CONST_DICT(uvc_module_globals, uvc_module_globals_table);
 
 const mp_obj_module_t mp_uvc_module = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_uvc,
     .globals = (mp_obj_dict_t*)&uvc_module_globals,
 };

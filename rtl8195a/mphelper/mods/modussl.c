@@ -203,6 +203,5 @@ STATIC MP_DEFINE_CONST_DICT(ssl_module_globals, ssl_module_globals_table);
 
 const mp_obj_module_t mp_module_ussl = {
     .base    = { &mp_type_module },
-    .name    = MP_QSTR_ussl,
     .globals = (mp_obj_dict_t*)&ssl_module_globals,
 };
