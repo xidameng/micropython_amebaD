@@ -60,7 +60,14 @@ int mp_hal_stdin_rx_chr(void) {
         if (c != -1) {
             return c;
         }
+        #if 0
+        // Idles CPU but need more testing before enabling
+        if (!ets_loop_iter()) {
+            asm("waiti 0");
+        }
+        #else
         mp_hal_delay_us(1);
+        #endif
     }
 }
 
@@ -110,7 +117,7 @@ void mp_hal_debug_tx_strn_cooked(void *env, const char *str, uint32_t len) {
 }
 
 uint32_t mp_hal_ticks_ms(void) {
-    return system_get_time() / 1000;
+    return ((uint64_t)system_time_high_word << 32 | (uint64_t)system_get_time()) / 1000;
 }
 
 uint32_t mp_hal_ticks_us(void) {
