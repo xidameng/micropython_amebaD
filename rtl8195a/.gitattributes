@@ -1,7 +1,5 @@
 *.a binary
 *.bin binary
 *.dll binary
-<<<<<<< HEAD
 *.out binary
-=======
->>>>>>> 149b89eca1e46f98caa5f9d95dbb03f5570bc105
+*.exe binary
