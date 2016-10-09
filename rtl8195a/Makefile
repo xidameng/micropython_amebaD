@@ -1,263 +1,645 @@
 include ../py/mkenv.mk
 
 # qstr definitions (must come before including py.mk)
-QSTR_DEFS += qstrdefsport.h $(HEADER_BUILD)/pins_qstr.h
+#QSTR_DEFS += qstrdefsport.h $(HEADER_BUILD)/pins_qstr.h
+QSTR_DEFS += qstrdefsport.h
 
 -include mpconfigport.mk
 
 # include py core make definitions
 include ../py/py.mk
 
-CROSS_COMPILE = arm-none-eabi-
+OS := $(shell uname)
+VENDOR := vendor
+GDB_SERVER := openocd
+TOOL := tool
 
-SDK = libameba/sdk
-LIB = lib
-TOOLS = tools
-HELPER = mphelper
-PROJECT = realtek_ameba1_va0_example
-BOARD ?= ameba
-
-#-------------------------------------------------------------------------------
-# Includes
-#-------------------------------------------------------------------------------
-
-INC += -I.
-INC += -I..
-INC += -I$(BUILD)
-INC += -I$(HELPER)
-
-INC += -I$(HEADER_BUILD)
-
-INC += -I../lib/utils
-INC += -I../lib/timeutils
-INC += -I../lib/mp-readline
-
-INC += -I$(SDK)/project/$(PROJECT)/inc
-INC += -I$(SDK)/component/soc/realtek/common/bsp
-INC += -I$(SDK)/component/os/freertos
-INC += -I$(SDK)/component/os/freertos/freertos_v8.1.2/Source/include
-INC += -I$(SDK)/component/os/freertos/freertos_v8.1.2/Source/portable/GCC/ARM_CM3
-INC += -I$(SDK)/component/os/os_dep/include
-INC += -I$(SDK)/component/soc/realtek/8195a/misc/driver
-INC += -I$(SDK)/component/common/api/network/include
-INC += -I$(SDK)/component/common/api
-INC += -I$(SDK)/component/common/api/platform
-INC += -I$(SDK)/component/common/api/wifi
-INC += -I$(SDK)/component/common/api/wifi/rtw_wpa_supplicant/src
-INC += -I$(SDK)/component/common/application
-INC += -I$(SDK)/component/common/example
-INC += -I$(SDK)/component/common/example/wlan_fast_connect
-INC += -I$(SDK)/component/common/mbed/api
-INC += -I$(SDK)/component/common/mbed/hal
-INC += -I$(SDK)/component/common/mbed/hal_ext
-INC += -I$(SDK)/component/common/mbed/targets/hal/rtl8195a
-INC += -I$(SDK)/component/common/network
-INC += -I$(SDK)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos
-INC += -I$(SDK)/component/common/network/lwip/lwip_v1.4.1/src/include
-INC += -I$(SDK)/component/common/network/lwip/lwip_v1.4.1/src/include/lwip
-INC += -I$(SDK)/component/common/network/lwip/lwip_v1.4.1/src/include/ipv4
-INC += -I$(SDK)/component/common/network/lwip/lwip_v1.4.1/port/realtek
-INC += -I$(SDK)/component/common/test
-INC += -I$(SDK)/component/soc/realtek/8195a/cmsis
-INC += -I$(SDK)/component/soc/realtek/8195a/cmsis/device
-INC += -I$(SDK)/component/soc/realtek/8195a/fwlib
-INC += -I$(SDK)/component/soc/realtek/8195a/fwlib/rtl8195a
-INC += -I$(SDK)/component/common/drivers/wlan/realtek/include
-INC += -I$(SDK)/component/common/drivers/wlan/realtek/src/osdep
-INC += -I$(SDK)/component/common/drivers/wlan/realtek/src/hci
-INC += -I$(SDK)/component/common/drivers/wlan/realtek/src/hal
-INC += -I$(SDK)/component/common/drivers/wlan/realtek/src/hal/OUTSRC
-INC += -I$(SDK)/component/soc/realtek/8195a/fwlib/ram_lib/wlan/realtek/wlan_ram_map/rom
-INC += -I$(SDK)/component/common/network/ssl/polarssl-1.3.8/include
-INC += -I$(SDK)/component/common/network/ssl/ssl_ram_map/rom
-INC += -I$(SDK)/component/common/utilities
-INC += -I$(SDK)/component/soc/realtek/8195a/misc/rtl_std_lib/include
-INC += -I$(SDK)/component/soc/realtek/8195a/fwlib/ram_lib/usb_otg/include
-INC += -I$(SDK)/component/common/video/v4l2/inc
-INC += -I$(SDK)/component/common/media/codec
-INC += -I$(SDK)/component/common/drivers/usb_class/host/uvc/inc
-INC += -I$(SDK)/component/common/drivers/sdio/realtek/sdio_host/inc/
-
-INC += -I$(HELPER)
-INC += -I$(HELPER)/gccollect
-INC += -I$(HELPER)/hal
-INC += -I$(HELPER)/mods
-INC += -I$(HELPER)/mods/network
-INC += -I$(HELPER)/mods/machine
-
-INC += -I../stmhal
-
-#-------------------------------------------------------------------------------
-# Flags
-#-------------------------------------------------------------------------------
-CFLAGS += -c
-CFLAGS += -g
-CFLAGS += -w
-CFLAGS += -mcpu=cortex-m3
-CFLAGS += -mtune=cortex-m3
-CFLAGS += -mthumb
-CFLAGS += -O2
-CFLAGS += -ansi
-CFLAGS += -std=gnu99
-CFLAGS += -fno-short-enums
-CFLAGS += -fno-common
-CFLAGS += -fmessage-length=0
-CFLAGS += -Wall
-CFLAGS += -fno-exceptions
-CFLAGS += -ffunction-sections
-CFLAGS += -fdata-sections
-CFLAGS += -fomit-frame-pointer
-CFLAGS += -fno-short-enums
-#CFLAGS += -nostdlib
-CFLAGS += -Werror
-CFLAGS += -Wundef
-#CFLAGS += -Wstrict-prototypes
-#CFLAGS += -Wno-write-strings
-#CFLAGS += -fsingle-precision-constant
-#CFLAGS += -Wdouble-promotion
-#CFLAGS += -nostartfiles
-CFLAGS += -DCONFIG_PLATFORM_8195A $(INC)
-CFLAGS += $(CFLAGS_MOD)
-
-#Debugging/Optimization
-ifeq ($(DEBUG), 1)
-CFLAGS += -O0 -ggdb
+.PHONY: toolchain
+toolchain:
+ifeq ($(OS),Linux)
+	if [ ! -d $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ] ; then tar -jxf $(VENDOR)/tools/arm-none-eabi-gcc/gcc-arm-none-eabi-4_8-2014q1-20140314-linux.tar.bz2 -C $(VENDOR)/tools/arm-none-eabi-gcc/ ; mv $(VENDOR)/tools/arm-none-eabi-gcc/gcc-arm-none-eabi-4_8-2014q1 $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ; fi
 else
-CFLAGS += -Os -DNDEBUG 
+	if [ ! -d $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ] ; then tar -zxf $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1.tar.gz -C $(VENDOR)/tools/arm-none-eabi-gcc/ ; fi
 endif
 
-ELF_CFLAGS += -O2
-ELF_CFLAGS += -Wl,--gc-sections
-ELF_CFLAGS += -mcpu=cortex-m3
-ELF_CFLAGS += -mthumb
-ELF_CFLAGS += --specs=nano.specs
+# Initialize tool chain
+# -------------------------------------------------------------------
+ARM_GCC_TOOLCHAIN = $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1/
+AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
+FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
 
-ELF_LDFLAGS += -L./scripts -L. -T./scripts/rlx8195A-symbol-v03-img2_arduino_arduino.ld
-ELF_LDFLAGS += -Wl,-Map=$@.map
-ELF_LDFLAGS += -Wl,--cref
-ELF_LDFLAGS += -Wl,--warn-common
-ELF_LDFLAGS += -Wl,--gc-sections
-ELF_LDFLAGS += -Wl,--no-enum-size-warning
-ELF_LDFLAGS += -Wl,--no-wchar-size-warning
-ELF_LDFLAGS += -Wl,--entry=InfraStart
+CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)bin/arm-none-eabi-
 
-ELF_ARLIST += ./$(LIB)/lib_wlan.a
-ELF_ARLIST += ./$(LIB)/lib_wlan_mp.a 
-ELF_ARLIST += ./$(LIB)/lib_wps.a
-ELF_ARLIST += ./$(LIB)/lib_mdns.a
-ELF_ARLIST += ./$(LIB)/lib_ameba.a
-ELF_ARLIST += ./$(LIB)/lib_rtlstd.a
-ELF_ARLIST += ./$(LIB)/lib_platform.a
-ELF_ARLIST += ./$(LIB)/lib_usb_drv.a
-ELF_ARLIST += ./$(LIB)/lib_usb_otg.a
-ELF_ARLIST += ./$(LIB)/lib_uvc.a
-ELF_ARLIST += ./$(LIB)/lib_usb_otg_linux.a
-ELF_ARLIST += ./$(LIB)/lib_sdcard.a
+# Compilation tools
+AR = $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+AS = $(CROSS_COMPILE)as
+NM = $(CROSS_COMPILE)nm
+LD = $(CROSS_COMPILE)gcc
+GDB = $(CROSS_COMPILE)gdb
+OBJCOPY = $(CROSS_COMPILE)objcopy
+OBJDUMP = $(CROSS_COMPILE)objdump
 
-#-------------------------------------------------------------------------------
-# C source files and objects
-#-------------------------------------------------------------------------------
-SRC_C += $(wildcard $(HELPER)/*.c)
-SRC_C += $(wildcard $(HELPER)/gccollect/*.c)
-SRC_C += $(wildcard $(HELPER)/hal/*.c)
-SRC_C += $(wildcard $(HELPER)/mods/*.c)
-SRC_C += $(wildcard $(HELPER)/mods/machine/*.c)
-SRC_C += $(wildcard $(HELPER)/mods/wireless/*.c)
-SRC_C += $(wildcard $(HELPER)/mods/network/*.c)
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+PICK = $(AMEBA_TOOLDIR)pick.exe
+PAD  = $(AMEBA_TOOLDIR)padding.exe
+CHKSUM = $(AMEBA_TOOLDIR)checksum.exe
+else
+PICK = $(AMEBA_TOOLDIR)pick
+PAD  = $(AMEBA_TOOLDIR)padding
+CHKSUM = $(AMEBA_TOOLDIR)checksum
+endif
 
-#-------------------------------------------------------------------------------
-# External C source files and objects
-#-------------------------------------------------------------------------------
-STM_SRC_C = $(addprefix stmhal/,\
-		bufhelper.c \
-	)
 
-SRC_C += \
-	main.c \
-	lib/libc/string0.c \
-	lib/utils/pyexec.c \
-	lib/utils/pyhelp.c \
-	lib/mp-readline/readline.c \
-	lib/netutils/netutils.c \
-	lib/fatfs/ff.c \
-	lib/fatfs/option/ccsbcs.c \
-	lib/timeutils/timeutils.c \
-	ftp/vfs.c \
-	ftp/ftpd.c \
-	$(STM_SRC_C)
+# Initialize target name and target object files
+# -------------------------------------------------------------------
 
-SRC_S += $(wildcard $(HELPER)/gccollect/*.s)
-SRC_S += 
+all: application manipulate_images
 
-OBJ = $(PY_O) $(addprefix $(BUILD)/, $(SRC_C:.c=.o) $(SRC_S:.s=.o))
+mp: application manipulate_images
 
-SRC_QSTR += $(SRC_C) $(STM_SRC_C)
+TARGET=application
+
+#OBJ_DIR=$(TARGET)/Debug/obj
+#BIN_DIR=$(TARGET)/Debug/bin
+OBJ_DIR=$(BUILD)
+BIN_DIR=$(BUILD)
+
+# Include folder list
+# -------------------------------------------------------------------
+
+INCLUDES =
+INCLUDES += -I.
+INCLUDES += -I..
+INCLUDES += -Iinc
+INCLUDES += -I$(BUILD)
+INCLUDES += -I$(HEADER_BUILD)
+INCLUDES += -I$(VENDOR)/component/soc/realtek/common/bsp
+INCLUDES += -I$(VENDOR)/component/os/freertos
+INCLUDES += -I$(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/include
+INCLUDES += -I$(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/GCC/ARM_CM3
+INCLUDES += -I$(VENDOR)/component/os/os_dep/include
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/misc/driver
+INCLUDES += -I$(VENDOR)/component/common/api/network/include
+INCLUDES += -I$(VENDOR)/component/common/api
+INCLUDES += -I$(VENDOR)/component/common/api/platform
+INCLUDES += -I$(VENDOR)/component/common/api/wifi
+INCLUDES += -I$(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/src
+INCLUDES += -I$(VENDOR)/component/common/application
+INCLUDES += -I$(VENDOR)/component/common/application/iotdemokit
+INCLUDES += -I$(VENDOR)/component/common/application/google
+INCLUDES += -I$(VENDOR)/component/common/media/framework
+INCLUDES += -I$(VENDOR)/component/common/example
+INCLUDES += -I$(VENDOR)/component/common/example/wlan_fast_connect
+INCLUDES += -I$(VENDOR)/component/common/mbed/api
+INCLUDES += -I$(VENDOR)/component/common/mbed/hal
+INCLUDES += -I$(VENDOR)/component/common/mbed/hal_ext
+INCLUDES += -I$(VENDOR)/component/common/mbed/targets/hal/rtl8195a
+INCLUDES += -I$(VENDOR)/component/common/network
+INCLUDES += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos
+INCLUDES += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include
+INCLUDES += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/lwip
+INCLUDES += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/ipv4
+INCLUDES += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek
+INCLUDES += -I$(VENDOR)/component/common/test
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/cmsis
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/cmsis/device
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/fwlib
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/misc/rtl_std_lib/include
+INCLUDES += -I$(VENDOR)/component/common/drivers/wlan/realtek/include
+INCLUDES += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/osdep
+INCLUDES += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hci
+INCLUDES += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hal
+INCLUDES += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hal/OUTSRC
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/fwlib/ram_lib/wlan/realtek/wlan_ram_map/rom
+INCLUDES += -I$(VENDOR)/component/common/network/ssl/polarssl-1.3.8/include
+INCLUDES += -I$(VENDOR)/component/common/network/ssl/ssl_ram_map/rom
+INCLUDES += -I$(VENDOR)/component/common/utilities
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/misc/rtl_std_lib/include
+INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/Curve25519
+INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/GladmanAES
+INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/fwlib/ram_lib/usb_otg/include
+INCLUDES += -I$(VENDOR)/component/common/video/v4l2/inc
+INCLUDES += -I$(VENDOR)/component/common/media/codec
+INCLUDES += -I$(VENDOR)/component/common/drivers/usb_class/host/uvc/inc
+INCLUDES += -I$(VENDOR)/component/common/drivers/usb_class/device
+INCLUDES += -I$(VENDOR)/component/common/drivers/usb_class/device/class
+#INCLUDES += -I$(VENDOR)/component/common/file_system/fatfs
+#INCLUDES += -I$(VENDOR)/component/common/file_system/fatfs/r0.10c/include
+INCLUDES += -I$(VENDOR)/component/common/drivers/sdio/realtek/sdio_host/inc
+INCLUDES += -I$(VENDOR)/component/common/audio
+INCLUDES += -I$(VENDOR)/component/common/drivers/i2s
+INCLUDES += -I$(VENDOR)/component/common/application/xmodem
+
+INCLUDES += -I../extmod
+INCLUDES += -I../lib/utils
+INCLUDES += -I../lib/timeutils
+INCLUDES += -I../lib/mp-readline
+INCLUDES += -I../lib/netutils
+
+INCLUDES += -Imphelper
+INCLUDES += -Imphelper/gccollect
+INCLUDES += -Imphelper/hal
+INCLUDES += -Imphelper/mods
+INCLUDES += -Imphelper/mods/network
+INCLUDES += -Imphelper/mods/machine
+
+
+# Source file list
+# -------------------------------------------------------------------
+
+SRC_C =
+DRAM_C =
+#cmsis
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/cmsis/device/system_8195a.c
+
+#console
+SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_ethernet.c
+SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_lwip.c
+SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_sys.c
+SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_wifi.c
+SRC_C += $(VENDOR)/component/common/api/at_cmd/log_service.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/low_level_io.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/rtl_consol.c
+
+#network - api
+SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/wifi_eap_config.c
+SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/wifi_p2p_config.c
+SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/wifi_wps_config.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_conf.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_ind.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_promisc.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
+SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
+
+#network - app
+SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
+SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
+SRC_C += $(VENDOR)/component/common/utilities/ssl_client_ext.c
+SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
+SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
+SRC_C += $(VENDOR)/component/common/utilities/uart_ymodem.c
+SRC_C += $(VENDOR)/component/common/utilities/update.c
+SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
+
+#network - lwip
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_lib.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_msg.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/err.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netbuf.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netdb.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netifapi.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/sockets.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/tcpip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/autoip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/icmp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/igmp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet_chksum.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_addr.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_frag.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/def.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dhcp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dns.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/init.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/lwip_timers.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/mem.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/memp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/netif.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/pbuf.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/raw.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/stats.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/sys.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_in.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_out.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/udp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/netif/etharp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/ethernetif.c
+SRC_C += $(VENDOR)/component/common/drivers/wlan/realtek/src/osdep/lwip_intf.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/sys_arch.c
+SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
+SRC_C += $(VENDOR)/component/common/network/sntp/sntp.c
+
+#network - mdns
+SRC_C += $(VENDOR)/component/common/network/mDNS/mDNSPlatform.c
+
+
+#os - freertos
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/MemMang/heap_5.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/GCC/ARM_CM3/port.c
+SRC_C += $(VENDOR)/component/os/freertos/cmsis_os.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/croutine.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/event_groups.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/list.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/queue.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/tasks.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/timers.c
+
+#os - osdep
+SRC_C += $(VENDOR)/component/os/os_dep/device_lock.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_service.c
+SRC_C += $(VENDOR)/component/os/os_dep/mailbox.c
+SRC_C += $(VENDOR)/component/os/os_dep/osdep_api.c
+SRC_C += $(VENDOR)/component/os/os_dep/osdep_service.c
+SRC_C += $(VENDOR)/component/os/os_dep/tcm_heap.c
+
+#peripheral - api
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/analogin_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/dma_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/efuse_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/ethernet_api.c
+SRC_C += $(VENDOR)/component/common/drivers/ethernet_mii/ethernet_mii.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/flash_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/gpio_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/gpio_irq_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/i2c_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/i2s_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/log_uart_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/nfc_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/pinmap.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/pinmap_common.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/port_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/pwmout_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/rtc_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/serial_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/sleep.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/spdio_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/spi_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/sys_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/timer_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/us_ticker.c
+SRC_C += $(VENDOR)/component/common/mbed/common/us_ticker_api.c
+SRC_C += $(VENDOR)/component/common/mbed/common/wait_api.c
+SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/wdt_api.c
+
+#peripheral - hal
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_32k.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_adc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gdma.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gpio.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2c.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2s.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_mii.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_nfc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_pcm.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_pwm.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_sdr_controller.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_ssi.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_timer.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_uart.c
+
+#peripheral - osdep
+SRC_C += $(VENDOR)/component/os/freertos/freertos_pmu.c
+
+#peripheral - rtl8195a
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_adc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gdma.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gpio.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2c.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2s.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_mii.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_nfc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_pwm.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_ssi.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_timer.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_uart.c
+
+#peripheral - wlan
+#all:SRC_C += $(VENDOR)/component/common/drivers/wlan/realtek/src/core/option/rtw_opt_skbuf.c
+
+#SDRAM
+DRAM_C += $(VENDOR)/component/common/api/platform/stdlib_patch.c
+#SDRAM - polarssl
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/aes.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/aesni.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/arc4.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/asn1parse.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/asn1write.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/base64.c
+SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/bignum.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/blowfish.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/camellia.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ccm.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/certs.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/cipher.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/cipher_wrap.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ctr_drbg.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/debug.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/des.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/dhm.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ecp.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ecp_curves.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ecdh.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ecdsa.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/entropy.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/entropy_poll.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/error.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/gcm.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/havege.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/hmac_drbg.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md_wrap.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md2.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md4.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md5.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/memory_buffer_alloc.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/net.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/oid.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/padlock.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pbkdf2.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pem.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkcs5.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkcs11.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkcs12.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pk.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pk_wrap.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkparse.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkwrite.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/platform.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ripemd160.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/rsa.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/sha1.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/sha256.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/sha512.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ssl_cache.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ssl_ciphersuites.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ssl_cli.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ssl_srv.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/ssl_tls.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/threading.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/timing.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/version.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/version_features.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509_crt.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509_crl.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509_csr.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509_create.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509write_crt.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/x509write_csr.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/xtea.c
+
+#SDRAM - ssl_ram_map
+DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map.c
+DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
+
+#SDRAM - wigadget
+DRAM_C += $(VENDOR)/component/common/application/wigadget/cloud_link.c
+DRAM_C += $(VENDOR)/component/common/application/wigadget/shtc1.c
+DRAM_C += $(VENDOR)/component/common/application/wigadget/wigadget.c
+
+
+#utilities
+SRC_C += $(VENDOR)/component/common/utilities/cJSON.c
+SRC_C += $(VENDOR)/component/common/utilities/http_client.c
+SRC_C += $(VENDOR)/component/common/utilities/uart_socket.c
+SRC_C += $(VENDOR)/component/common/utilities/webserver.c
+SRC_C += $(VENDOR)/component/common/utilities/xml.c
+#utilities - example
+SRC_C += $(VENDOR)/component/common/example/example_entry.c
+SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
+
+#utilities - FatFS
+#SRC_C += $(VENDOR)/component/common/file_system/fatfs/fatfs_ext/src/ff_driver.c
+#SRC_C += $(VENDOR)/component/common/file_system/fatfs/r0.10c/src/diskio.c
+#SRC_C += $(VENDOR)/component/common/file_system/fatfs/r0.10c/src/ff.c
+#SRC_C += $(VENDOR)/component/common/file_system/fatfs/r0.10c/src/option/ccsbcs.c
+#SRC_C += $(VENDOR)/component/common/file_system/fatfs/disk_if/src/sdcard.c
+
+#utilities - xmodme update
+SRC_C += $(VENDOR)/component/common/application/xmodem/uart_fw_update.c
+#user 
+SRC_C += main.c
+
+# put micropython source to sdram section
+DRAM_C += $(wildcard ../py/*.c)
+DRAM_C += $(wildcard ../extmod/*.c)
+DRAM_C += $(wildcard mphelper/*.c)
+DRAM_C += $(wildcard mphelper/gccollect/*.c)
+#DRAM_C += $(wildcard mphelper/mods/*.c)
+#DRAM_C += $(wildcard mphelper/mods/machine/*.c)
+#DRAM_C += $(wildcard mphelper/mods/wireless/*.c)
+#DRAM_C += $(wildcard mphelper/mods/network/*.c)
+
+DRAM_C := $(filter-out ../extmod/modlwip.c,$(DRAM_C))
+
+DRAM_C += \
+		lib/libc/string0.c \
+		lib/utils/pyexec.c \
+		lib/utils/pyhelp.c \
+		lib/mp-readline/readline.c \
+		lib/netutils/netutils.c \
+		lib/fatfs/ff.c \
+		lib/fatfs/option/ccsbcs.c \
+		lib/timeutils/timeutils.c \
+		ftp/vfs.c \
+		ftp/ftpd.c \
+
+ASM_S += $(wildcard mphelper/gccollect/*.s)
+
+# Generate obj list
+# -------------------------------------------------------------------
+
+SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
+#SRC_O = $(patsubst %.c,%.o,$(SRC_C))
+DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
+#DRAM_O = $(patsubst %.c,%.o,$(DRAM_C))
+ASM_O = $(addprefix $(BUILD)/, $(ASM_S:.s=.o))
+
+OBJ = $(SRC_O) $(DRAM_O) $(ASM_O)
+
+SRC_QSTR += $(SRC_C) $(DRAM_C)
 SRC_QSTR_AUTO_DEPS +=
 
-#-------------------------------------------------------------------------------
-# Rules
-#-------------------------------------------------------------------------------
-all: $(BUILD)/firmware.elf image
 
-deploy:
-	cp $(BUILD)/ram_all.bin /Volumes/MBED/
-	sync
+# Compile options
+# -------------------------------------------------------------------
 
-$(addprefix $(BUILD)/,$(OBJ)): $(BUILD)/%.o: %.c %.s
-	$(Q)$(CC) $(CFLAGS) $< -o $@
+CFLAGS =
+CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -DARDUINO_SDK
+CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -O2 -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
+CFLAGS += $(INCLUDES)
 
-# Making OBJ use an order-only dependency on the generated pins.h file
-# has the side effect of making the pins.h file before we actually compile
-# any of the objects. The normal dependency generation will deal with the
-# case when pins.h is modified. But when it doesn't exist, we don't know
-# which source files might need it.
-$(BUILD)/firmware.elf:| $(BUILD)/pins.o
+LFLAGS = 
+LFLAGS += -mcpu=cortex-m3 -mthumb -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BIN_DIR)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
 
-$(BUILD)/firmware.elf: $(OBJ) $(BUILD)/pins.o
-	$(Q)$(ECHO) "BUILDING $@"
-	$(Q)$(CC) $(ELF_CFLAGS) $(ELF_LDFLAGS) -o $@ -Wl,--start-group $^ -Wl,--start-group $(ELF_ARLIST) -Wl,--end-group -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
-	$(Q)$(SIZE) $@
+LIBFLAGS =
+all: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
+mp: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan_mp -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
 
-MAKE_PINS = boards/make-pins.py
-BOARD_PINS = boards/$(BOARD)/pins.csv
-AF_FILE = boards/rtl8195a_af.csv
-PREFIX_FILE = boards/rtl8195a_prefix.c
-GEN_PINS_SRC = $(BUILD)/pins.c
-GEN_PINS_HDR = $(HEADER_BUILD)/pins.h
-GEN_PINS_QSTR = $(HEADER_BUILD)/pins_qstr.h
+RAMALL_BIN =
+OTA_BIN = 
+all: RAMALL_BIN = ram_all.bin
+all: OTA_BIN = ota.bin
+mp: RAMALL_BIN = ram_all_mp.bin
+mp: OTA_BIN = ota_mp.bin
 
-$(GEN_PINS_SRC) $(GEN_PINS_HDR) $(GEN_PINS_QSTR): $(BOARD_PINS) $(MAKE_PINS) $(AF_FILE) $(PREFIX_FILE) | $(HEADER_BUILD)
-	$(ECHO) "CREATING PIN FILES"
-	$(Q)$(PYTHON) $(MAKE_PINS) --board $(BOARD_PINS) --af $(AF_FILE) --prefix $(PREFIX_FILE) --hdr $(GEN_PINS_HDR) --qstr $(GEN_PINS_QSTR) > $(GEN_PINS_SRC)
 
-$(BUILD)/pins.o: $(BUILD)/pins.c
-	$(call compile_c)
+# Compile
+# -------------------------------------------------------------------
 
-$(BUILD)/firmware.map:$(BUILD)/firmware.elf
-	$(Q)$(RM) -f $(BUILD)/firmware.map
-	$(Q)$(CROSS_COMPILE)nm $(BUILD)/firmware.elf | sort > $(BUILD)/firmware.map
+application: prerequirement build_info $(SRC_O) $(DRAM_O) $(ASM_O)
+	$(LD) $(LFLAGS) -o $(BIN_DIR)/$(TARGET).axf  $(OBJ) $(OBJ_DIR)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -T$(TOOL)/rlx8195A-symbol-v02-img2.ld 
+	$(OBJDUMP) -d $(BIN_DIR)/$(TARGET).axf > $(BIN_DIR)/$(TARGET).asm
 
-image: $(BUILD)/firmware.map
-	$(Q)$(ECHO) "CREATING IMAGE"
-	$(Q)$(RM) -f $(BUILD)/firmware.asm 
-	$(Q)$(RM) -f $(BUILD)/*.bin
-	$(Q)$(CROSS_COMPILE)objdump -d $(BUILD)/firmware.elf >  $(BUILD)/firmware.asm
-	$(Q)$(eval RAM2_START_ADDR = 0x$(shell grep __ram_image2_text $(BUILD)/firmware.map | grep _start__ | awk '{print $$1}'))
-	$(Q)$(eval RAM2_END_ADDR = 0x$(shell grep __ram_image2_text $(BUILD)/firmware.map | grep _end__ | awk '{print $$1}'))
-	$(Q)$(eval RAM3_START_ADDR = 0x$(shell grep __sdram_data_ $(BUILD)/firmware.map | grep _start__ | awk '{print $$1}'))
-	$(Q)$(eval RAM3_END_ADDR = 0x$(shell grep __sdram_data_ $(BUILD)/firmware.map | grep _end__ | awk '{print $$1}'))
-	$(Q)$(OBJCOPY) -j .image2.start.table -j .ram_image2.text -j .ram.data -Obinary $(BUILD)/firmware.elf $(BUILD)/ram_2.bin
-	$(Q)$(OBJCOPY) -j .ARM.exidx -j .sdr_data -Obinary $(BUILD)/firmware.elf $(BUILD)/sdram.bin
-	$(Q)$(TOOLS)/mac/pick $(RAM2_START_ADDR) $(RAM2_END_ADDR) $(BUILD)/ram_2.bin $(BUILD)/ram_2.p.bin body+reset_offset+sig
-	$(Q)$(TOOLS)/mac/pick $(RAM2_START_ADDR) $(RAM2_END_ADDR) $(BUILD)/ram_2.bin $(BUILD)/ram_2.ns.bin body+reset_offset
-	$(Q)$(TOOLS)/mac/pick $(RAM3_START_ADDR) $(RAM3_END_ADDR) $(BUILD)/sdram.bin $(BUILD)/ram_3.p.bin body+reset_offset
-	$(Q)$(CP) $(TOOLS)/ram_1.p.bin $(BUILD)/ram_1.p.bin
-	$(Q)$(TOOLS)/mac/padding 44k 0xFF $(BUILD)/ram_1.p.bin
-	$(Q)cat $(BUILD)/ram_1.p.bin $(BUILD)/ram_2.p.bin $(BUILD)/ram_3.p.bin > $(BUILD)/ram_all.bin
-dummy:
-	$(Q)$(CP) $(TOOLS)/ram_1.p.bin $(BUILD)/dummy.bin
-	$(Q)$(TOOLS)/mac/padding 1M 0xFF $(BUILD)/dummy.bin
-	$(Q)$(CP) $(BUILD)/dummy.bin /Volumes/MBED/
-	sync
 
+# Manipulate Image
+# -------------------------------------------------------------------
+	
+.PHONY: manipulate_images
+manipulate_images:	
+	@echo ===========================================================
+	@echo Image manipulating
+	@echo ===========================================================
+	$(NM) $(BIN_DIR)/$(TARGET).axf | sort > $(BIN_DIR)/$(TARGET).nmap
+	$(OBJCOPY) -j .image2.start.table -j .ram_image2.text -j .ram_image2.rodata -j .ram.data -Obinary $(BIN_DIR)/$(TARGET).axf $(BIN_DIR)/ram_2.bin
+	$(OBJCOPY) -j .sdr_text -j .sdr_rodata -j .sdr_data -Obinary $(BIN_DIR)/$(TARGET).axf $(BIN_DIR)/sdram.bin
+	cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.p.bin $(BIN_DIR)/ram_1.p.bin
+	chmod 777 $(BIN_DIR)/ram_1.p.bin
+	chmod +rx $(PICK) $(CHKSUM) $(PAD)
+	$(PICK) 0x`grep __ram_image2_text_start__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __ram_image2_text_end__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` $(BIN_DIR)/ram_2.bin $(BIN_DIR)/ram_2.p.bin body+reset_offset+sig
+	$(PICK) 0x`grep __ram_image2_text_start__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __ram_image2_text_end__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` $(BIN_DIR)/ram_2.bin $(BIN_DIR)/ram_2.ns.bin body+reset_offset
+	$(PICK) 0x`grep __sdram_data_start__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __sdram_data_end__ $(BIN_DIR)/$(TARGET).nmap | gawk '{print $$1}'` $(BIN_DIR)/sdram.bin $(BIN_DIR)/ram_3.p.bin body+reset_offset
+	$(PAD) 44k 0xFF $(BIN_DIR)/ram_1.p.bin
+	cat $(BIN_DIR)/ram_1.p.bin > $(BIN_DIR)/$(RAMALL_BIN)
+	chmod 777 $(BIN_DIR)/$(RAMALL_BIN)
+	cat $(BIN_DIR)/ram_2.p.bin >> $(BIN_DIR)/$(RAMALL_BIN)
+	if [ -s $(BIN_DIR)/sdram.bin ]; then cat $(BIN_DIR)/ram_3.p.bin >> $(BIN_DIR)/$(RAMALL_BIN); fi
+	cat $(BIN_DIR)/ram_2.ns.bin > $(BIN_DIR)/$(OTA_BIN)
+	chmod 777 $(BIN_DIR)/$(OTA_BIN)
+	if [ -s $(BIN_DIR)/sdram.bin ]; then cat $(BIN_DIR)/ram_3.p.bin >> $(BIN_DIR)/$(OTA_BIN); fi
+	$(CHKSUM) $(BIN_DIR)/$(OTA_BIN) || true
+	rm $(BIN_DIR)/ram_*.p.bin $(BIN_DIR)/ram_*.ns.bin
+
+# Generate build info
+# -------------------------------------------------------------------	
+
+.PHONY: build_info
+build_info:
+	@echo \#define UTS_VERSION \"`date +%Y/%m/%d-%T`\" > .ver
+	@echo \#define RTL8195AFW_COMPILE_TIME \"`date +%Y/%m/%d-%T`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_DATE \"`date +%Y%m%d`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_BY \"`id -u -n`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_HOST \"`$(HOSTNAME_APP)`\" >> .ver
+	@if [ -x /bin/dnsdomainname ]; then \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN \"`dnsdomainname`\"; \
+	elif [ -x /bin/domainname ]; then \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN \"`domainname`\"; \
+	else \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN ; \
+	fi >> .ver
+
+	@echo \#define RTL195AFW_COMPILER \"gcc `$(CC) $(CFLAGS) -dumpversion | tr --delete '\r'`\" >> .ver
+	@mv -f .ver inc/$@.h
+
+
+.PHONY: prerequirement
+prerequirement:
+	@echo ===========================================================
+	@echo Build $(TARGET)
+	@echo ===========================================================
+	mkdir -p $(OBJ_DIR)
+	mkdir -p $(BIN_DIR)
+	cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.r.bin $(OBJ_DIR)/ram_1.r.bin
+	chmod 777 $(OBJ_DIR)/ram_1.r.bin
+	$(OBJCOPY) --rename-section .data=.loader.data,contents,alloc,load,readonly,data -I binary -O elf32-littlearm -B arm $(OBJ_DIR)/ram_1.r.bin $(OBJ_DIR)/ram_1.r.o 
+
+$(SRC_O): $(BUILD)/%.o : %.c
+	$(MKDIR) -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
+	#cp $@ $(OBJ_DIR)/$(notdir $@)
+	#chmod 777 $(OBJ_DIR)/$(notdir $@)
+
+$(DRAM_O): $(BUILD)/%.o : %.c 
+	$(MKDIR) -p $(dir $@)
+	$(CC) $(CFLAGS)  -c $< -o $@
+	$(OBJCOPY) --prefix-alloc-sections .sdram $@
+	$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
+	#cp $@ $(OBJ_DIR)/$(notdir $@)
+	#chmod 777 $(OBJ_DIR)/$(notdir $@)
+
+$(ASM_O): $(BUILD)/%.o : %.s
+	$(MKDIR) -p $(dir $@)
+	$(CC) $(CFLAGS)  -c $< -o $@
+	$(OBJCOPY) --prefix-alloc-sections .sdram $@
+	$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
+	#cp $@ $(OBJ_DIR)/$(notdir $@)
+	#chmod 777 $(OBJ_DIR)/$(notdir $@)
+
+# Generate build info
+# -------------------------------------------------------------------	
+#ifeq (setup,$(firstword $(MAKECMDGOALS)))
+#  # use the rest as arguments for "run"
+#  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+#  # ...and turn them into do-nothing targets
+#  $(eval $(RUN_ARGS):;@:)
+#endif
+.PHONY: setup
+setup:
+	@echo "----------------"
+	@echo Setup $(GDB_SERVER)
+	@echo "----------------"
+ifeq ($(GDB_SERVER), openocd)
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_debug_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_ramdebug_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_flash_write_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
+else
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_debug_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_ramdebug_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt
+	cp -p $(FLASH_TOOLDIR)/rtl_gdb_flash_write_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
+endif
+
+.PHONY: flashburn
+flashburn:
+	@if [ ! -f $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt ] ; then echo Please do \"make setup GDB_SERVER=[jlink or openocd]\" first; echo && false ; fi
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+	$(FLASH_TOOLDIR)/Check_Jtag.sh
+endif
+	cp	$(FLASH_TOOLDIR)/target_NORMALB.axf $(FLASH_TOOLDIR)/target_NORMAL.axf
+	chmod 777 $(FLASH_TOOLDIR)/target_NORMAL.axf
+	chmod +rx $(FLASH_TOOLDIR)/SetupGDB_NORMAL.sh
+	$(FLASH_TOOLDIR)/SetupGDB_NORMAL.sh
+	$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
+	
+.PHONY: debug
+debug:
+	@if [ ! -f $(FLASH_TOOLDIR)/rtl_gdb_debug.txt ] ; then echo Please do \"make setup GDB_SERVER=[jlink or openocd]\" first; echo && false ; fi
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+	$(FLASH_TOOLDIR)/Check_Jtag.sh
+	cmd /c start $(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
+else
+	$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
+endif
+
+.PHONY: ramdebug
+ramdebug:
+	@if [ ! -f $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt ] ; then echo Please do \"make setup GDB_SERVER=[jlink or openocd]\" first; echo && false ; fi
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+	$(FLASH_TOOLDIR)/Check_Jtag.sh
+	cmd /c start $(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
+else
+	$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
+endif
+
+.PHONY: clean
+distclean:
+	rm -rf $(TARGET)
+	rm -f $(SRC_O) $(DRAM_O)
+	rm -f $(patsubst %.o,%.d,$(SRC_O)) $(patsubst %.o,%.d,$(DRAM_O))
+	
+.PHONY: clean_all
+clean_all:
+	rm -rf $(ARM_GCC_TOOLCHAIN)
+	rm -rf $(TARGET)
+	rm -f $(SRC_O) $(DRAM_O)
+	rm -f $(patsubst %.o,%.d,$(SRC_O)) $(patsubst %.o,%.d,$(DRAM_O))
+
+print:
+	$(ECHO) $(OBJ)
+	
 include ../py/mkrules.mk

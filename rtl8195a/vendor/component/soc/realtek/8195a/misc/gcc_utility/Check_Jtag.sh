@@ -2,7 +2,7 @@
 
 #===============================================================================
 CURRENT_UTILITY_DIR=$(pwd)
-GDBSCPTFILE="../../../component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
+GDBSCPTFILE="vendor/component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
 
 #===============================================================================
 RLXSTS=$(ps -W | grep "rlx_probe_driver.exe" | grep -v "grep" | wc -l)

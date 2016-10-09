@@ -3,11 +3,11 @@
 #===============================================================================
 #set GDB connection 
 set remotetimeout 100000
-target remote :2331
+target remote :3333
 
 #===============================================================================
 #set file path
-set $BINFILE = "./application/Debug/bin/ram_all.bin"
+set $BINFILE = "./build/ram_all.bin"
 
 #===============================================================================
 #Message display setting
@@ -40,9 +40,9 @@ set debug remote 0
 
 #===============================================================================
 #set JTAG and external SRAM
-monitor reset 1
+monitor reset init
+monitor halt
 monitor sleep 20
-monitor clrbp
 #===============================================================================
 #Variables declaration (1)
 #binary file size
@@ -69,13 +69,12 @@ set $Temp = 0x0
 
 #===============================================================================
 #Load flash download file
-file ../../../component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
+file vendor/component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
 
 #Load the file
 lo
 
 printf "Load flash controller.\n"
-
 #===============================================================================
 #Set for executing flash controller funciton
 set $Temp = {int}($PERI_ON_BASE+$REG_SOC_PERI_FUNC0_EN)
@@ -153,7 +152,7 @@ printf  "Flash write start...\n"
 set $LoopCnt = 0
 while  ($LoopCnt < $LoopNum)
 	p /x FlashAddrForWrite
-    restore ./application/Debug/bin/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
+    restore ./build/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
     c
     
     printf "FILEENDADDR"
@@ -170,7 +169,7 @@ end
 #set FlashAddrForWrite = $FILEENDADDR
 #set $FILESTARTADDR = $FILEENDADDR
 set $FILEENDADDR = $FILESTARTADDR + $TailSize
-restore ./application/Debug/bin/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
+restore ./build/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
 c
 
 #Set complete flas
@@ -187,7 +186,7 @@ printf "start addr of dumping"
 p /x $dumpstartaddr
 printf "end addr of dumping"
 p /x $dumpendaddr 
-dump binary memory  ./application/Debug/bin/dump.bin $dumpstartaddr $dumpendaddr
+dump binary memory  ./build/dump.bin $dumpstartaddr $dumpendaddr
 
 
 delete

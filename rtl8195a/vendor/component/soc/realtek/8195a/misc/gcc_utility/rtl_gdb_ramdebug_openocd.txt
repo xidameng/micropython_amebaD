@@ -40,7 +40,7 @@ monitor sleep 20
 monitor halt
 #===============================================================================
 #Load flash download file
-file ./application/Debug/bin/application.axf
+file ./build/application.axf
 
 #boot from ram, igonore loading flash
 set {int}0x40000210=0x8011157

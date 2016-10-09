@@ -95,7 +95,7 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
 }
 
 void mp_hal_set_interrupt_char(int c) {
-    mpexception_set_interrupt_char (c);
+    //mpexception_set_interrupt_char (c);
 }
 
 void mp_hal_delay_ms(uint32_t ms) {

@@ -7,7 +7,7 @@ target remote :2331
 
 #===============================================================================
 #set file path
-set $BINFILE = "./application/Debug/bin/ram_all.bin"
+set $BINFILE = "./build/ram_all.bin"
 
 #===============================================================================
 #Message display setting
@@ -69,7 +69,7 @@ set $Temp = 0x0
 
 #===============================================================================
 #Load flash download file
-file ../../../component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
+file vendor/component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
 
 #Load the file
 lo
@@ -153,7 +153,7 @@ printf  "Flash write start...\n"
 set $LoopCnt = 0
 while  ($LoopCnt < $LoopNum)
 	p /x FlashAddrForWrite
-    restore ./application/Debug/bin/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
+    restore ./build/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
     c
     
     printf "FILEENDADDR"
@@ -170,7 +170,7 @@ end
 #set FlashAddrForWrite = $FILEENDADDR
 #set $FILESTARTADDR = $FILEENDADDR
 set $FILEENDADDR = $FILESTARTADDR + $TailSize
-restore ./application/Debug/bin/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
+restore ./build/ram_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR $FILEENDADDR
 c
 
 #Set complete flas
@@ -187,7 +187,7 @@ printf "start addr of dumping"
 p /x $dumpstartaddr
 printf "end addr of dumping"
 p /x $dumpendaddr 
-dump binary memory  ./application/Debug/bin/dump.bin $dumpstartaddr $dumpendaddr
+dump binary memory  ./build/dump.bin $dumpstartaddr $dumpendaddr
 
 
 delete

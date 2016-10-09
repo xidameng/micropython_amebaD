@@ -4,10 +4,10 @@
 CURRENT_UTILITY_DIR=$(pwd)
 echo "..."
 echo $CURRENT_UTILITY_DIR
-RAMFILENAME="./application/Debug/bin/ram_all.bin"
+RAMFILENAME="./build/ram_all.bin"
 echo $RAMFILENAME
 #RAMFILENAME="ram_2.bin"
-GDBSCPTFILE="../../../component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
+GDBSCPTFILE="vendor/component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
 
 #===============================================================================
 #get file size
