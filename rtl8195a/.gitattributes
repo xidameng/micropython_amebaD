@@ -4,3 +4,4 @@
 *.out binary
 *.exe binary
 *.bz2 binary
+*.axf binary
