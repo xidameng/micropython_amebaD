@@ -138,12 +138,12 @@ INCLUDES += -I../lib/timeutils
 INCLUDES += -I../lib/mp-readline
 INCLUDES += -I../lib/netutils
 
-INCLUDES += -Imphelper
-INCLUDES += -Imphelper/gccollect
-INCLUDES += -Imphelper/hal
-INCLUDES += -Imphelper/mods
-INCLUDES += -Imphelper/mods/network
-INCLUDES += -Imphelper/mods/machine
+INCLUDES += -I./mphelper
+INCLUDES += -I./mphelper/gccollect
+INCLUDES += -I./mphelper/hal
+INCLUDES += -I./mphelper/mods
+INCLUDES += -I./mphelper/mods/network
+INCLUDES += -I./mphelper/mods/machine
 
 
 # Source file list
@@ -416,18 +416,23 @@ SRC_C += $(VENDOR)/component/common/application/xmodem/uart_fw_update.c
 SRC_C += main.c
 
 # put micropython source to sdram section
-DRAM_C += $(wildcard ../py/*.c)
-DRAM_C += $(wildcard ../extmod/*.c)
-DRAM_C += $(wildcard mphelper/*.c)
-DRAM_C += $(wildcard mphelper/gccollect/*.c)
-#DRAM_C += $(wildcard mphelper/mods/*.c)
-#DRAM_C += $(wildcard mphelper/mods/machine/*.c)
-#DRAM_C += $(wildcard mphelper/mods/wireless/*.c)
-#DRAM_C += $(wildcard mphelper/mods/network/*.c)
+PY_C += $(wildcard ../py/*.c)
+PY_C += $(wildcard ../extmod/*.c)
+PY_C += $(wildcard mphelper/*.c)
+PY_C += $(wildcard mphelper/gccollect/*.c)
+PY_C += mphelper/mods/modmachine.c
+PY_C += mphelper/mods/moduos.c
+PY_C += mphelper/mods/machine/objloguart.c
+PY_C += mphelper/mods/machine/objsdio.c
+PY_C += mphelper/mods/machine/objflash.c
+#PY_C += $(wildcard mphelper/mods/*.c)
+#PY_C += $(wildcard mphelper/mods/machine/*.c)
+#PY_C += $(wildcard mphelper/mods/wireless/*.c)
+#PY_C += $(wildcard mphelper/mods/network/*.c)
 
-DRAM_C := $(filter-out ../extmod/modlwip.c,$(DRAM_C))
+PY_C := $(filter-out ../extmod/modlwip.c,$(PY_C))
 
-DRAM_C += \
+PY_C += \
 		lib/libc/string0.c \
 		lib/utils/pyexec.c \
 		lib/utils/pyhelp.c \
@@ -438,6 +443,8 @@ DRAM_C += \
 		lib/timeutils/timeutils.c \
 		ftp/vfs.c \
 		ftp/ftpd.c \
+
+DRAM_C += $(PY_C)
 
 ASM_S += $(wildcard mphelper/gccollect/*.s)
 
@@ -452,7 +459,7 @@ ASM_O = $(addprefix $(BUILD)/, $(ASM_S:.s=.o))
 
 OBJ = $(SRC_O) $(DRAM_O) $(ASM_O)
 
-SRC_QSTR += $(SRC_C) $(DRAM_C)
+SRC_QSTR += $(PY_C)
 SRC_QSTR_AUTO_DEPS +=
 
 
@@ -468,8 +475,8 @@ LFLAGS =
 LFLAGS += -mcpu=cortex-m3 -mthumb -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BIN_DIR)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
 
 LIBFLAGS =
-all: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
-mp: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan_mp -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
+all: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -l_sdcard -lm -lc -lnosys -lgcc
+mp: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan_mp -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -l_sdcard -lm -lc -lnosys -lgcc
 
 RAMALL_BIN =
 OTA_BIN = 

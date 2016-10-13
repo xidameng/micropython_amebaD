@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,11 +28,9 @@
  *                              Header includes
  * ***************************************************************************/
 // micropython headers
-#include "py/mpstate.h"
-#include "py/runtime.h"
-#include "py/mphal.h"
 
 // local object headers
+#if 0
 #include "machine/objpin.h"
 #include "machine/obji2c.h"
 #include "machine/objuart.h"
@@ -43,9 +39,14 @@
 #include "machine/objdac.h"
 #include "machine/objpwm.h"
 #include "machine/objrtc.h"
-#include "machine/objsdio.h"
 #include "machine/objwdt.h"
+#endif
+#include "machine/objsdio.h"
+#include "machine/objflash.h"
+#include "machine/objloguart.h"
 
+
+// mbed lib headers
 #include "sys_api.h"
 
 /*****************************************************************************
@@ -55,11 +56,16 @@ STATIC mp_obj_t machine_reset(void) {
     sys_reset();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
+MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         (mp_obj_t)&machine_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO),          MP_OBJ_FROM_PTR(&sdio_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
+#if 0
+
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           (mp_obj_t)&i2c_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
@@ -68,8 +74,8 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           (mp_obj_t)&dac_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           (mp_obj_t)&rtc_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO),          (mp_obj_t)&sdio_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),          (mp_obj_t)&wdt_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           (mp_obj_t)&wdt_type },
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 

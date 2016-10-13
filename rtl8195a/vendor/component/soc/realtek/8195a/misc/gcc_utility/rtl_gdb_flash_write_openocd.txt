@@ -69,7 +69,7 @@ set $Temp = 0x0
 
 #===============================================================================
 #Load flash download file
-file vendor/component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
+file ./vendor/component/soc/realtek/8195a/misc/gcc_utility/target_NORMAL.axf
 
 #Load the file
 lo

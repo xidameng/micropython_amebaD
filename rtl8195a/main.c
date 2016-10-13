@@ -41,6 +41,9 @@
 #include "gchelper.h"
 #include "exception.h"
 
+#include "lib/fatfs/ff.h"
+#include "extmod/fsusermount.h"
+
 #include "cmsis_os.h"
 #include "sys_api.h"
 
@@ -55,8 +58,7 @@
  * ***************************************************************************/
 osThreadId main_tid = 0;
 osThreadId ftpd_tid = 0;
-
-extern void console_init(void);
+fs_user_mount_t fs_user_mount_flash;
 
 #if 0
 /**
@@ -108,7 +110,8 @@ void main (void) {
     gc_init(&_mp_gc_head, &_mp_gc_end);
 
     // Kernel initialization
-    //osKernelInitialize();
+    osKernelInitialize();
+
     // Init micropython basic system
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
@@ -118,6 +121,24 @@ void main (void) {
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
 
     log_uart_init0();
+#if 0
+    fs_user_mount_t *vfs = &fs_user_mount_flash;
+    vfs->str = "/flash";
+    vfs->len = 6;
+    vfs->flags = 0;
+    flash_init0(vfs);
+    MP_STATE_PORT(fs_user_mount)[0] = vfs;
+    FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
+    if (res == FR_NO_FILESYSTEM) {
+        res = f_mkfs("/flash", 1, 0);
+        if (res == FR_OK) {
+            DiagPrintf("OK!\r\n");
+        } else {
+            MP_STATE_PORT(fs_user_mount)[0] = NULL;
+            DiagPrintf("NO!\r\n");
+        }
+    }
+#endif
 
     // Create main task
     osThreadDef(main_task, MICROPY_MAIN_TASK_PRIORITY, 1, MICROPY_MAIN_TASK_STACK_SIZE);
@@ -151,7 +172,7 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
 void mp_keyboard_interrupt(void) {
-    MP_STATE_VM(mp_pending_exception) = MP_STATE_PORT(mp_kbd_exception);
+    //MP_STATE_VM(mp_pending_exception) = MP_STATE_PORT(mp_kbd_exception);
 }
 
 mp_obj_t mp_builtin_ftpd(mp_obj_t enable_in) {

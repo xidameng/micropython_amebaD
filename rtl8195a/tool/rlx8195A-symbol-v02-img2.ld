@@ -194,6 +194,26 @@ SECTIONS
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 
+	.flash_map : 
+    {
+      __image1_flash_size__ = 0xB000;
+      . = . + __image1_flash_size__;
+      __image1_flash_end__ = .;
+      __image2_flash_start__ = .;
+      . = . + SIZEOF(.image2.start.table) + SIZEOF(.ram_image2.text) + +SIZEOF(.ram_image2.rodata) + SIZEOF(.ram.data);
+      __image2_flash_end__ = .;
+      __sdram_text_flash_start__ = .;
+      . = . + SIZEOF(.sdr_text) + SIZEOF(.sdr_rodata) + SIZEOF(.sdr_data);
+      __sdram_text_flash_end__ = .;
+      /* ALIGN flash address to 4K address because of the Ameba flash driver's restriction */
+      . = ALIGN(0x1000);
+      __fatfs_start_address__ = .;
+      . = ORIGIN(FLASH) + LENGTH(FLASH) - 1;
+      __fatfs_end_address__ = .;
+      __fatfs_num_blocks__ = (__fatfs_end_address__ - __fatfs_start_address__ + 1) / 4096;
+    } > FLASH
+
+
 }
 
 

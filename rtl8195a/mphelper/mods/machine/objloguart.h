@@ -23,23 +23,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef _OBJSDIO_H_
-#define _OBJSDIO_H_
+#ifndef OBJLOGUART_H_
+#define OBJLOGUART_H_
 
-#include "py/mpstate.h"
+#include "py/mpconfig.h"
 #include "py/runtime.h"
-#include "py/mphal.h"
+#include "py/stream.h"
 
-#include "exception.h"
+// mbed lib headers
+#include "log_uart_api.h"
 
-#include "sd.h"
+#define LOG_UART_DEFAULT_BAUDRATE       (38400)
+#define LOG_UART_DEFAULT_DATA_BITS      (8)
+#define LOG_UART_DEFAULT_PARITY         (0)
+#define LOG_UART_DEFAULT_STOP_BITS      (1)
+#define LOG_UART_DEFAULT_TX_TIMEOUT     (100)
+#define LOG_UART_DEFAULT_RX_TIMEOUT     (100)
 
-extern const mp_obj_type_t sdio_type;
+extern const mp_obj_type_t log_uart_type;
 
-#define SDIO_BLOCK_SIZE 512
+// TODO(Chester) This struct should be place in objuart.h
+typedef struct {
+    uint32_t        baudrate;
+    uint8_t         data_bits;
+    uint8_t         parity;
+    uint8_t         stop_bits;
+} UartParams;
 
 typedef struct {
-    mp_obj_base_t base;
-} sdio_obj_t;
+    uint32_t    timeout_ms;
+} UartLane;
 
-#endif  // _OBJSDIO_H_
+typedef struct {
+    mp_obj_base_t    base;
+    log_uart_t       obj;
+    UartParams       params;
+    UartLane         tx;
+    UartLane         rx;
+} log_uart_obj_t;
+
+#endif /* OBJLOGUART_H_ */

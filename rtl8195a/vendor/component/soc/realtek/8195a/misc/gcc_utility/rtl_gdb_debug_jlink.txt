@@ -39,8 +39,8 @@ monitor reset 1
 monitor sleep 20
 monitor clrbp
 #===============================================================================
-#Load flash download 
-file ./build/application.axf
+#Load flash download file
+file ./application/Debug/bin/application.axf
 
 #skip sdram init, it has been init in openocd config
 set {int}0x40000210=0x211157

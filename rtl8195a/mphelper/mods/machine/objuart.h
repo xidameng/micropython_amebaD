@@ -36,6 +36,66 @@
 #define UART_DEFAULT_BAUD_RATE            (9600)
 #define UART_MAX_BAUD_RATE                (115200)
 
+enum {
+    eUART_BAUDRATE_2400    = 2400,
+    eUART_BAUDRATE_4800    = 4800,
+    eUART_BAUDRATE_9600    = 9600,
+    eUART_BAUDRATE_19200   = 19200,
+    eUART_BAUDRATE_38400   = 38400,
+    eUART_BAUDRATE_57600   = 57600,
+    eUART_BAUDRATE_115200  = 115200,
+    eUART_BAUDRATE_921600  = 921600,
+    eUART_BAUDRATE_1152000 = 115200,
+} UartBaudrate;
+
+enum {
+    eUART_PARITY_NONE    = 0,
+    eUART_PARITY_ODD     = 1,
+    eUART_PARITY_EVEN    = 2,
+    eUART_PARITY_FORCED1 = 3,
+    eUART_PARITY_FORCED0 = 4,
+} UartParity;
+
+enum {
+    eUART_STOP_1BIT = 1,
+    eUART_STOP_2BIT = 2,
+} UartStopBits;
+
+enum {
+    eUART_DATA_8BITS = 8,
+    eUART_DATA_16BITS = 16,
+} UartDataBits;
+
+enum {
+    eUART_BAUDRATE_2400    = 2400,
+    eUART_BAUDRATE_4800    = 4800,
+    eUART_BAUDRATE_9600    = 9600,
+    eUART_BAUDRATE_19200   = 19200,
+    eUART_BAUDRATE_38400   = 38400,
+    eUART_BAUDRATE_57600   = 57600,
+    eUART_BAUDRATE_115200  = 115200,
+    eUART_BAUDRATE_921600  = 921600,
+    eUART_BAUDRATE_1152000 = 115200,
+} UartBaudrate;
+
+enum {
+    eUART_PARITY_NONE    = 0,
+    eUART_PARITY_ODD     = 1,
+    eUART_PARITY_EVEN    = 2,
+    eUART_PARITY_FORCED1 = 3,
+    eUART_PARITY_FORCED0 = 4,
+} UartParity;
+
+enum {
+    eUART_STOP_1BIT = 1,
+    eUART_STOP_2BIT = 2,
+} UartStopBits;
+
+enum {
+    eUART_DATA_8BITS = 8,
+    eUART_DATA_16BITS = 16,
+} UartDataBits;
+
 extern const mp_obj_type_t uart_type;
 extern const mp_obj_dict_t pin_board_pins_locals_dict;
 

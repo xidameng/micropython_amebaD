@@ -93,7 +93,7 @@ monitor MemU32 0x40000300=0x0006005e
 monitor sleep 3
 #===============================================================================
 #Load flash download file
-file ./build/application.axf
+file ./application/Debug/bin/application.axf
 
 #boot from ram, igonore loading flash
 monitor MemU32 0x40000210=0x8011157

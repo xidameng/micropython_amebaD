@@ -7,7 +7,7 @@ echo $CURRENT_UTILITY_DIR
 RAMFILENAME="./build/ram_all.bin"
 echo $RAMFILENAME
 #RAMFILENAME="ram_2.bin"
-GDBSCPTFILE="vendor/component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
+GDBSCPTFILE="./vendor/component/soc/realtek/8195a/misc/gcc_utility/rtl_gdb_flash_write.txt"
 
 #===============================================================================
 #get file size

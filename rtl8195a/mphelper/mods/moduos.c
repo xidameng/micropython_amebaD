@@ -24,58 +24,41 @@
  * THE SOFTWARE.
  */
 
+/*****************************************************************************
+ *                              Header includes
+ * ***************************************************************************/
 #include "py/mpstate.h"
-#include "py/objtuple.h"
 #include "py/objstr.h"
-#include "py/ringbuf.h"
 #include "genhdr/mpversion.h"
 #include "lib/fatfs/ff.h"
-#include "extmod/misc.h"
 #include "extmod/vfs_fat_file.h"
 #include "extmod/fsusermount.h"
 
-#include "objuart.h"
-
-#include "cmsis_os.h"
-
-extern int interrupt_char;
-extern ringbuf_t input_buf;
-osThreadId os_dupterm_notify_tid = 0;
-
-#define REQ_SIGNAL_TERDUP 0x01
-
-void os_dupterm_notify_task(void *arg);
-
 STATIC const qstr os_uname_info_fields[] = {
-    MP_QSTR_sysname, MP_QSTR_nodename,
-    MP_QSTR_release, MP_QSTR_version, MP_QSTR_machine, MP_QSTR_machine_version,
+    MP_QSTR_sysname, MP_QSTR_nodename, MP_QSTR_release,
+    MP_QSTR_version, MP_QSTR_core, MP_QSTR_port_version,
 };
-STATIC const MP_DEFINE_STR_OBJ(os_uname_info_sysname_obj, "cwyark");
-STATIC const MP_DEFINE_STR_OBJ(os_uname_info_nodename_obj, "cwyark");
+STATIC const MP_DEFINE_STR_OBJ(os_uname_info_sysname_obj, MICROPY_PY_SYS_PLATFORM);
+STATIC const MP_DEFINE_STR_OBJ(os_uname_info_nodename_obj, MICROPY_PY_SYS_PLATFORM);
 STATIC const MP_DEFINE_STR_OBJ(os_uname_info_release_obj, MICROPY_VERSION_STRING);
 STATIC const MP_DEFINE_STR_OBJ(os_uname_info_version_obj, MICROPY_GIT_TAG " on " MICROPY_BUILD_DATE);
-STATIC const MP_DEFINE_STR_OBJ(os_uname_info_machine_obj, MICROPY_HW_BOARD_NAME " with " MICROPY_HW_MCU_NAME);
-STATIC const MP_DEFINE_STR_OBJ(os_uname_info_machine_version_obj, MICROPY_HW_PORT_VERSION);
+STATIC const MP_DEFINE_STR_OBJ(os_uname_info_core_obj, MICROPY_HW_MCU_NAME);
+STATIC const MP_DEFINE_STR_OBJ(os_uname_info_port_version_obj, MICROPY_HW_PORT_VERSION);
 STATIC MP_DEFINE_ATTRTUPLE(
     os_uname_info_obj,
     os_uname_info_fields,
     6,
-    (mp_obj_t)&os_uname_info_sysname_obj,
-    (mp_obj_t)&os_uname_info_nodename_obj,
-    (mp_obj_t)&os_uname_info_release_obj,
-    (mp_obj_t)&os_uname_info_version_obj,
-    (mp_obj_t)&os_uname_info_machine_obj,
-    (mp_obj_t)&os_uname_info_machine_version_obj
+    MP_OBJ_FROM_PTR(&os_uname_info_sysname_obj),
+    MP_OBJ_FROM_PTR(&os_uname_info_nodename_obj),
+    MP_OBJ_FROM_PTR(&os_uname_info_release_obj),
+    MP_OBJ_FROM_PTR(&os_uname_info_version_obj),
+    MP_OBJ_FROM_PTR(&os_uname_info_core_obj),
+    MP_OBJ_FROM_PTR(&os_uname_info_port_version_obj)
 );
 
 
-void os_init0(void) {
-    osThreadDef(os_dupterm_notify_task, osPriorityNormal, 1, 2048);
-    os_dupterm_notify_tid = osThreadCreate (osThread (os_dupterm_notify_task), NULL);
-}
-
 STATIC mp_obj_t os_uname(void) {
-    return (mp_obj_t)&os_uname_info_obj;
+    return MP_OBJ_FROM_PTR(&os_uname_info_obj);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_uname_obj, os_uname);
 
@@ -303,86 +286,26 @@ error:
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_statvfs_obj, os_statvfs);
 
-static int call_dupterm_read(void) {
-    if (MP_STATE_PORT(term_obj) == NULL) {
-        return -1;
-    }
-
-    nlr_buf_t nlr;
-
-    if (nlr_push(&nlr) == 0) {
-        mp_obj_t read_m[3];
-        mp_load_method(MP_STATE_PORT(term_obj), MP_QSTR_read, read_m);
-        read_m[2] = MP_OBJ_NEW_SMALL_INT(1);
-        mp_obj_t res = mp_call_method_n_kw(1, 0, read_m);
-        if (res == mp_const_none) {
-            nlr_pop();
-            return -2;
-        }
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(res, &bufinfo, MP_BUFFER_READ);
-        if (bufinfo.len == 0) {
-            mp_uos_deactivate("dupterm: EOF received, deactivating\n", MP_OBJ_NULL);
-            nlr_pop();
-            return -1;
-        }
-        nlr_pop();
-        return *(byte*)bufinfo.buf;
-    } else {
-        //TODO(chester) always throw OSError 11 after the line end, it's very weird
-        //mp_uos_deactivate("dupterm: Exception in read() method, deactivating: ", nlr.ret_val);
-    }
-    return -1;
-}
-
-void os_dupterm_notify_task(void *arg) {
-    osEvent evt;
-    while (1) {
-        evt = osSignalWait(0, osWaitForever);
-        if (evt.status == osEventSignal) {
-            if (evt.value.signals & REQ_SIGNAL_TERDUP) {
-                int8_t c = call_dupterm_read();
-                if (c > 0)
-                    ringbuf_put(&input_buf, c);
-            }
-        }
-    }
-    osThreadTerminate(osThreadGetId());
-}
-
-STATIC mp_obj_t os_dupterm_notify(mp_obj_t obj_in) {
-    (void)obj_in;
-    osSignalSet(os_dupterm_notify_tid, REQ_SIGNAL_TERDUP);   
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
-
 STATIC const mp_map_elem_t os_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uname),    (mp_obj_t)&os_uname_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uname),           MP_OBJ_FROM_PTR(&os_uname_obj) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_listdir),  (mp_obj_t)&os_listdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_getcwd),   (mp_obj_t)&os_getcwd_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mkdir),    (mp_obj_t)&os_mkdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_chdir),    (mp_obj_t)&os_chdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_remove),   (mp_obj_t)&os_remove_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_rename),   (mp_obj_t)&os_rename_obj},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_rmdir),    (mp_obj_t)&os_rmdir_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stat),     (mp_obj_t)&os_stat_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_statvfs),  (mp_obj_t)&os_statvfs_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_listdir),         MP_OBJ_FROM_PTR(&os_listdir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getcwd),          MP_OBJ_FROM_PTR(&os_getcwd_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mkdir),           MP_OBJ_FROM_PTR(&os_mkdir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_chdir),           MP_OBJ_FROM_PTR(&os_chdir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_remove),          MP_OBJ_FROM_PTR(&os_remove_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rename),          MP_OBJ_FROM_PTR(&os_rename_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rmdir),           MP_OBJ_FROM_PTR(&os_rmdir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_stat),            MP_OBJ_FROM_PTR(&os_stat_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_statvfs),         MP_OBJ_FROM_PTR(&os_statvfs_obj) },
 
     /// \constant sep - separation character used in paths
     { MP_OBJ_NEW_QSTR(MP_QSTR_sep),             MP_OBJ_NEW_QSTR(MP_QSTR__slash_) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mount),           (mp_obj_t)&fsuser_mount_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_umount),          (mp_obj_t)&fsuser_umount_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs),            (mp_obj_t)&fsuser_mkfs_obj },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm),         (mp_obj_t)&mp_uos_dupterm_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify),  (mp_obj_t)&os_dupterm_notify_obj },
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sync), (mp_obj_t)&mod_os_sync_obj },
-#endif
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mount),           MP_OBJ_FROM_PTR(&fsuser_mount_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umount),          MP_OBJ_FROM_PTR(&fsuser_umount_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mkfs),            MP_OBJ_FROM_PTR(&fsuser_mkfs_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(os_module_globals, os_module_globals_table);
 

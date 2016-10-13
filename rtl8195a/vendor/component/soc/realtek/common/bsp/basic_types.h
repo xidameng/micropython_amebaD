@@ -88,7 +88,7 @@ typedef unsigned char           bool;
 
 #define UCHAR                   uint8_t
 #define USHORT                  uint16_t
-#if 0  // micropython lib conflict
+#if 0  //micropython types conflict
 #define UINT                    uint32_t
 #endif
 #define ULONG                   uint32_t	

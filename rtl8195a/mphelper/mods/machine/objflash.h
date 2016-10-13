@@ -23,23 +23,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef _OBJSDIO_H_
-#define _OBJSDIO_H_
 
-#include "py/mpstate.h"
+#ifndef _OBJFLASH_H_
+#define _OBJFLASH_H_
+
+// Micropython headers
+#include "py/obj.h"
 #include "py/runtime.h"
-#include "py/mphal.h"
+#include "lib/fatfs/ff.h"
+#include "extmod/fsusermount.h"
 
-#include "exception.h"
+// mbed headers
+#include "device_lock.h"
+#include "flash_api.h"
 
-#include "sd.h"
+extern const struct _mp_obj_type_t flash_type;
 
-extern const mp_obj_type_t sdio_type;
+extern uint32_t __fatfs_start_address__;
+extern uint32_t __fatfs_end_address__;
+extern uint32_t __fatfs_num_blocks__;
 
-#define SDIO_BLOCK_SIZE 512
+#define FLASH_START_BASE    (&__fatfs_start_address__)
+#define FLASH_BLOCK_SIZE    (4096)
+#define FLASH_START_BLOCK   (0)
+#define FLASH_NUM_BLOCKS    (&__fatfs_num_blocks__)
 
 typedef struct {
     mp_obj_base_t base;
-} sdio_obj_t;
+    flash_t       obj;
+} flash_obj_t;
 
-#endif  // _OBJSDIO_H_
+void flash_init0(fs_user_mount_t *vfs);
+
+#endif /* _OBJFLASH_H_ */

@@ -92,22 +92,24 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
     { MP_OBJ_NEW_QSTR(MP_QSTR_help),        (mp_obj_t)&mp_builtin_help_obj },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),        (mp_obj_t)&mp_builtin_ftpd_obj },   \
 
-//extern const struct _mp_obj_module_t mp_module_umachine;
+extern const struct _mp_obj_module_t mp_module_umachine;
+extern const struct _mp_obj_module_t mp_module_uos;
 //extern const struct _mp_obj_module_t mp_module_utime;
 //extern const struct _mp_obj_module_t mp_module_uwireless;
-//extern const struct _mp_obj_module_t mp_module_uos;
+
 //extern const struct _mp_obj_module_t mp_module_usocket;
 //extern const struct _mp_obj_module_t mp_module_ussl;
 //
 //extern const struct _mp_obj_module_t mp_network_module;
 //extern const struct _mp_obj_module_t mp_crypto_module;
 //extern const struct _mp_obj_module_t mp_uvc_module;
-
+//
 #define MICROPY_PORT_BUILTIN_MODULES \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_umachine),   (mp_obj_t)&mp_module_umachine },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),  (mp_obj_t)&mp_module_uwireless },  \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_uos),        (mp_obj_t)&mp_module_uos },        \
+
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_ussl),       (mp_obj_t)&mp_module_ussl },       \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_network),    (mp_obj_t)&mp_network_module },    \
@@ -115,13 +117,14 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  (mp_obj_t)&mp_module_ubinascii },  \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_re),        (mp_obj_t)&mp_module_ure },        \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  (mp_obj_t)&mp_module_ubinascii },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_re),        (mp_obj_t)&mp_module_ure },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
+
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
 
@@ -136,11 +139,11 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
 
-#define MICROPY_PY_SYS_PLATFORM             "RTL8195A"
+#define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
-#define MICROPY_HW_PORT_VERSION             "v0.0.1"
+#define MICROPY_HW_PORT_VERSION             "0.0.1"
 
-#define MICROPY_HW_BOARD_NAME               "Ameba Board"
+#define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
 #define MICROPY_HW_MCU_NAME                 "RTL8195A"
 
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"

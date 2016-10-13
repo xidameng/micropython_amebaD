@@ -24,30 +24,31 @@
  * THE SOFTWARE.
  */
 
+/*****************************************************************************
+ *                              Header includes
+ * ***************************************************************************/
 #include "objsdio.h"
+#include "lib/fatfs/ff.h"
+#include "extmod/fsusermount.h"
 
-STATIC const mp_obj_base_t sdio_obj = {&sdio_type};
+STATIC sdio_obj_t sdio_obj = {
+    .base.type = &sdio_type,
+};
 
 void sdio_init(void) {
     //TODO Should check ret value
-    uint8_t ret = 0;
-    ret = SD_Init();
+    uint8_t ret = SD_Init();
 }
 
 void sdio_deinit(void) {
     //TODO Should check ret value
-    uint8_t ret = 0;
-    ret = SD_DeInit();
+    uint8_t ret = SD_DeInit();
 }
 
 void sdio_flush(void) {
-    //TODO should check the write status
-    uint8_t ret = 0;
-    ret = SD_Status();
-    ret = SD_WaitReady();
 }
 
-uint32_t sdio_get_block_size(void) {
+mp_uint_t sdio_get_block_size(void) {
     return SDIO_BLOCK_SIZE;
 }
 
@@ -73,7 +74,7 @@ STATIC mp_obj_t sdio_ioctl(mp_obj_t self, mp_obj_t cmd_in, mp_obj_t arg_in) {
     mp_int_t cmd = mp_obj_get_int(cmd_in);
     switch (cmd) {
         case BP_IOCTL_INIT: sdio_init(); return MP_OBJ_NEW_SMALL_INT(0);
-        case BP_IOCTL_DEINIT: sdio_deinit(); return MP_OBJ_NEW_SMALL_INT(0); // TODO properly
+        case BP_IOCTL_DEINIT: sdio_deinit(); return MP_OBJ_NEW_SMALL_INT(0);
         case BP_IOCTL_SYNC: sdio_flush(); return MP_OBJ_NEW_SMALL_INT(0);
         //case BP_IOCTL_SEC_COUNT: return MP_OBJ_NEW_SMALL_INT(storage_get_block_count());
         case BP_IOCTL_SEC_SIZE: return MP_OBJ_NEW_SMALL_INT(sdio_get_block_size());
@@ -92,15 +93,15 @@ STATIC mp_obj_t sdio_make_new(const mp_obj_type_t *type, size_t n_args, size_t n
 }
 
 STATIC const mp_map_elem_t sdio_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readblocks),  (mp_obj_t)&sdio_readblocks_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_writeblocks), (mp_obj_t)&sdio_writeblocks_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ioctl),       (mp_obj_t)&sdio_ioctl_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readblocks),  MP_OBJ_FROM_PTR(&sdio_readblocks_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_writeblocks), MP_OBJ_FROM_PTR(&sdio_writeblocks_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ioctl),       MP_OBJ_FROM_PTR(&sdio_ioctl_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(sdio_locals_dict, sdio_locals_dict_table);
 
 const mp_obj_type_t sdio_type = {
     { &mp_type_type },
-    .name = MP_QSTR_SDIO,
-    .make_new = sdio_make_new,
+    .name        = MP_QSTR_SDIO,
+    .make_new    = sdio_make_new,
     .locals_dict = (mp_obj_t)&sdio_locals_dict,
 };

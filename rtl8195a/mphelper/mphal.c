@@ -23,6 +23,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+/*****************************************************************************
+ *                              Header includes
+ * ***************************************************************************/
 #include "py/mpstate.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
