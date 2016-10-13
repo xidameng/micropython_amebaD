@@ -46,10 +46,17 @@ void sdio_deinit(void) {
 }
 
 void sdio_flush(void) {
+    SD_WaitReady();
 }
 
 mp_uint_t sdio_get_block_size(void) {
     return SDIO_BLOCK_SIZE;
+}
+
+mp_uint_t sdio_get_block_count(void) {
+    uint32_t sector;
+    SD_GetCapacity(&sector);
+    return sector;
 }
 
 STATIC mp_obj_t sdio_readblocks(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
@@ -76,7 +83,7 @@ STATIC mp_obj_t sdio_ioctl(mp_obj_t self, mp_obj_t cmd_in, mp_obj_t arg_in) {
         case BP_IOCTL_INIT: sdio_init(); return MP_OBJ_NEW_SMALL_INT(0);
         case BP_IOCTL_DEINIT: sdio_deinit(); return MP_OBJ_NEW_SMALL_INT(0);
         case BP_IOCTL_SYNC: sdio_flush(); return MP_OBJ_NEW_SMALL_INT(0);
-        //case BP_IOCTL_SEC_COUNT: return MP_OBJ_NEW_SMALL_INT(storage_get_block_count());
+        case BP_IOCTL_SEC_COUNT: return MP_OBJ_NEW_SMALL_INT(sdio_get_block_count());
         case BP_IOCTL_SEC_SIZE: return MP_OBJ_NEW_SMALL_INT(sdio_get_block_size());
 
         default: return mp_const_none;
