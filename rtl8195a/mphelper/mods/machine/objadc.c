@@ -74,7 +74,7 @@ STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 
 STATIC const mp_map_elem_t adc_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read),       (mp_obj_t)&adc_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),       MP_OBJ_FROM_PTR(&adc_read_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(adc_locals_dict, adc_locals_dict_table);
 

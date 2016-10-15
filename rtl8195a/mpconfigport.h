@@ -97,7 +97,7 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_uterminal;
-//extern const struct _mp_obj_module_t mp_module_utime;
+extern const struct _mp_obj_module_t mp_module_utime;
 //extern const struct _mp_obj_module_t mp_module_uwireless;
 
 //extern const struct _mp_obj_module_t mp_module_usocket;
@@ -111,7 +111,7 @@ extern const struct _mp_obj_module_t mp_module_uterminal;
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),         (mp_obj_t)&mp_module_uterminal },   \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),      (mp_obj_t)&mp_module_utime },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),  (mp_obj_t)&mp_module_uwireless },  \
 
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
@@ -127,7 +127,7 @@ extern const struct _mp_obj_module_t mp_module_uterminal;
     { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_term),      (mp_obj_t)&mp_module_uterminal },        \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
 
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \

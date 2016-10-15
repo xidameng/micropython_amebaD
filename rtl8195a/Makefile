@@ -421,15 +421,15 @@ PY_C += $(wildcard ../extmod/*.c)
 PY_C += $(wildcard mphelper/*.c)
 PY_C += $(wildcard mphelper/gccollect/*.c)
 PY_C += mphelper/mods/modmachine.c
+PY_C += mphelper/mods/modutime.c
 PY_C += mphelper/mods/modterm.c
 PY_C += mphelper/mods/moduos.c
 PY_C += mphelper/mods/machine/objloguart.c
 PY_C += mphelper/mods/machine/objsdio.c
 PY_C += mphelper/mods/machine/objflash.c
-#PY_C += $(wildcard mphelper/mods/*.c)
-#PY_C += $(wildcard mphelper/mods/machine/*.c)
-#PY_C += $(wildcard mphelper/mods/wireless/*.c)
-#PY_C += $(wildcard mphelper/mods/network/*.c)
+PY_C += mphelper/mods/machine/objwdt.c
+PY_C += mphelper/mods/machine/objrtc.c
+PY_C += mphelper/mods/machine/objadc.c
 
 PY_C := $(filter-out ../extmod/modlwip.c,$(PY_C))
 

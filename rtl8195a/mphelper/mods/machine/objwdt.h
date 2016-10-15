@@ -30,14 +30,13 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#include "exception.h"
-
 #include "wdt_api.h"
 
 extern const mp_obj_type_t wdt_type;
 
 typedef struct {
     mp_obj_base_t base;
+    mp_obj_t      callback;
 } wdt_obj_t;
 
 #endif  // OBJWDT_H_

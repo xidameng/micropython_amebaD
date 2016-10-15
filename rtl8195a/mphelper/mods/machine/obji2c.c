@@ -247,12 +247,12 @@ STATIC const mp_map_elem_t i2c_locals_dict_table[] = {
 #if 0 // TODO(Chester): Need to figure out how to scan ...
     { MP_OBJ_NEW_QSTR(MP_QSTR_scan),                (mp_obj_t)&i2c_scan_obj },
 #endif
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),               (mp_obj_t)&i2c_reset_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_recv),                (mp_obj_t)&i2c_recv_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_send),                (mp_obj_t)&i2c_send_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),               MP_OBJ_FROM_PTR(&i2c_reset_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_recv),                MP_OBJ_FROM_PTR(&i2c_recv_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_send),                MP_OBJ_FROM_PTR(&i2c_send_obj) },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mem_read),            (mp_obj_t)&i2c_mem_read_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_mem_write),           (mp_obj_t)&i2c_mem_write_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mem_read),            MP_OBJ_FROM_PTR(&i2c_mem_read_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mem_write),           MP_OBJ_FROM_PTR(&i2c_mem_write_obj) },
 
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_MASTER),              MP_OBJ_NEW_SMALL_INT(I2C_MASTER) },
