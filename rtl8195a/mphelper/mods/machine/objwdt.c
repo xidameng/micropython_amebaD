@@ -35,7 +35,15 @@
 /*****************************************************************************
  *                              Internal functions
  * ***************************************************************************/
-STATIC const mp_obj_base_t wdt_obj = {&wdt_type};
+STATIC wdt_obj_t wdt_obj = {
+    .base.type = &wdt_type,
+    .callback  = mp_const_none,
+};
+
+STATIC void wdt_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
+    wdt_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_printf(print, "WDT(");
+}
 
 STATIC mp_obj_t wdt_start(mp_obj_t self_in, mp_obj_t msec_in) {
     mp_int_t msec = mp_obj_get_int(msec_in);
@@ -55,17 +63,17 @@ STATIC mp_obj_t wdt_stop(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_stop_obj, wdt_stop);
 
-STATIC mp_obj_t wdt_refresh(mp_obj_t self_in) {
+STATIC mp_obj_t wdt_feed(mp_obj_t self_in) {
     watchdog_refresh();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_refresh_obj, wdt_refresh);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_feed_obj, wdt_feed);
 
 STATIC const mp_map_elem_t wdt_locals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_wdt) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_start),           (mp_obj_t)&wdt_start_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stop),            (mp_obj_t)&wdt_stop_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_refresh),         (mp_obj_t)&wdt_refresh_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_start),           MP_OBJ_FROM_PTR(&wdt_start_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_stop),            MP_OBJ_FROM_PTR(&wdt_stop_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_feed),            MP_OBJ_FROM_PTR(&wdt_feed_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(wdt_locals_dict, wdt_locals_table);
 
@@ -79,7 +87,8 @@ STATIC mp_obj_t wdt_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 
 const mp_obj_type_t wdt_type = {
     { &mp_type_type },
-    .name = MP_QSTR_WDT,
-    .make_new = wdt_make_new,
+    .name        = MP_QSTR_WDT,
+    .print       = wdt_print,
+    .make_new    = wdt_make_new,
     .locals_dict = (mp_obj_t)&wdt_locals_dict,
 };

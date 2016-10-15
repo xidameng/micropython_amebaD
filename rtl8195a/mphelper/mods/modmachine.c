@@ -35,15 +35,16 @@
 #include "machine/obji2c.h"
 #include "machine/objuart.h"
 #include "machine/objspi.h"
-#include "machine/objadc.h"
-#include "machine/objdac.h"
 #include "machine/objpwm.h"
-#include "machine/objrtc.h"
-#include "machine/objwdt.h"
+#include "machine/objdac.h"
 #endif
 #include "machine/objsdio.h"
 #include "machine/objflash.h"
 #include "machine/objloguart.h"
+#include "machine/objwdt.h"
+#include "machine/objrtc.h"
+#include "machine/objadc.h"
+
 
 
 // mbed lib headers
@@ -64,17 +65,19 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO),          MP_OBJ_FROM_PTR(&sdio_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
-#if 0
+    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
 
+#if 0
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           (mp_obj_t)&i2c_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           (mp_obj_t)&spi_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           (mp_obj_t)&adc_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           (mp_obj_t)&dac_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           (mp_obj_t)&rtc_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           (mp_obj_t)&wdt_type },
+
+
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);

@@ -27,10 +27,17 @@
 #include "objrtc.h"
 
 // singleton RTC object
-STATIC const rtc_obj_t rtc_obj = {{&rtc_type}};
+STATIC rtc_obj_t rtc_obj = {
+    .base.type = &rtc_type,
+};
 
 void rtc_init0(void) {
     rtc_init();
+}
+
+STATIC void rtc_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
+    rtc_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_printf(print, "RTC()");
 }
 
 STATIC mp_obj_t rtc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
@@ -83,13 +90,14 @@ STATIC mp_obj_t rtc_datetime(mp_uint_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(rtc_datetime_obj, 1, 2, rtc_datetime);
 
 STATIC const mp_map_elem_t rtc_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_datetime),  (mp_obj_t)&rtc_datetime_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_datetime),  MP_OBJ_FROM_PTR(&rtc_datetime_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(rtc_locals_dict, rtc_locals_dict_table);
 
 const mp_obj_type_t rtc_type = {
     { &mp_type_type },
-    .name = MP_QSTR_RTC,
-    .make_new = rtc_make_new,
+    .name        = MP_QSTR_RTC,
+    .print       = rtc_print,
+    .make_new    = rtc_make_new,
     .locals_dict = (mp_obj_t)&rtc_locals_dict,
 };
