@@ -41,7 +41,7 @@
 #define MICROPY_PY_COLLECTIONS                  (1)
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_IO                           (0)
-#define MICROPY_PY_OS_DUPTERM                   (1)
+#define MICROPY_PY_OS_DUPTERM                   (0)
 #define MICROPY_PY_WEBSOCKET                    (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
 #define MICROPY_PY_UCTYPES                      (1)
@@ -55,6 +55,8 @@
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
+
+#define MICROPY_PY_TERM_NUM                     (3)
 
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
@@ -94,6 +96,7 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
 
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
+extern const struct _mp_obj_module_t mp_module_uterminal;
 //extern const struct _mp_obj_module_t mp_module_utime;
 //extern const struct _mp_obj_module_t mp_module_uwireless;
 
@@ -107,6 +110,7 @@ extern const struct _mp_obj_module_t mp_module_uos;
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),         (mp_obj_t)&mp_module_uterminal },   \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),  (mp_obj_t)&mp_module_uwireless },  \
 
@@ -122,6 +126,7 @@ extern const struct _mp_obj_module_t mp_module_uos;
     { MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_term),      (mp_obj_t)&mp_module_uterminal },        \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
 
@@ -138,6 +143,7 @@ extern const struct _mp_obj_module_t mp_module_uos;
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
+#include "cmsis_os.h"
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
@@ -149,16 +155,17 @@ extern const struct _mp_obj_module_t mp_module_uos;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "1234567890"
 
-#define MICROPY_FTPD_STACK_SIZE     512
-#define MICROPY_FTPD_TASK_PRIORITY  osPriorityBelowNormal
+#define MICROPY_FTPD_STACK_SIZE             512
+#define MICROPY_FTPD_TASK_PRIORITY          osPriorityBelowNormal
 
-#define MICROPY_MAIN_TASK_STACK_SIZE    1024 * 20
-#define MICROPY_MAIN_TASK_PRIORITY      osPriorityHigh
+#define MICROPY_MAIN_TASK_STACK_SIZE        1024 * 20
+#define MICROPY_MAIN_TASK_PRIORITY          osPriorityHigh
 
-#define MICROPY_PORT_ROOT_POINTERS      \
-    const char *readline_hist[8];       \
-    mp_obj_t mp_const_user_interrupt;   \
-    mp_obj_t mp_kbd_exception; \
+#define MICROPY_PORT_ROOT_POINTERS          \
+    const char *readline_hist[8];           \
+    mp_obj_list_t term_list_obj;            \
+    mp_obj_t dupterm_arr_obj;               \
+    mp_obj_t mp_kbd_exception;              \
     struct _pyb_uart_obj_t *pyb_stdio_uart; \
 
 #define ENOTSUP 524

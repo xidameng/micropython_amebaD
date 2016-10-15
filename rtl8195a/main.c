@@ -44,7 +44,6 @@
 #include "lib/fatfs/ff.h"
 #include "extmod/fsusermount.h"
 
-#include "cmsis_os.h"
 #include "sys_api.h"
 
 #include "FreeRTOS.h"
@@ -56,42 +55,7 @@
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-osThreadId main_tid = 0;
 osThreadId ftpd_tid = 0;
-fs_user_mount_t fs_user_mount_flash;
-
-#if 0
-/**
-  * @brief  Main program.
-  * @param  None
-  * @retval None
-  */
-void main(void)
-{
-	/* Initialize log uart and at command service */
-	console_init();	
-
-	/* pre-processor of application example */
-	pre_example_entry();
-
-	/* wlan intialization */
-#if defined(CONFIG_WIFI_NORMAL) && defined(CONFIG_NETWORK)
-	wlan_network();
-#endif
-
-	/* Execute application example */
-	example_entry();
-
-    	/*Enable Schedule, Start Kernel*/
-#if defined(CONFIG_KERNEL) && !TASK_SCHEDULER_DISABLED
-	#ifdef PLATFORM_FREERTOS
-	vTaskStartScheduler();
-	#endif
-#else
-	RtlConsolTaskRom(NULL);
-#endif
-}
-#else
 
 void main_task(void const *arg) {
     if (pyexec_friendly_repl() != 0) {
@@ -109,9 +73,6 @@ void main (void) {
     gc_collect_init (sp);
     gc_init(&_mp_gc_head, &_mp_gc_end);
 
-    // Kernel initialization
-    osKernelInitialize();
-
     // Init micropython basic system
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
@@ -119,40 +80,17 @@ void main (void) {
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
-
-    log_uart_init0();
-#if 0
-    fs_user_mount_t *vfs = &fs_user_mount_flash;
-    vfs->str = "/flash";
-    vfs->len = 6;
-    vfs->flags = 0;
-    flash_init0(vfs);
-    MP_STATE_PORT(fs_user_mount)[0] = vfs;
-    FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
-    if (res == FR_NO_FILESYSTEM) {
-        res = f_mkfs("/flash", 1, 0);
-        if (res == FR_OK) {
-            DiagPrintf("OK!\r\n");
-        } else {
-            MP_STATE_PORT(fs_user_mount)[0] = NULL;
-            DiagPrintf("NO!\r\n");
-        }
-    }
-#endif
-
+    term_init();
+    MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     // Create main task
-    osThreadDef(main_task, MICROPY_MAIN_TASK_PRIORITY, 1, MICROPY_MAIN_TASK_STACK_SIZE);
-    main_tid = osThreadCreate (osThread (main_task), NULL);
-
-    osKernelStart();
+    xTaskCreate( main_task, (signed char*)"Task1", 1024, NULL, tskIDLE_PRIORITY+5, NULL );
+    vTaskStartScheduler();
     for(;;);
     return;
 }
-#endif
 
 void nlr_jump_fail(void *val) {
-    DiagPrintf("FATAL: uncaught exception %p\n", val);
-    //mp_obj_print_exception(&mp_plat_print, (mp_obj_t)val);
+    mp_printf(&mp_plat_print, "FATAL: uncaught exception %p\r\n", val);
     for (uint i = 0;;) {
         for (volatile uint delay = 0; delay < 10000000; delay++);
     }
@@ -170,10 +108,6 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
     return fatfs_builtin_open(n_args, args, kwargs);
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
-
-void mp_keyboard_interrupt(void) {
-    //MP_STATE_VM(mp_pending_exception) = MP_STATE_PORT(mp_kbd_exception);
-}
 
 mp_obj_t mp_builtin_ftpd(mp_obj_t enable_in) {
     bool enable = mp_obj_is_true(enable_in);

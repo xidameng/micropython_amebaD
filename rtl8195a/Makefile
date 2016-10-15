@@ -421,6 +421,7 @@ PY_C += $(wildcard ../extmod/*.c)
 PY_C += $(wildcard mphelper/*.c)
 PY_C += $(wildcard mphelper/gccollect/*.c)
 PY_C += mphelper/mods/modmachine.c
+PY_C += mphelper/mods/modterm.c
 PY_C += mphelper/mods/moduos.c
 PY_C += mphelper/mods/machine/objloguart.c
 PY_C += mphelper/mods/machine/objsdio.c
@@ -438,6 +439,7 @@ PY_C += \
 		lib/utils/pyhelp.c \
 		lib/mp-readline/readline.c \
 		lib/netutils/netutils.c \
+		lib/utils/interrupt_char.c \
 		lib/fatfs/ff.c \
 		lib/fatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \

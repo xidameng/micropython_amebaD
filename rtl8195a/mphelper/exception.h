@@ -49,8 +49,5 @@ extern const char mpexception_socket_timeout[];
  *                              External Functions
  * ***************************************************************************/
 void mpexception_init0 (void);
-void mpexception_set_interrupt_char (int c);
-void mpexception_nlr_jump (void *o);
-void mpexception_keyboard_nlr_jump (void);
 
 #endif /* MPEXCEPTION_H_ */
