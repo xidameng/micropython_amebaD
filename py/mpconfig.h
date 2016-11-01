@@ -860,6 +860,22 @@ typedef double mp_float_t;
 #define MICROPY_PY_UERRNO (0)
 #endif
 
+// Whether to provide "utime" module functions implementation
+// in terms of mp_hal_* functions.
+#ifndef MICROPY_PY_UTIME_MP_HAL
+#define MICROPY_PY_UTIME_MP_HAL (0)
+#endif
+
+// Period of values returned by utime.ticks_ms(), ticks_us(), ticks_cpu()
+// functions. Should be power of two. All functions above use the same
+// period, so if underlying hardware/API has different periods, the
+// minimum of them should be used. The value below is the maximum value
+// this parameter can take (corresponding to 30 bit tick values on 32-bit
+// system).
+#ifndef MICROPY_PY_UTIME_TICKS_PERIOD
+#define MICROPY_PY_UTIME_TICKS_PERIOD (MP_SMALL_INT_POSITIVE_MASK + 1)
+#endif
+
 // Whether to provide "_thread" module
 #ifndef MICROPY_PY_THREAD
 #define MICROPY_PY_THREAD (0)

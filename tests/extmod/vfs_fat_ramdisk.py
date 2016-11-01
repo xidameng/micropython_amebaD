@@ -41,60 +41,61 @@ except MemoryError:
 
 uos.VfsFat.mkfs(bdev)
 
-assert b"FOO_FILETXT" not in bdev.data
-assert b"hello!" not in bdev.data
+print(b"FOO_FILETXT" not in bdev.data)
+print(b"hello!" not in bdev.data)
 
 vfs = uos.VfsFat(bdev, "/ramdisk")
-print("statvfs:", vfs.statvfs("/ramdisk"))
 
+try:
+    vfs.statvfs("/null")
+except OSError as e:
+    print(e.args[0] == uerrno.ENODEV)
+
+print("statvfs:", vfs.statvfs("/ramdisk"))
 print("getcwd:", vfs.getcwd())
 
-f = vfs.open("foo_file.txt", "w")
-f.write("hello!")
-f.close()
+try:
+    vfs.stat("no_file.txt")
+except OSError as e:
+    print(e.args[0] == uerrno.ENOENT)
 
-f2 = vfs.open("foo_file.txt")
-print(f2.read())
-f2.close()
+with vfs.open("foo_file.txt", "w") as f:
+    f.write("hello!")
+print(vfs.listdir())
 
-assert b"FOO_FILETXT" in bdev.data
-assert b"hello!" in bdev.data
+print("stat root:", vfs.stat("/"))
+print("stat disk:", vfs.stat("/ramdisk/"))
+print("stat file:", vfs.stat("foo_file.txt"))
 
-assert vfs.listdir() == ['foo_file.txt']
-
-vfs.remove('foo_file.txt')
-assert vfs.listdir() == []
+print(b"FOO_FILETXT" in bdev.data)
+print(b"hello!" in bdev.data)
 
 vfs.mkdir("foo_dir")
-assert vfs.listdir() == ['foo_dir']
-f = vfs.open("foo_dir/file-in-dir.txt", "w")
-f.write("data in file")
-f.close()
-
-assert vfs.listdir("foo_dir") == ['file-in-dir.txt']
-
-vfs.rename("foo_dir/file-in-dir.txt", "moved-to-root.txt")
-assert vfs.listdir() == ['foo_dir', 'moved-to-root.txt']
-
 vfs.chdir("foo_dir")
 print("getcwd:", vfs.getcwd())
-assert vfs.listdir() == []
+print(vfs.listdir())
 
 with vfs.open("sub_file.txt", "w") as f:
-    f.write("test2")
-assert vfs.listdir() == ["sub_file.txt"]
+    f.write("subdir file")
+
+try:
+    vfs.chdir("sub_file.txt")
+except OSError as e:
+    print(e.args[0] == uerrno.ENOENT)
 
 vfs.chdir("..")
 print("getcwd:", vfs.getcwd())
-
 
 vfs.umount()
 try:
     vfs.listdir()
 except OSError as e:
-    assert e.args[0] == uerrno.ENODEV
-else:
-    raise AssertionError("expected OSError not thrown")
+    print(e.args[0] == uerrno.ENODEV)
+
+try:
+    vfs.getcwd()
+except OSError as e:
+    print(e.args[0] == uerrno.ENODEV)
 
 vfs = uos.VfsFat(bdev, "/ramdisk")
-assert  vfs.listdir() == ['foo_dir', 'moved-to-root.txt']
+print(vfs.listdir(b""))

@@ -178,7 +178,7 @@ STATIC mp_obj_t mp_builtin_chr(mp_obj_t o_in) {
         str[3] = (c & 0x3F) | 0x80;
         len = 4;
     } else {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "chr() arg not in range(0x110000)"));
+        mp_raise_msg(&mp_type_ValueError, "chr() arg not in range(0x110000)");
     }
     return mp_obj_new_str(str, len, true);
     #else
@@ -187,7 +187,7 @@ STATIC mp_obj_t mp_builtin_chr(mp_obj_t o_in) {
         char str[1] = {ord};
         return mp_obj_new_str(str, 1, true);
     } else {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "chr() arg not in range(256)"));
+        mp_raise_msg(&mp_type_ValueError, "chr() arg not in range(256)");
     }
     #endif
 }
@@ -286,7 +286,7 @@ STATIC mp_obj_t mp_builtin_min_max(size_t n_args, const mp_obj_t *args, mp_map_t
             if (default_elem != NULL) {
                 best_obj = default_elem->value;
             } else {
-                nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "arg is an empty sequence"));
+                mp_raise_msg(&mp_type_ValueError, "arg is an empty sequence");
             }
         }
         return best_obj;
@@ -430,13 +430,8 @@ MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_print_obj, 0, mp_builtin_print);
 
 STATIC mp_obj_t mp_builtin___repl_print__(mp_obj_t o) {
     if (o != mp_const_none) {
-        #if MICROPY_PY_IO
-        mp_obj_print_helper(&mp_sys_stdout_print, o, PRINT_REPR);
-        mp_print_str(&mp_sys_stdout_print, "\n");
-        #else
-        mp_obj_print_helper(&mp_plat_print, o, PRINT_REPR);
-        mp_print_str(&mp_plat_print, "\n");
-        #endif
+        mp_obj_print_helper(MP_PYTHON_PRINTER, o, PRINT_REPR);
+        mp_print_str(MP_PYTHON_PRINTER, "\n");
         #if MICROPY_CAN_OVERRIDE_BUILTINS
         // Set "_" special variable
         mp_obj_t dest[2] = {MP_OBJ_SENTINEL, o};
@@ -507,8 +502,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_builtin_sum_obj, 1, 2, mp_builtin_sum);
 
 STATIC mp_obj_t mp_builtin_sorted(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
     if (n_args > 1) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError,
-                                          "must use keyword argument for key function"));
+        mp_raise_msg(&mp_type_TypeError, "must use keyword argument for key function");
     }
     mp_obj_t self = mp_type_list.make_new(&mp_type_list, 1, 0, args);
     mp_obj_list_sort(1, &self, kwargs);
@@ -547,6 +541,13 @@ STATIC mp_obj_t mp_builtin_setattr(mp_obj_t base, mp_obj_t attr, mp_obj_t value)
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(mp_builtin_setattr_obj, mp_builtin_setattr);
+
+#if MICROPY_CPYTHON_COMPAT
+STATIC mp_obj_t mp_builtin_delattr(mp_obj_t base, mp_obj_t attr) {
+    return mp_builtin_setattr(base, attr, MP_OBJ_NULL);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mp_builtin_delattr_obj, mp_builtin_delattr);
+#endif
 
 STATIC mp_obj_t mp_builtin_hasattr(mp_obj_t object_in, mp_obj_t attr_in) {
     qstr attr = mp_obj_str_get_qstr(attr_in);
@@ -623,6 +624,9 @@ STATIC const mp_rom_map_elem_t mp_module_builtins_globals_table[] = {
     #if MICROPY_PY_BUILTINS_SET
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mp_type_set) },
     #endif
+    #if MICROPY_PY_BUILTINS_SLICE
+    { MP_ROM_QSTR(MP_QSTR_slice), MP_ROM_PTR(&mp_type_slice) },
+    #endif
     { MP_ROM_QSTR(MP_QSTR_str), MP_ROM_PTR(&mp_type_str) },
     { MP_ROM_QSTR(MP_QSTR_super), MP_ROM_PTR(&mp_type_super) },
     { MP_ROM_QSTR(MP_QSTR_tuple), MP_ROM_PTR(&mp_type_tuple) },
@@ -648,6 +652,9 @@ STATIC const mp_rom_map_elem_t mp_module_builtins_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_compile), MP_ROM_PTR(&mp_builtin_compile_obj) },
     #endif
     { MP_ROM_QSTR(MP_QSTR_chr), MP_ROM_PTR(&mp_builtin_chr_obj) },
+    #if MICROPY_CPYTHON_COMPAT
+    { MP_ROM_QSTR(MP_QSTR_delattr), MP_ROM_PTR(&mp_builtin_delattr_obj) },
+    #endif
     { MP_ROM_QSTR(MP_QSTR_dir), MP_ROM_PTR(&mp_builtin_dir_obj) },
     { MP_ROM_QSTR(MP_QSTR_divmod), MP_ROM_PTR(&mp_builtin_divmod_obj) },
     #if MICROPY_PY_BUILTINS_EVAL_EXEC
