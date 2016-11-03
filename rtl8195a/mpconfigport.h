@@ -40,7 +40,7 @@
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
 #define MICROPY_PY_MATH                         (1)
-#define MICROPY_PY_IO                           (0)
+#define MICROPY_PY_IO                           (1)
 #define MICROPY_PY_OS_DUPTERM                   (0)
 #define MICROPY_PY_WEBSOCKET                    (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
@@ -84,7 +84,6 @@ typedef long mp_off_t;
 
 #define MP_STATE_PORT MP_STATE_VM
 
-extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
 //extern const struct _mp_obj_fun_builtin_t mp_builtin_mdns_obj;
 
 // extra built in names to add to the global namespace
@@ -92,33 +91,32 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
     { MP_OBJ_NEW_QSTR(MP_QSTR_open),        (mp_obj_t)&mp_builtin_open_obj },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_input),       (mp_obj_t)&mp_builtin_input_obj },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_help),        (mp_obj_t)&mp_builtin_help_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),        (mp_obj_t)&mp_builtin_ftpd_obj },   \
 
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_uterminal;
 extern const struct _mp_obj_module_t mp_module_utime;
-//extern const struct _mp_obj_module_t mp_module_uwireless;
+extern const struct _mp_obj_module_t mp_module_uwireless;
 
-//extern const struct _mp_obj_module_t mp_module_usocket;
-//extern const struct _mp_obj_module_t mp_module_ussl;
+extern const struct _mp_obj_module_t mp_module_usocket;
+extern const struct _mp_obj_module_t mp_module_ussl;
 //
-//extern const struct _mp_obj_module_t mp_network_module;
-//extern const struct _mp_obj_module_t mp_crypto_module;
+extern const struct _mp_obj_module_t mp_network_module;
+extern const struct _mp_obj_module_t mp_crypto_module;
 //extern const struct _mp_obj_module_t mp_uvc_module;
 //
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),         (mp_obj_t)&mp_module_uterminal },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),      (mp_obj_t)&mp_module_utime },      \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),  (mp_obj_t)&mp_module_uwireless },  \
-
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),    (mp_obj_t)&mp_module_usocket },    \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ussl),       (mp_obj_t)&mp_module_ussl },       \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_network),    (mp_obj_t)&mp_network_module },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        (mp_obj_t)&mp_module_uterminal },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        (mp_obj_t)&mp_module_utime },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    (mp_obj_t)&mp_module_uwireless },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_network),      (mp_obj_t)&mp_network_module },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      (mp_obj_t)&mp_module_usocket },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         (mp_obj_t)&mp_module_ussl },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_crypto),       (mp_obj_t)&mp_crypto_module },     \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_uvc),        (mp_obj_t)&mp_uvc_module },        \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_crypto),     (mp_obj_t)&mp_crypto_module },     \
+
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  (mp_obj_t)&mp_module_ubinascii },  \
@@ -126,12 +124,11 @@ extern const struct _mp_obj_module_t mp_module_utime;
     { MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_term),      (mp_obj_t)&mp_module_uterminal },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_term),      (mp_obj_t)&mp_module_uterminal },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
-
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -158,8 +155,8 @@ extern const struct _mp_obj_module_t mp_module_utime;
 #define MICROPY_FTPD_STACK_SIZE             512
 #define MICROPY_FTPD_TASK_PRIORITY          osPriorityBelowNormal
 
-#define MICROPY_MAIN_TASK_STACK_SIZE        1024 * 20
-#define MICROPY_MAIN_TASK_PRIORITY          osPriorityHigh
+#define MICROPY_MAIN_TASK_STACK_SIZE        1024 
+#define MICROPY_MAIN_TASK_PRIORITY          5
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \

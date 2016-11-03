@@ -34,7 +34,7 @@
  * ***************************************************************************/
 STATIC const mp_map_elem_t wireless_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_wireless) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WLAN),         (mp_obj_t)&wlan_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_WLAN),         MP_OBJ_FROM_PTR(&wlan_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(wireless_module_globals, wireless_module_globals_table);

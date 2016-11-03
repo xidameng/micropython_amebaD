@@ -80,11 +80,14 @@ void main (void) {
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
+    netif_init0();
     rtc_init0();
+    crypto_init0();
+    wlan_init0();
     term_init();
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     // Create main task
-    xTaskCreate( main_task, (signed char*)"Task1", 1024, NULL, tskIDLE_PRIORITY+5, NULL );
+    xTaskCreate( main_task, (signed char*)"Task1", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
     vTaskStartScheduler();
     for(;;);
     return;

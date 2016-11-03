@@ -85,9 +85,9 @@ INCLUDES += -I$(VENDOR)/component/common/api
 INCLUDES += -I$(VENDOR)/component/common/api/platform
 INCLUDES += -I$(VENDOR)/component/common/api/wifi
 INCLUDES += -I$(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/src
-INCLUDES += -I$(VENDOR)/component/common/application
-INCLUDES += -I$(VENDOR)/component/common/application/iotdemokit
-INCLUDES += -I$(VENDOR)/component/common/application/google
+#INCLUDES += -I$(VENDOR)/component/common/application
+#INCLUDES += -I$(VENDOR)/component/common/application/iotdemokit
+#INCLUDES += -I$(VENDOR)/component/common/application/google
 INCLUDES += -I$(VENDOR)/component/common/media/framework
 INCLUDES += -I$(VENDOR)/component/common/example
 INCLUDES += -I$(VENDOR)/component/common/example/wlan_fast_connect
@@ -117,8 +117,8 @@ INCLUDES += -I$(VENDOR)/component/common/network/ssl/polarssl-1.3.8/include
 INCLUDES += -I$(VENDOR)/component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(VENDOR)/component/common/utilities
 INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/misc/rtl_std_lib/include
-INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/Curve25519
-INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/GladmanAES
+#INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/Curve25519
+#INCLUDES += -I$(VENDOR)/component/common/application/apple/WACServer/External/GladmanAES
 INCLUDES += -I$(VENDOR)/component/soc/realtek/8195a/fwlib/ram_lib/usb_otg/include
 INCLUDES += -I$(VENDOR)/component/common/video/v4l2/inc
 INCLUDES += -I$(VENDOR)/component/common/media/codec
@@ -130,7 +130,7 @@ INCLUDES += -I$(VENDOR)/component/common/drivers/usb_class/device/class
 INCLUDES += -I$(VENDOR)/component/common/drivers/sdio/realtek/sdio_host/inc
 INCLUDES += -I$(VENDOR)/component/common/audio
 INCLUDES += -I$(VENDOR)/component/common/drivers/i2s
-INCLUDES += -I$(VENDOR)/component/common/application/xmodem
+#INCLUDES += -I$(VENDOR)/component/common/application/xmodem
 
 INCLUDES += -I../extmod
 INCLUDES += -I../lib/utils
@@ -155,11 +155,11 @@ DRAM_C =
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/cmsis/device/system_8195a.c
 
 #console
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_ethernet.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_lwip.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_sys.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_wifi.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/log_service.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_ethernet.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_lwip.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_sys.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_wifi.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/log_service.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/low_level_io.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/rtl_consol.c
 
@@ -179,7 +179,7 @@ SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
 SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
 SRC_C += $(VENDOR)/component/common/utilities/ssl_client_ext.c
 SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
-SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
+#SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
 SRC_C += $(VENDOR)/component/common/utilities/uart_ymodem.c
 SRC_C += $(VENDOR)/component/common/utilities/update.c
 SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
@@ -388,9 +388,9 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 
 #SDRAM - wigadget
-DRAM_C += $(VENDOR)/component/common/application/wigadget/cloud_link.c
-DRAM_C += $(VENDOR)/component/common/application/wigadget/shtc1.c
-DRAM_C += $(VENDOR)/component/common/application/wigadget/wigadget.c
+#DRAM_C += $(VENDOR)/component/common/application/wigadget/cloud_link.c
+#DRAM_C += $(VENDOR)/component/common/application/wigadget/shtc1.c
+#DRAM_C += $(VENDOR)/component/common/application/wigadget/wigadget.c
 
 
 #utilities
@@ -401,7 +401,7 @@ SRC_C += $(VENDOR)/component/common/utilities/webserver.c
 SRC_C += $(VENDOR)/component/common/utilities/xml.c
 #utilities - example
 SRC_C += $(VENDOR)/component/common/example/example_entry.c
-SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
+#SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
 
 #utilities - FatFS
 #SRC_C += $(VENDOR)/component/common/file_system/fatfs/fatfs_ext/src/ff_driver.c
@@ -411,7 +411,7 @@ SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
 #SRC_C += $(VENDOR)/component/common/file_system/fatfs/disk_if/src/sdcard.c
 
 #utilities - xmodme update
-SRC_C += $(VENDOR)/component/common/application/xmodem/uart_fw_update.c
+#SRC_C += $(VENDOR)/component/common/application/xmodem/uart_fw_update.c
 #user 
 SRC_C += main.c
 
@@ -421,15 +421,24 @@ PY_C += $(wildcard ../extmod/*.c)
 PY_C += $(wildcard mphelper/*.c)
 PY_C += $(wildcard mphelper/gccollect/*.c)
 PY_C += mphelper/mods/modmachine.c
+PY_C += mphelper/mods/moduwireless.c
+PY_C += mphelper/mods/modnetwork.c
 PY_C += mphelper/mods/modutime.c
 PY_C += mphelper/mods/modterm.c
 PY_C += mphelper/mods/moduos.c
+PY_C += mphelper/mods/modusocket.c
+PY_C += mphelper/mods/modussl.c
+PY_C += mphelper/mods/modcrypto.c
 PY_C += mphelper/mods/machine/objloguart.c
 PY_C += mphelper/mods/machine/objsdio.c
 PY_C += mphelper/mods/machine/objflash.c
 PY_C += mphelper/mods/machine/objwdt.c
 PY_C += mphelper/mods/machine/objrtc.c
 PY_C += mphelper/mods/machine/objadc.c
+
+PY_C += mphelper/mods/wireless/objwlan.c
+
+PY_C += mphelper/mods/network/objnetif.c
 
 PY_C := $(filter-out ../extmod/modlwip.c,$(PY_C))
 
