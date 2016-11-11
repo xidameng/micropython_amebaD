@@ -175,14 +175,14 @@ SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
 SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
 
 #network - app
-SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
-SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
-SRC_C += $(VENDOR)/component/common/utilities/ssl_client_ext.c
-SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
+#SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
+#SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
+#SRC_C += $(VENDOR)/component/common/utilities/ssl_client_ext.c
+#SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
 #SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
-SRC_C += $(VENDOR)/component/common/utilities/uart_ymodem.c
-SRC_C += $(VENDOR)/component/common/utilities/update.c
-SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
+#SRC_C += $(VENDOR)/component/common/utilities/uart_ymodem.c
+#SRC_C += $(VENDOR)/component/common/utilities/update.c
+#SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
 
 #network - lwip
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_lib.c
@@ -394,13 +394,13 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 
 
 #utilities
-SRC_C += $(VENDOR)/component/common/utilities/cJSON.c
-SRC_C += $(VENDOR)/component/common/utilities/http_client.c
-SRC_C += $(VENDOR)/component/common/utilities/uart_socket.c
-SRC_C += $(VENDOR)/component/common/utilities/webserver.c
-SRC_C += $(VENDOR)/component/common/utilities/xml.c
+#SRC_C += $(VENDOR)/component/common/utilities/cJSON.c
+#SRC_C += $(VENDOR)/component/common/utilities/http_client.c
+#SRC_C += $(VENDOR)/component/common/utilities/uart_socket.c
+#SRC_C += $(VENDOR)/component/common/utilities/webserver.c
+#SRC_C += $(VENDOR)/component/common/utilities/xml.c
 #utilities - example
-SRC_C += $(VENDOR)/component/common/example/example_entry.c
+#SRC_C += $(VENDOR)/component/common/example/example_entry.c
 #SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
 
 #utilities - FatFS
@@ -439,6 +439,7 @@ PY_C += mphelper/mods/machine/objadc.c
 PY_C += mphelper/mods/wireless/objwlan.c
 
 PY_C += mphelper/mods/network/objnetif.c
+PY_C += mphelper/mods/network/objpacket.c
 
 PY_C := $(filter-out ../extmod/modlwip.c,$(PY_C))
 

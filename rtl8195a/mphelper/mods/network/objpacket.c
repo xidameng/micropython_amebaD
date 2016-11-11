@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Galen Hazelwood
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,48 +27,20 @@
 /*****************************************************************************
  *                              Header includes
  * ***************************************************************************/
-#include "modnetwork.h"
-#include "objnetif.h"
 #include "objpacket.h"
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
 
-/*****************************************************************************
- *                              Internal variables
- * ***************************************************************************/
-
-
-/*****************************************************************************
- *                              Local functions
- * ***************************************************************************/
-
-void network_init0(void) {
-    // Init modnetwork here
-    mp_obj_list_init(&MP_STATE_PORT(netif_list_obj), 0);
-
-    /**
-     * tcpip_init is a lwip tcpip stack init function, it create a new task: tcpip_thread
-     * to recv message from mailbox
-     */
-    tcpip_init(NULL, NULL);
-}
-
-STATIC mp_obj_t netif_iflist(void) {
-    return &MP_STATE_PORT(netif_list_obj);
-}
-MP_DEFINE_CONST_FUN_OBJ_0(netif_iflist_obj, netif_iflist);
-
-STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_iflist),       MP_OBJ_FROM_PTR(&netif_iflist_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),        MP_OBJ_FROM_PTR(&netif_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PKT),          MP_OBJ_FROM_PTR(&packet_type) },
+STATIC const mp_map_elem_t packet_locals_dict_table[] = {
+ 
 };
-STATIC MP_DEFINE_CONST_DICT(mp_module_network_globals, mp_module_network_globals_table);
+STATIC MP_DEFINE_CONST_DICT(packet_locals_dict, packet_locals_dict_table);
 
-const mp_obj_module_t mp_network_module = {
-    .base     = { &mp_type_module },
-    .globals  = (mp_obj_dict_t*)&mp_module_network_globals,
+
+const mp_obj_type_t packet_type = {
+    { &mp_type_type },
+    .name           = MP_QSTR_PKT,
+    .locals_dict    = (mp_obj_t)&packet_locals_dict,
 };

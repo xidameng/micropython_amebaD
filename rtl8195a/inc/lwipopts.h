@@ -150,7 +150,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_UPNP		0
 
 /* Support Multicast */
-#define LWIP_IGMP                   1
+#define LWIP_IGMP                   0
 #define LWIP_RAND()                 rand()
 
 /* Support TCP Keepalive */
@@ -271,7 +271,7 @@ The STM32F2x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 /**
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
-#define LWIP_SOCKET                     1	
+#define LWIP_SOCKET                     1
 
 /*
    -----------------------------------
@@ -279,7 +279,7 @@ The STM32F2x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
    -----------------------------------
 */
 
-#define LWIP_DEBUG                      0
+#define LWIP_DEBUG                      1
 
 
 /*

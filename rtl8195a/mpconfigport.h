@@ -161,6 +161,7 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \
     mp_obj_list_t term_list_obj;            \
+    mp_obj_list_t netif_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
     mp_obj_t mp_kbd_exception;              \
     struct _pyb_uart_obj_t *pyb_stdio_uart; \
