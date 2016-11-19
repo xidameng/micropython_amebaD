@@ -41,7 +41,7 @@
 #include "lwip/lwip_timers.h"
 #include "lwip/tcp.h"
 #include "lwip/udp.h"
-//#include "lwip/raw.h"
+#include "lwip/raw.h"
 #include "lwip/dns.h"
 #include "lwip/tcp_impl.h"
 
@@ -130,6 +130,7 @@ typedef struct _lwip_socket_obj_t {
     volatile union {
         struct tcp_pcb *tcp;
         struct udp_pcb *udp;
+        struct raw_pcb *raw;
     } pcb;
     volatile union {
         struct pbuf *pbuf;
@@ -143,6 +144,7 @@ typedef struct _lwip_socket_obj_t {
 
     uint8_t domain;
     uint8_t type;
+    uint8_t protocol;
 
     #define STATE_NEW 0
     #define STATE_CONNECTING 1
@@ -214,8 +216,7 @@ STATIC err_t _lwip_tcp_recv_unaccepted(void *arg, struct tcp_pcb *pcb, struct pb
 // "Poll" (idle) callback to be called ASAP after accept callback
 // to execute Python callback function, as it can't be executed
 // from accept callback itself.
-STATIC err_t _lwip_tcp_accept_finished(void *arg, struct tcp_pcb *pcb)
-{
+STATIC err_t _lwip_tcp_accept_finished(void *arg, struct tcp_pcb *pcb) {
     lwip_socket_obj_t *socket = (lwip_socket_obj_t*)arg;
     tcp_poll(pcb, NULL, 0);
     exec_user_callback(socket);
@@ -252,8 +253,7 @@ STATIC err_t _lwip_tcp_recv(void *arg, struct tcp_pcb *tcpb, struct pbuf *p, err
         // Other side has closed connection.
         DEBUG_printf("_lwip_tcp_recv[%p]: other side closed connection\n", socket);
         socket->state = STATE_PEER_CLOSED;
-        exec_user_callback(socket);
-        return ERR_OK;
+        goto ret;
     }
 
     if (socket->incoming.pbuf == NULL) {
@@ -266,8 +266,8 @@ STATIC err_t _lwip_tcp_recv(void *arg, struct tcp_pcb *tcpb, struct pbuf *p, err
         #endif
     }
 
+ret:
     exec_user_callback(socket);
-
     return ERR_OK;
 }
 
@@ -289,9 +289,14 @@ STATIC mp_uint_t lwip_udp_send(lwip_socket_obj_t *socket, const byte *buf, mp_ui
         return -1;
     }
 
-    memcpy(p->payload, buf, len);
-
     err_t err;
+
+    err = pbuf_take(p, buf, len);
+
+    if (err != ERR_OK) {
+        goto ret;
+    }
+
     if (ip == NULL) {
         err = udp_send(socket->pcb.udp, p);
     } else {
@@ -300,12 +305,10 @@ STATIC mp_uint_t lwip_udp_send(lwip_socket_obj_t *socket, const byte *buf, mp_ui
         err = udp_sendto(socket->pcb.udp, p, &dest, port);
     }
 
+ret:
     pbuf_free(p);
 
-    // udp_sendto can return 1 on occasion for ESP8266 port.  It's not known why
-    // but it seems that the send actually goes through without error in this case.
-    // So we treat such cases as a success until further investigation.
-    if (err != ERR_OK && err != 1) {
+    if (err != ERR_OK) {
         *_errno = error_lookup_table[-err];
         return -1;
     }
@@ -318,6 +321,7 @@ STATIC mp_uint_t lwip_udp_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_
 
     if (socket->incoming.pbuf == NULL) {
         if (socket->timeout != -1) {
+            // Wait for the timeout
             for (mp_uint_t retries = socket->timeout / 100; retries--;) {
                 mp_hal_delay_ms(100);
                 if (socket->incoming.pbuf != NULL) break;
@@ -327,6 +331,11 @@ STATIC mp_uint_t lwip_udp_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_
                 return -1;
             }
         } else {
+            /**
+             * Blocking the socket until incomming socket, it might be
+             * dangerous when blocking. I suggest use the watchdog when
+             * using blocking socket.
+             */
             while (socket->incoming.pbuf == NULL) {
                 poll_sockets();
             }
@@ -361,6 +370,7 @@ STATIC mp_uint_t lwip_tcp_send(lwip_socket_obj_t *socket, const byte *buf, mp_ui
     // Check for any pending errors
     STREAM_ERROR_CHECK(socket);
 
+    // Get the available buffer space
     u16_t available = tcp_sndbuf(socket->pcb.tcp);
 
     if (available == 0) {
@@ -466,6 +476,53 @@ STATIC mp_uint_t lwip_tcp_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_
     return len;
 }
 
+
+STATIC mp_uint_t lwip_raw_send(lwip_socket_obj_t *socket, const byte *buf, mp_uint_t len, byte *ip, int *_errno) {
+
+    if (len > 0xffff) {
+        // Any packet that big is probably going to fail the pbuf_alloc anyway, but may as well try
+        len = 0xffff;
+    }
+
+    // FIXME: maybe PBUF_ROM?
+    struct pbuf *p = pbuf_alloc(PBUF_RAW, len, PBUF_RAM);
+    if (p == NULL) {
+        *_errno = MP_ENOMEM;
+        return -1;
+    }
+
+    err_t err;
+
+    err = pbuf_take(p, buf, len);
+
+    if (err != ERR_OK) {
+        goto ret;
+    }
+
+    if (ip == NULL) {
+        err = raw_send(socket->pcb.udp, p);
+    } else {
+        ip_addr_t dest;
+        IP4_ADDR(&dest, ip[0], ip[1], ip[2], ip[3]);
+        err = raw_sendto(socket->pcb.udp, p, &dest);
+    }
+
+ret:
+    pbuf_free(p);
+
+    if (err != ERR_OK) {
+        *_errno = error_lookup_table[-err];
+        return -1;
+    }
+
+    return len;
+}
+
+
+STATIC mp_uint_t lwip_raw_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_t len, byte *ip, mp_uint_t *port, int *_errno) {
+    return 0;
+}
+
 /*******************************************************************************/
 // The socket functions provided by lwip.socket.
 
@@ -492,12 +549,15 @@ STATIC mp_obj_t lwip_socket_make_new(const mp_obj_type_t *type, mp_uint_t n_args
         if (n_args >= 2) {
             socket->type = mp_obj_get_int(args[1]);
         }
+        if (n_args >= 3) {
+            socket->protocol = mp_obj_get_int(args[2]);
+        }
     }
 
     switch (socket->type) {
         case MOD_NETWORK_SOCK_STREAM: socket->pcb.tcp = tcp_new(); break;
         case MOD_NETWORK_SOCK_DGRAM: socket->pcb.udp = udp_new(); break;
-        //case MOD_NETWORK_SOCK_RAW: socket->pcb.raw = raw_new(); break;
+        case MOD_NETWORK_SOCK_RAW: socket->pcb.raw = raw_new(socket->protocol); break;
         default: nlr_raise(mp_obj_new_exception_arg1(&mp_type_OSError, MP_OBJ_NEW_SMALL_INT(MP_EINVAL)));
     }
 
@@ -517,6 +577,10 @@ STATIC mp_obj_t lwip_socket_make_new(const mp_obj_type_t *type, mp_uint_t n_args
             // Register our receive callback now. Since UDP sockets don't require binding or connection
             // before use, there's no other good time to do it.
             udp_recv(socket->pcb.udp, _lwip_udp_incoming, (void*)socket);
+            break;
+        }
+        case MOD_NETWORK_SOCK_RAW: {
+            raw_recv(socket->pcb.raw, NULL, NULL);
             break;
         }
     }
@@ -547,7 +611,7 @@ STATIC mp_obj_t lwip_socket_close(mp_obj_t self_in) {
             break;
         }
         case MOD_NETWORK_SOCK_DGRAM: udp_remove(socket->pcb.udp); break;
-        //case MOD_NETWORK_SOCK_RAW: raw_remove(socket->pcb.raw); break;
+        case MOD_NETWORK_SOCK_RAW: raw_remove(socket->pcb.raw); break;
     }
     socket->pcb.tcp = NULL;
     socket->state = _ERR_BADF;
@@ -582,6 +646,9 @@ STATIC mp_obj_t lwip_socket_bind(mp_obj_t self_in, mp_obj_t addr_in) {
         case MOD_NETWORK_SOCK_DGRAM: {
             err = udp_bind(socket->pcb.udp, &bind_addr, port);
             break;
+        }
+        case MOD_NETWORK_SOCK_RAW: {
+            err = raw_bind(socket->pcb.raw, &bind_addr);
         }
     }
 
@@ -740,6 +807,9 @@ STATIC mp_obj_t lwip_socket_connect(mp_obj_t self_in, mp_obj_t addr_in) {
             err = udp_connect(socket->pcb.udp, &dest, port);
             break;
         }
+        case MOD_NETWORK_SOCK_RAW: {
+            err = raw_connect(socket->pcb.raw, &dest);
+        }
     }
 
     if (err != ERR_OK) {
@@ -776,6 +846,10 @@ STATIC mp_obj_t lwip_socket_send(mp_obj_t self_in, mp_obj_t buf_in) {
         }
         case MOD_NETWORK_SOCK_DGRAM: {
             ret = lwip_udp_send(socket, bufinfo.buf, bufinfo.len, NULL, 0, &_errno);
+            break;
+        }
+        case MOD_NETWORK_SOCK_RAW: {
+            ret = lwip_raw_send(socket, bufinfo.buf, bufinfo.len, NULL, &_errno);
             break;
         }
     }
@@ -840,6 +914,10 @@ STATIC mp_obj_t lwip_socket_sendto(mp_obj_t self_in, mp_obj_t data_in, mp_obj_t 
         }
         case MOD_NETWORK_SOCK_DGRAM: {
             ret = lwip_udp_send(socket, bufinfo.buf, bufinfo.len, ip, port, &_errno);
+            break;
+        }
+        case MOD_NETWORK_SOCK_RAW: {
+            ret = lwip_raw_send(socket, bufinfo.buf, bufinfo.len, ip, &_errno);
             break;
         }
     }
@@ -1000,6 +1078,7 @@ STATIC mp_obj_t lwip_socket_makefile(mp_uint_t n_args, const mp_obj_t *args) {
     return args[0];
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lwip_socket_makefile_obj, 1, 3, lwip_socket_makefile);
+
 #if 0
 STATIC mp_uint_t lwip_socket_read(mp_obj_t self_in, void *buf, mp_uint_t size, int *errcode) {
 #else
@@ -1035,25 +1114,25 @@ mp_uint_t lwip_socket_write(mp_obj_t self_in, const void *buf, mp_uint_t size, i
 }
 
 STATIC const mp_map_elem_t lwip_socket_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___del__), (mp_obj_t)&lwip_socket_close_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_close), (mp_obj_t)&lwip_socket_close_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_bind), (mp_obj_t)&lwip_socket_bind_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_listen), (mp_obj_t)&lwip_socket_listen_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_accept), (mp_obj_t)&lwip_socket_accept_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_connect), (mp_obj_t)&lwip_socket_connect_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_send), (mp_obj_t)&lwip_socket_send_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_recv), (mp_obj_t)&lwip_socket_recv_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sendto), (mp_obj_t)&lwip_socket_sendto_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_recvfrom), (mp_obj_t)&lwip_socket_recvfrom_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sendall), (mp_obj_t)&lwip_socket_sendall_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_settimeout), (mp_obj_t)&lwip_socket_settimeout_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_setblocking), (mp_obj_t)&lwip_socket_setblocking_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_setsockopt), (mp_obj_t)&lwip_socket_setsockopt_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_makefile), (mp_obj_t)&lwip_socket_makefile_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___del__),      (mp_obj_t)&lwip_socket_close_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_close),        (mp_obj_t)&lwip_socket_close_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_bind),         (mp_obj_t)&lwip_socket_bind_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_listen),       (mp_obj_t)&lwip_socket_listen_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_accept),       (mp_obj_t)&lwip_socket_accept_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_connect),      (mp_obj_t)&lwip_socket_connect_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_send),         (mp_obj_t)&lwip_socket_send_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_recv),         (mp_obj_t)&lwip_socket_recv_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sendto),       (mp_obj_t)&lwip_socket_sendto_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_recvfrom),     (mp_obj_t)&lwip_socket_recvfrom_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sendall),      (mp_obj_t)&lwip_socket_sendall_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_settimeout),   (mp_obj_t)&lwip_socket_settimeout_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_setblocking),  (mp_obj_t)&lwip_socket_setblocking_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_setsockopt),   (mp_obj_t)&lwip_socket_setsockopt_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_makefile),     (mp_obj_t)&lwip_socket_makefile_obj },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read), (mp_obj_t)&mp_stream_read_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readline), (mp_obj_t)&mp_stream_unbuffered_readline_obj},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_write), (mp_obj_t)&mp_stream_write_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),         (mp_obj_t)&mp_stream_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readline),     (mp_obj_t)&mp_stream_unbuffered_readline_obj},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_write),        (mp_obj_t)&mp_stream_write_obj },
 };
 STATIC MP_DEFINE_CONST_DICT(lwip_socket_locals_dict, lwip_socket_locals_dict_table);
 
@@ -1064,10 +1143,10 @@ STATIC const mp_stream_p_t lwip_socket_stream_p = {
 
 STATIC const mp_obj_type_t lwip_socket_type = {
     { &mp_type_type },
-    .name = MP_QSTR_socket,
-    .print = lwip_socket_print,
-    .make_new = lwip_socket_make_new,
-    .protocol = &lwip_socket_stream_p,
+    .name        = MP_QSTR_socket,
+    .print       = lwip_socket_print,
+    .make_new    = lwip_socket_make_new,
+    .protocol    = &lwip_socket_stream_p,
     .locals_dict = (mp_obj_t)&lwip_socket_locals_dict,
 };
 
@@ -1110,7 +1189,6 @@ void mod_lwip_deregister_poll(void (* poll)(void *arg), void *poll_arg) {
 // The lwip global functions.
 
 STATIC mp_obj_t mod_lwip_reset() {
-    lwip_init();
     lwip_poll_list.poll = NULL;
     return mp_const_none;
 }
@@ -1120,7 +1198,7 @@ STATIC mp_obj_t mod_lwip_callback() {
     if (lwip_poll_list.poll != NULL) {
         lwip_poll_list.poll(lwip_poll_list.poll_arg);
     }
-#if 0
+#if NO_SYS
     sys_check_timeouts();
 #endif
     return mp_const_none;
@@ -1196,16 +1274,19 @@ MP_DEFINE_CONST_FUN_OBJ_0(lwip_print_pcbs_obj, lwip_print_pcbs);
 
 STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_usocket) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         (mp_obj_t)&mod_lwip_reset_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_callback),      (mp_obj_t)&mod_lwip_callback_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_getaddrinfo),   (mp_obj_t)&lwip_getaddrinfo_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_print_pcbs),    (mp_obj_t)&lwip_print_pcbs_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset),         MP_OBJ_FROM_PTR(&mod_lwip_reset_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_callback),      MP_OBJ_FROM_PTR(&mod_lwip_callback_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_getaddrinfo),   MP_OBJ_FROM_PTR(&lwip_getaddrinfo_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_print_pcbs),    MP_OBJ_FROM_PTR(&lwip_print_pcbs_obj) },
     // objects
-    { MP_OBJ_NEW_QSTR(MP_QSTR_socket),        (mp_obj_t)&lwip_socket_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_socket),        MP_OBJ_FROM_PTR(&lwip_socket_type) },
 
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET),       MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET) },
+
+#if 0  // IPV6 not support yet
     { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET6),      MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET6) },
+#endif
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_STREAM),   MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_STREAM) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_DGRAM),    MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_DGRAM) },
@@ -1213,7 +1294,7 @@ STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOL_SOCKET),    MP_OBJ_NEW_SMALL_INT(1) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR),  MP_OBJ_NEW_SMALL_INT(SOF_REUSEADDR) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR),  MP_OBJ_NEW_SMALL_INT(SOF_CALLBACK) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_CALLBACK),   MP_OBJ_NEW_SMALL_INT(SOF_CALLBACK) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_lwip_globals, mp_module_lwip_globals_table);
