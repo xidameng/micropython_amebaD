@@ -96,9 +96,11 @@ mp_import_stat_t mp_import_stat(const char *path) {
     return fat_vfs_import_stat(path);
 }
 
+#if !MICROPY_VFS_FAT
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return fat_vfs_lexer_new_from_file(filename);
 }
+#endif
 
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
     return fatfs_builtin_open(n_args, args, kwargs);

@@ -28,7 +28,8 @@ ARM_GCC_TOOLCHAIN = $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1/
 AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
 FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
 
-CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)bin/arm-none-eabi-
+# CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)bin/arm-none-eabi-
+CROSS_COMPILE = arm-none-eabi-
 
 # Compilation tools
 AR = $(CROSS_COMPILE)ar

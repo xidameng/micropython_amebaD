@@ -4,13 +4,14 @@
 
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
-#define MICROPY_PERSISTENT_CODE_LOAD            (1)
+#define MICROPY_PERSISTENT_CODE_LOAD            (0)
 #define MICROPY_EMIT_THUMB                      (0)
 #define MICROPY_EMIT_INLINE_THUMB               (0)
 #define MICROPY_COMP_MODULE_CONST               (1)
 #define MICROPY_COMP_CONST                      (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (0)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
+#define MICROPY_CPYTHON_COMPAT                  (1)
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_GC                       (1)
 #define MICROPY_ENABLE_FINALISER                (1)
@@ -58,6 +59,8 @@
 
 #define MICROPY_PY_TERM_NUM                     (3)
 
+#define MICROPY_VFS_FAT                         (1)
+#define MICROPY_READER_FATFS                    (MICROPY_VFS_FAT)
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
 #define MICROPY_FSUSERMOUNT                     (1)
@@ -65,6 +68,9 @@
 #define MICROPY_FATFS_RPATH                     (2)
 #define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
+
+#define mp_type_fileio fatfs_type_fileio
+#define mp_type_textio fatfs_type_textio
 
 
 // type definitions for the specific machine
