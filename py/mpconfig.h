@@ -110,10 +110,11 @@
 // Be conservative and always clear to zero newly (re)allocated memory in the GC.
 // This helps eliminate stray pointers that hold on to memory that's no longer
 // used.  It decreases performance due to unnecessary memory clearing.
+// A memory manager which always clears memory can set this to 0.
 // TODO Do analysis to understand why some memory is not properly cleared and
 // find a more efficient way to clear it.
 #ifndef MICROPY_GC_CONSERVATIVE_CLEAR
-#define MICROPY_GC_CONSERVATIVE_CLEAR (1)
+#define MICROPY_GC_CONSERVATIVE_CLEAR (MICROPY_ENABLE_GC)
 #endif
 
 // Support automatic GC when reaching allocation threshold,
@@ -380,6 +381,16 @@
 /*****************************************************************************/
 /* Python internal features                                                  */
 
+// Whether to use the POSIX reader for importing files
+#ifndef MICROPY_READER_POSIX
+#define MICROPY_READER_POSIX (0)
+#endif
+
+// Whether to use the FatFS reader for importing files
+#ifndef MICROPY_READER_FATFS
+#define MICROPY_READER_FATFS (0)
+#endif
+
 // Hook for the VM at the start of the opcode loop (can contain variable
 // definitions usable by the other hook functions)
 #ifndef MICROPY_VM_HOOK_INIT
@@ -504,10 +515,12 @@ typedef long long mp_longint_impl_t;
 
 #if MICROPY_FLOAT_IMPL == MICROPY_FLOAT_IMPL_FLOAT
 #define MICROPY_PY_BUILTINS_FLOAT (1)
+#define MICROPY_FLOAT_CONST(x) x##F
 #define MICROPY_FLOAT_C_FUN(fun) fun##f
 typedef float mp_float_t;
 #elif MICROPY_FLOAT_IMPL == MICROPY_FLOAT_IMPL_DOUBLE
 #define MICROPY_PY_BUILTINS_FLOAT (1)
+#define MICROPY_FLOAT_CONST(x) x
 #define MICROPY_FLOAT_C_FUN(fun) fun
 typedef double mp_float_t;
 #else

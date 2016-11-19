@@ -1,9 +1,9 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Josef Gajdusek
+ * Copyright (c) 2013-2016 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef MICROPY_INCLUDED_PY_READER_H
+#define MICROPY_INCLUDED_PY_READER_H
 
-extern uint32_t pyb_rtc_alarm0_wake;
-extern uint64_t pyb_rtc_alarm0_expiry;
+#include "py/obj.h"
 
-void pyb_rtc_set_us_since_2000(uint64_t nowus);
+// the readbyte function must return the next byte in the input stream
+// it must return MP_READER_EOF if end of stream
+// it can be called again after returning MP_READER_EOF, and in that case must return MP_READER_EOF
+#define MP_READER_EOF ((mp_uint_t)(-1))
 
-uint64_t pyb_rtc_get_us_since_2000();
+typedef struct _mp_reader_t {
+    void *data;
+    mp_uint_t (*readbyte)(void *data);
+    void (*close)(void *data);
+} mp_reader_t;
 
-void rtc_prepare_deepsleep(uint64_t sleep_us);
+bool mp_reader_new_mem(mp_reader_t *reader, const byte *buf, size_t len, size_t free_len);
+int mp_reader_new_file(mp_reader_t *reader, const char *filename);
+int mp_reader_new_file_from_fd(mp_reader_t *reader, int fd, bool close_fd);
+
+#endif // MICROPY_INCLUDED_PY_READER_H

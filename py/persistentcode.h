@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2013-2016 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef MICROPY_INCLUDED_PY_PERSISTENTCODE_H
+#define MICROPY_INCLUDED_PY_PERSISTENTCODE_H
 
-#include "py/lexer.h"
+#include "py/mpprint.h"
+#include "py/reader.h"
+#include "py/emitglue.h"
 
-mp_lexer_t *fat_vfs_lexer_new_from_file(const char *filename);
+mp_raw_code_t *mp_raw_code_load(mp_reader_t *reader);
+mp_raw_code_t *mp_raw_code_load_mem(const byte *buf, size_t len);
+mp_raw_code_t *mp_raw_code_load_file(const char *filename);
 
-// TODO: Instead of such shims, probably better to let port #define
-// mp_lexer_new_from_file to a function it wants to use.
-mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
-    return fat_vfs_lexer_new_from_file(filename);
-}
+void mp_raw_code_save(mp_raw_code_t *rc, mp_print_t *print);
+void mp_raw_code_save_file(mp_raw_code_t *rc, const char *filename);
+
+#endif // MICROPY_INCLUDED_PY_PERSISTENTCODE_H
