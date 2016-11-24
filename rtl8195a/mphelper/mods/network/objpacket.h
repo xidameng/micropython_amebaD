@@ -27,22 +27,18 @@
 #ifndef OBJPACKET_H_
 #define OBJPACKET_H_
 #include "py/runtime.h"
+#include "py/objstr.h"
+
+#include "lwip/ip.h"
+#include "lwip/pbuf.h"
+#include "lwip/mem.h"
+#include "netif/etharp.h"
 
 extern const mp_obj_type_t packet_type;
 
-#define MACADDR_LEN 6
-
-typedef struct mac_addr {
-    int8_t hex[MACADDR_LEN];
-};
-
 typedef struct {
     mp_obj_base_t base;
-    struct  mac_addr dst;
-    struct  mac_addr src;
-    uint16_t ethr_type;
-    int8_t  *payload;
-    uint32_t crc;
+    struct pbuf *pkt;
 } packet_obj_t;
 
 #endif

@@ -29,7 +29,9 @@
 #include "modnetwork.h"
 #include "objnetif.h"
 
+#if 0 // TODO(Chester) remove xnetif
 extern struct netif xnetif[NET_IF_NUM];
+#endif
 
 /*****************************************************************************
  *                              Local variables
@@ -255,9 +257,12 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
         memcpy(self->key, key, key_len);
     }
 
+#if 0 //TODO (Chester) remove xnetif
     dhcps_deinit();
 
+
     dhcps_init(&xnetif[self->netif]);
+#endif
     
     if (is_promisc_enabled()) {
         promisc_set(0, NULL, 0);
