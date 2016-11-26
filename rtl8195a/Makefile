@@ -14,21 +14,11 @@ VENDOR := vendor
 GDB_SERVER := openocd
 TOOL := tool
 
-.PHONY: toolchain
-toolchain:
-ifeq ($(OS),Linux)
-	if [ ! -d $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ] ; then tar -jxf $(VENDOR)/tools/arm-none-eabi-gcc/gcc-arm-none-eabi-4_8-2014q1-20140314-linux.tar.bz2 -C $(VENDOR)/tools/arm-none-eabi-gcc/ ; mv $(VENDOR)/tools/arm-none-eabi-gcc/gcc-arm-none-eabi-4_8-2014q1 $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ; fi
-else
-	if [ ! -d $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1 ] ; then tar -zxf $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1.tar.gz -C $(VENDOR)/tools/arm-none-eabi-gcc/ ; fi
-endif
-
-# Initialize tool chain
 # -------------------------------------------------------------------
 ARM_GCC_TOOLCHAIN = $(VENDOR)/tools/arm-none-eabi-gcc/4.8.3-2014q1/
 AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
 FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
 
-# CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)bin/arm-none-eabi-
 CROSS_COMPILE = arm-none-eabi-
 
 # Compilation tools

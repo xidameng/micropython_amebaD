@@ -4,18 +4,14 @@ ENTRY(Reset_Handler)
 
 INCLUDE "export-rom_v02.txt"
 
-
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0xFA000
-  TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
-  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 21560
-  RECY_RAM (rwx)  : ORIGIN = 0x10002100, LENGTH = 7936
+  ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 0x5438
   BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
+  TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
+  FLASH (rwx) : ORIGIN = 0x98000000, LENGTH = 0x100000
 }
-
-
 
 SECTIONS
 {
@@ -37,25 +33,25 @@ SECTIONS
     	}
     	.dummy 
     	{ 
-        	__ram_image1_text_start__ = .;
-          __ram_start_table_start__ = .;
-          KEEP(*(SORT(.start.ram.data*)))
-          __ram_start_table_end__ = .;
-      	__image1_validate_code__ = .;
-          KEEP(*(.image1.validate.rodata*))
-          KEEP(*(.infra.ram.data*))
-          KEEP(*(.timer.ram.data*))
-          KEEP(*(.cutb.ram.data*))
-          KEEP(*(.cutc.ram.data*))
-          KEEP(*(.hal.ram.data*))
-          __image1_bss_start__ = .;
-          .ram_image1.bss$$Base = .;
-      	__image1_bss_end__ = .;
-      	.ram_image1.bss$$Limit = .;
-      	__ram_image1_data_end__ = .;
+            __ram_image1_text_start__ = .;
+            __ram_start_table_start__ = .;
+            KEEP(*(SORT(.start.ram.data*)))
+            __ram_start_table_end__ = .;
+      	    __image1_validate_code__ = .;
+            KEEP(*(.image1.validate.rodata*))
+            KEEP(*(.infra.ram.data*))
+            KEEP(*(.timer.ram.data*))
+            KEEP(*(.cutb.ram.data*))
+            KEEP(*(.cutc.ram.data*))
+            KEEP(*(.hal.ram.data*))
+            __image1_bss_start__ = .;
+            .ram_image1.bss$$Base = .;
+      	    __image1_bss_end__ = .;
+      	    .ram_image1.bss$$Limit = .;
+      	    __ram_image1_data_end__ = .;
           
-          *(.hal.ram.text*)    
-          *(.infra.ram.text*)
+            *(.hal.ram.text*)    
+            *(.infra.ram.text*)
     	}
     } > TCM
 
@@ -118,12 +114,30 @@ SECTIONS
       
     } > BD_RAM
 
-    .bf_data2 : 
+    .heap :
     {
-      __buffer_data_start2__ = .;
-      __buffer_data_end2__ = .;
-      
-    } > RECY_RAM
+       __end__ = .;
+       end = __end__;
+       *(.heap*)
+       __HeapLimit = .;
+    } > BD_RAM
+
+	/* .stack_dummy section doesn't contains any symbols. It is only
+	 * used for linker to calculate size of stack sections, and assign
+	 * values to stack symbols later */
+	.stack_dummy :
+	{
+		*(.stack)
+	} > BD_RAM
+
+	/* Set stack top to end of RAM, and stack limit move down by
+	 * size of stack_dummy section */
+	__StackTop = ORIGIN(BD_RAM) + LENGTH(BD_RAM);
+	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
+	PROVIDE(__stack = __StackTop);
+
+	/* Check if data + heap + stack exceeds RAM limit */
+	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 
     .sdr_text :
     {
@@ -167,44 +181,22 @@ SECTIONS
       _mp_gc_head = .;
       . = ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM);
       _mp_gc_end = .;
-    } >  SDRAM_RAM
-
-    .heap :
-    {
-       __end__ = .;
-       end = __end__;
-       *(.heap*)
-       __HeapLimit = .;
-    } > BD_RAM
-
-	/* .stack_dummy section doesn't contains any symbols. It is only
-	 * used for linker to calculate size of stack sections, and assign
-	 * values to stack symbols later */
-	.stack_dummy :
-	{
-		*(.stack)
-	} > BD_RAM
-
-	/* Set stack top to end of RAM, and stack limit move down by
-	 * size of stack_dummy section */
-	__StackTop = ORIGIN(BD_RAM) + LENGTH(BD_RAM);
-	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
-	PROVIDE(__stack = __StackTop);
-
-	/* Check if data + heap + stack exceeds RAM limit */
-	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
+    } > SDRAM_RAM
 
 	.flash_map : 
     {
       __image1_flash_size__ = 0xB000;
       . = . + __image1_flash_size__;
       __image1_flash_end__ = .;
+
       __image2_flash_start__ = .;
       . = . + SIZEOF(.image2.start.table) + SIZEOF(.ram_image2.text) + +SIZEOF(.ram_image2.rodata) + SIZEOF(.ram.data);
       __image2_flash_end__ = .;
+
       __sdram_text_flash_start__ = .;
       . = . + SIZEOF(.sdr_text) + SIZEOF(.sdr_rodata) + SIZEOF(.sdr_data);
       __sdram_text_flash_end__ = .;
+
       /* ALIGN flash address to 4K address because of the Ameba flash driver's restriction */
       . = ALIGN(0x1000);
       __fatfs_start_address__ = .;

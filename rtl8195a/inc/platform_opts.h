@@ -8,7 +8,7 @@
 #define __PLATFORM_OPTS_H__
 
 /*For MP mode setting*/
-#define SUPPORT_MP_MODE		1
+#define SUPPORT_MP_MODE		0
 
 /**
  * For AT cmd Log service configurations
