@@ -6,11 +6,11 @@ INCLUDE "export-rom_v02.txt"
 
 MEMORY
 {
+  FLASH (rwx) : ORIGIN = 0x00000000, LENGTH = 0x100000
   ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 0x5438
   BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
-  FLASH (rwx) : ORIGIN = 0x98000000, LENGTH = 0x100000
 }
 
 SECTIONS
@@ -173,14 +173,6 @@ SECTIONS
       *(.wps.bss*)
       *(.websocket.bss*)
       __sdram_bss_end__ = .;
-    } > SDRAM_RAM
-
-    .mp_heap :
-    {
-      /* define micropython heap start and end */
-      _mp_gc_head = .;
-      . = ORIGIN(SDRAM_RAM) + LENGTH(SDRAM_RAM);
-      _mp_gc_end = .;
     } > SDRAM_RAM
 
 	.flash_map : 

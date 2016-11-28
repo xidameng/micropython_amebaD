@@ -29,6 +29,7 @@
 /*****************************************************************************
  *                              Header includes
  * ***************************************************************************/
+
 #include "py/mpconfig.h"
 #include "py/obj.h"
 #include "py/runtime.h"
@@ -38,7 +39,6 @@
 #include "lib/utils/pyexec.h"
 
 #include "gccollect.h"
-#include "gchelper.h"
 #include "exception.h"
 
 #include "lib/fatfs/ff.h"
@@ -56,11 +56,11 @@ void main_task(void const *arg) {
     }
 }
 
-void main (void) {
-    uint32_t sp = gc_helper_get_sp();
-    gc_collect_init (sp);
-    gc_init(&_mp_gc_head, &_mp_gc_end);
+static char heap[36*1024];
 
+void main (void) {
+
+    gc_init(heap, heap + sizeof(heap));
     // Init micropython basic system
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
@@ -68,28 +68,24 @@ void main (void) {
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
 
     mp_flash_mount();
+    term_init();
+    rtc_init0();
+#if 0
 
     network_init0();
 
     netif_init0();
-    rtc_init0();
+
     crypto_init0();
     wlan_init0();
-    term_init();
 
+#endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     // Create main task
     xTaskCreate( main_task, (signed char*)"Task1", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
     vTaskStartScheduler();
     for(;;);
     return;
-}
-
-void nlr_jump_fail(void *val) {
-    mp_printf(&mp_plat_print, "FATAL: uncaught exception %p\r\n", val);
-    for (uint i = 0;;) {
-        for (volatile uint delay = 0; delay < 10000000; delay++);
-    }
 }
 
 mp_import_stat_t mp_import_stat(const char *path) {
@@ -112,4 +108,11 @@ void mp_flash_mount (void) {
     // Attach "/flash" and "/flash/lib" to sysytem path
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
+}
+
+void nlr_jump_fail(void *val) {
+    mp_printf(&mp_plat_print, "FATAL: uncaught exception %p\r\n", val);
+    for (uint i = 0;;) {
+        for (volatile uint delay = 0; delay < 10000000; delay++);
+    }
 }
