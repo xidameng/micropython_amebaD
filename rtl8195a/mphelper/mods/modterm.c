@@ -44,7 +44,7 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-void term_init (void) {
+void modterm_init (void) {
     // Init terminal here   
     mp_obj_list_init(&MP_STATE_PORT(term_list_obj), 0);
     MP_STATE_PORT(dupterm_arr_obj) = mp_obj_new_bytearray(1, "");

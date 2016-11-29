@@ -53,6 +53,12 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
+
+void modmachine_init(void) {
+    rtc_init0();
+    crypto_init0();
+}
+
 STATIC mp_obj_t machine_reset(void) {
     sys_reset();
     return mp_const_none;

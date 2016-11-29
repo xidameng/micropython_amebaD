@@ -54,7 +54,7 @@ void main_task(void const *arg) {
     }
 }
 
-static char heap[2*1024];
+static char heap[36*1024];
 
 void main (void) {
     gc_init(heap, heap + sizeof(heap));
@@ -64,13 +64,13 @@ void main (void) {
     mp_obj_list_init(mp_sys_argv, 0);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
 
+    modmachine_init();
+    modterm_init();
+
     mp_flash_mount();
-    term_init();
-    rtc_init0();
 
     network_init0();
     netif_init0();
-    crypto_init0();
     wlan_init0();
 
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
