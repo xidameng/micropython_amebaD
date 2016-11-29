@@ -75,7 +75,8 @@ void *tcm_heap_calloc(int size);
 u8* _rtw_vmalloc(u32 sz)
 {
 	u8 *pbuf = NULL;	
-#if CONFIG_USE_TCM_HEAP
+//#if CONFIG_USE_TCM_HEAP
+#if 0 //Chester modify, don't use tcm
 	pbuf = tcm_heap_malloc(sz);
 #endif
 	if(pbuf==NULL){
@@ -90,7 +91,8 @@ u8* _rtw_vmalloc(u32 sz)
 u8* _rtw_zvmalloc(u32 sz)
 {
 	u8 *pbuf = NULL;	
-#if CONFIG_USE_TCM_HEAP
+//#if CONFIG_USE_TCM_HEAP
+#if 0 // chester modify, don't use tcm
 	pbuf = tcm_heap_calloc(sz);
 #endif
 	if(pbuf==NULL){
@@ -105,7 +107,8 @@ u8* _rtw_zvmalloc(u32 sz)
 void _rtw_vmfree(u8 *pbuf, u32 sz)
 {
 	
-#if CONFIG_USE_TCM_HEAP
+//#if CONFIG_USE_TCM_HEAP
+#if 0 // Chester modify, don't use tcm
 	if( (u32)pbuf > 0x1FFF0000 && (u32)pbuf < 0x20000000 )
 		tcm_heap_free(pbuf);
 	else

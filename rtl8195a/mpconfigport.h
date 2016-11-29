@@ -14,14 +14,13 @@
 #define MICROPY_ENABLE_GC                       (1)
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_HELPER_REPL                     (1)
-#define MICROPY_ENABLE_FINALISER                (1)
-#define MICROPY_ENABLE_SOURCE_LINE              (1)
+#define MICROPY_ENABLE_SOURCE_LINE              (0)
 #define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_LONGLONG)
 #define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_ENABLE_DOC_STRING               (1)
-#define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_DETAILED)
+#define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_NORMAL)
 #define MICROPY_REPL_AUTO_INDENT                (1)
-#define MICROPY_OPT_COMPUTED_GOTO               (1)
+#define MICROPY_OPT_COMPUTED_GOTO               (0)
 #define MICROPY_MODULE_WEAK_LINKS               (1)
 #define MICROPY_PY_BUILTINS_BYTEARRAY           (1)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW          (1)
@@ -38,13 +37,13 @@
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
-#define MICROPY_PY_MATH                         (1)
+#define MICROPY_PY_MATH                         (0)
 #define MICROPY_PY_IO                           (1)
-#define MICROPY_PY_WEBSOCKET                    (1)
+#define MICROPY_PY_WEBSOCKET                    (0)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UCTYPES                      (1)
+#define MICROPY_PY_UCTYPES                      (0)
 #define MICROPY_PY_UJSON                        (1)
-#define MICROPY_PY_FRAMEBUF                     (1)
+#define MICROPY_PY_FRAMEBUF                     (0)
 #define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
@@ -52,7 +51,7 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_BUILTINS_FLOAT               (1)
+#define MICROPY_PY_BUILTINS_FLOAT               (0)
 
 #define MICROPY_PY_TERM_NUM                     (3)
 
@@ -105,19 +104,18 @@ extern const struct _mp_obj_module_t mp_module_usocket;
 extern const struct _mp_obj_module_t mp_module_ussl;
 //
 extern const struct _mp_obj_module_t mp_network_module;
-extern const struct _mp_obj_module_t mp_crypto_module;
 
 //
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        (mp_obj_t)&mp_module_uterminal },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),        (mp_obj_t)&mp_module_utime },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    (mp_obj_t)&mp_module_uwireless },  \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_network),      (mp_obj_t)&mp_network_module },    \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      (mp_obj_t)&mp_module_usocket },    \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         (mp_obj_t)&mp_module_ussl },       \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_crypto),       (mp_obj_t)&mp_crypto_module },     \
+
 
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
@@ -127,7 +125,7 @@ extern const struct _mp_obj_module_t mp_crypto_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_re),        (mp_obj_t)&mp_module_ure },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
@@ -155,10 +153,10 @@ extern const struct _mp_obj_module_t mp_crypto_module;
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "1234567890"
 
 #define MICROPY_FTPD_STACK_SIZE             512
-#define MICROPY_FTPD_TASK_PRIORITY          osPriorityBelowNormal
+#define MICROPY_FTPD_TASK_PRIORITY          (configMAX_PRIORITIES - 2)
 
-#define MICROPY_MAIN_TASK_STACK_SIZE        1024 
-#define MICROPY_MAIN_TASK_PRIORITY          5
+#define MICROPY_MAIN_TASK_STACK_SIZE        384
+#define MICROPY_MAIN_TASK_PRIORITY          (configMAX_PRIORITIES - 1)
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \
@@ -167,5 +165,3 @@ extern const struct _mp_obj_module_t mp_crypto_module;
     mp_obj_t dupterm_arr_obj;               \
     mp_obj_t mp_kbd_exception;              \
     struct _pyb_uart_obj_t *pyb_stdio_uart; \
-
-#define ENOTSUP 524

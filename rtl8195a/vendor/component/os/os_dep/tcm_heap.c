@@ -23,7 +23,6 @@ static struct Heap g_tcm_heap;
 __attribute__((section(".tcm.heap")))
 #endif
 HEAP_DEFINE_BUF(tcm_heap, TCM_HEAP_SIZE);
-//unsigned char tcm_heap[TCM_HEAP_SIZE];
 
 static int g_heap_inited=0;
 static	_lock	tcm_lock;

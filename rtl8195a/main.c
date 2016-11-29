@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,10 +54,9 @@ void main_task(void const *arg) {
     }
 }
 
-static char heap[36*1024];
+static char heap[2*1024];
 
 void main (void) {
-
     gc_init(heap, heap + sizeof(heap));
     // Init micropython basic system
     mp_init();
@@ -70,16 +67,12 @@ void main (void) {
     mp_flash_mount();
     term_init();
     rtc_init0();
-#if 0
 
     network_init0();
-
     netif_init0();
-
     crypto_init0();
     wlan_init0();
 
-#endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     // Create main task
     xTaskCreate( main_task, (signed char*)"Task1", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );

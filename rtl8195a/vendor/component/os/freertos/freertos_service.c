@@ -3,11 +3,11 @@
 #include <task.h>
 #include <timers.h>
 #include <semphr.h>
-//#include <autoconf.h>
+
 #include <osdep_service.h>
 #include <stdio.h>
 #include <freertos_pmu.h>
-//#include <tcm_heap.h>
+
 /********************* os depended utilities ********************/
 
 #ifndef USE_MUTEX_FOR_SPINLOCK
@@ -544,7 +544,8 @@ static int _freertos_create_task(struct task_struct *ptask, const char *name,
 
 	priority += tskIDLE_PRIORITY + PRIORITIE_OFFSET;
 
-#if CONFIG_USE_TCM_HEAP
+//#if CONFIG_USE_TCM_HEAP
+#if 0 // Chester modify, don't use TCM
 	void *stack_addr = tcm_heap_malloc(stack_size*sizeof(int));
 	//void *stack_addr = rtw_malloc(stack_size*sizeof(int));
 	if(stack_addr == NULL){

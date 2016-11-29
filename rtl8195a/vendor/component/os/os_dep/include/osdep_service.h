@@ -30,7 +30,8 @@
 #endif
 
 #if defined(CONFIG_PLATFORM_8195A)
-	#define CONFIG_USE_TCM_HEAP 1					/* USE TCM HEAP */
+// Chester modify, don't use TCM
+	#define CONFIG_USE_TCM_HEAP 0					/* USE TCM HEAP */
 	#define USE_MUTEX_FOR_SPINLOCK	1
 #endif
 

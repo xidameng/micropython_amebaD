@@ -306,13 +306,14 @@ SRC_C += mphelper/mods/modterm.c
 SRC_C += mphelper/mods/moduos.c
 SRC_C += mphelper/mods/modusocket.c
 SRC_C += mphelper/mods/modussl.c
-SRC_C += mphelper/mods/modcrypto.c
+#SRC_C += mphelper/mods/modcrypto.c
 SRC_C += mphelper/mods/machine/objloguart.c
 SRC_C += mphelper/mods/machine/objsdio.c
 SRC_C += mphelper/mods/machine/objflash.c
 SRC_C += mphelper/mods/machine/objwdt.c
 SRC_C += mphelper/mods/machine/objrtc.c
 SRC_C += mphelper/mods/machine/objadc.c
+SRC_C += mphelper/mods/machine/objcrypto.c
 
 SRC_C += mphelper/mods/wireless/objwlan.c
 
@@ -333,4 +334,4 @@ SRC_C += \
 		ftp/ftpd.c \
 
 
-ASM_S += $(wildcard mphelper/gccollect/*.s)
+ASM_S += mphelper/gccollect/gchelper.s
