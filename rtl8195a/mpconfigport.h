@@ -12,7 +12,7 @@
 #define MICROPY_PY_MICROPYTHON_MEM_INFO         (1)
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_GC                       (1)
-#define MICROPY_ENABLE_FINALISER                (1)
+#define MICROPY_ENABLE_FINALISER                (0)
 #define MICROPY_HELPER_REPL                     (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (0)
 #define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_LONGLONG)
@@ -41,9 +41,7 @@
 #define MICROPY_PY_IO                           (1)
 #define MICROPY_PY_WEBSOCKET                    (0)
 #define MICROPY_PY_IO_FILEIO                    (1)
-#define MICROPY_PY_UCTYPES                      (0)
 #define MICROPY_PY_UJSON                        (1)
-#define MICROPY_PY_FRAMEBUF                     (0)
 #define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
 #define MICROPY_PY_STRUCT                       (1)
@@ -51,7 +49,7 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_BUILTINS_FLOAT               (0)
+#define MICROPY_PY_BUILTINS_FLOAT               (1)
 
 #define MICROPY_PY_TERM_NUM                     (3)
 
@@ -90,9 +88,9 @@ typedef long mp_off_t;
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_open),        (mp_obj_t)&mp_builtin_open_obj },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_input),       (mp_obj_t)&mp_builtin_input_obj },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_help),        (mp_obj_t)&mp_builtin_help_obj },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_open),        MP_OBJ_FROM_PTR(&mp_builtin_open_obj) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_input),       MP_OBJ_FROM_PTR(&mp_builtin_input_obj) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_help),        MP_OBJ_FROM_PTR(&mp_builtin_help_obj) },   \
 
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
@@ -107,28 +105,28 @@ extern const struct _mp_obj_module_t mp_network_module;
 
 //
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        (mp_obj_t)&mp_module_uterminal },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     (mp_obj_t)&mp_module_umachine },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          (mp_obj_t)&mp_module_uos },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        (mp_obj_t)&mp_module_utime },      \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    (mp_obj_t)&mp_module_uwireless },  \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_network),      (mp_obj_t)&mp_network_module },    \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      (mp_obj_t)&mp_module_usocket },    \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         (mp_obj_t)&mp_module_ussl },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_usocket) },    \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },       \
 
 
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_term),      (mp_obj_t)&mp_module_uterminal },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   (mp_obj_t)&mp_module_umachine },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  (mp_obj_t)&mp_module_ubinascii },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_re),        (mp_obj_t)&mp_module_ure },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_json),      (mp_obj_t)&mp_module_ujson },      \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        (mp_obj_t)&mp_module_uos },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      (mp_obj_t)&mp_module_utime },      \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  (mp_obj_t)&mp_module_uwireless },  \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    (mp_obj_t)&mp_module_usocket },    \
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       (mp_obj_t)&mp_module_ussl },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_term),      MP_OBJ_FROM_PTR(&mp_module_uterminal) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),   MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_binascii),  MP_OBJ_FROM_PTR(&mp_module_ubinascii) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_re),        MP_OBJ_FROM_PTR(&mp_module_ure) },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_json),      MP_OBJ_FROM_PTR(&mp_module_ujson) },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os),        MP_OBJ_FROM_PTR(&mp_module_uos) },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),      MP_OBJ_FROM_PTR(&mp_module_utime) },      \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_wireless),  MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_socket),    MP_OBJ_FROM_PTR(&mp_module_usocket) },    \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_ssl),       MP_OBJ_FROM_PTR(&mp_module_ussl) },       \
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via

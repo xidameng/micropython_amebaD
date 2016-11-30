@@ -56,7 +56,12 @@ void main_task(void const *arg) {
 
 // When locate heap to TCM, the hardware crypto would be trouble
 // So it's a tradeoff.
-char heap[10*1024];
+#if defined (__ICCARM__)
+#pragma location=".tcm.heap"
+#else
+__attribute__((section(".tcm.heap")))
+#endif
+char heap[36*1024];
 
 void main (void) {
     gc_init(heap, heap + sizeof(heap));

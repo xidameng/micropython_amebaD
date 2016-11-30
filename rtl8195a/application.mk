@@ -296,8 +296,14 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 SRC_C += main.c
 
 # put micropython source to sdram section
-SRC_C += $(wildcard mphelper/*.c)
-SRC_C += $(wildcard mphelper/gccollect/*.c)
+SRC_C += mphelper/bufhelper.c
+SRC_C += mphelper/diskio.c
+SRC_C += mphelper/exception.c
+SRC_C += mphelper/help.c
+SRC_C += mphelper/mphal.c
+SRC_C += mphelper/pybstdio.c
+SRC_C += mphelper/input.c
+SRC_C += mphelper/gccollect/gccollect.c
 SRC_C += mphelper/mods/modmachine.c
 SRC_C += mphelper/mods/moduwireless.c
 SRC_C += mphelper/mods/modnetwork.c
@@ -306,7 +312,6 @@ SRC_C += mphelper/mods/modterm.c
 SRC_C += mphelper/mods/moduos.c
 SRC_C += mphelper/mods/modusocket.c
 SRC_C += mphelper/mods/modussl.c
-#SRC_C += mphelper/mods/modcrypto.c
 SRC_C += mphelper/mods/machine/objloguart.c
 SRC_C += mphelper/mods/machine/objsdio.c
 SRC_C += mphelper/mods/machine/objflash.c
@@ -316,16 +321,13 @@ SRC_C += mphelper/mods/machine/objadc.c
 SRC_C += mphelper/mods/machine/objcrypto.c
 
 SRC_C += mphelper/mods/wireless/objwlan.c
-
 SRC_C += mphelper/mods/network/objnetif.c
 SRC_C += mphelper/mods/network/objpacket.c
 
 SRC_C += \
-		lib/libc/string0.c \
 		lib/utils/pyexec.c \
 		lib/utils/pyhelp.c \
 		lib/mp-readline/readline.c \
-		lib/netutils/netutils.c \
 		lib/utils/interrupt_char.c \
 		lib/fatfs/ff.c \
 		lib/fatfs/option/ccsbcs.c \
