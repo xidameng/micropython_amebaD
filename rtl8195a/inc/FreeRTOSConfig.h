@@ -104,7 +104,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_MUTEXES				1
 #define configUSE_TIMERS                1
 
-#define configMAX_PRIORITIES			( 5 )
+#define configMAX_PRIORITIES			( 11 )
 #define PRIORITIE_OFFSET				( 4 )
 
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )

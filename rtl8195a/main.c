@@ -54,7 +54,9 @@ void main_task(void const *arg) {
     }
 }
 
-static char heap[36*1024];
+// When locate heap to TCM, the hardware crypto would be trouble
+// So it's a tradeoff.
+char heap[10*1024];
 
 void main (void) {
     gc_init(heap, heap + sizeof(heap));
@@ -63,45 +65,44 @@ void main (void) {
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
-
-    modmachine_init();
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
+#if MICROPY_VFS_FAT
+    memset(MP_STATE_PORT(fs_user_mount), 0, sizeof(MP_STATE_PORT(fs_user_mount)));
+#endif
+    MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     modterm_init();
-
-    mp_flash_mount();
+    modmachine_init();
 
     network_init0();
     netif_init0();
     wlan_init0();
 
-    MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     // Create main task
-    xTaskCreate( main_task, (signed char*)"Task1", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
+    xTaskCreate(main_task, (signed char*)"main task", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
     vTaskStartScheduler();
     for(;;);
     return;
 }
 
 mp_import_stat_t mp_import_stat(const char *path) {
+#if MICROPY_VFS_FAT
     return fat_vfs_import_stat(path);
-}
-
-#if !MICROPY_VFS_FAT
-mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
-    return fat_vfs_lexer_new_from_file(filename);
-}
+#else
+    (void)path;
+    return MP_IMPORT_STAT_NO_EXIST;
 #endif
+}
 
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-    return fatfs_builtin_open(n_args, args, kwargs);
+#if MICROPY_VFS_FAT
+    // TODO: Handle kwargs!
+    return vfs_proxy_call(MP_QSTR_open, n_args, args);
+#else
+    return mp_const_none;
+#endif
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
-
-void mp_flash_mount (void) {
-    // Mount mahcine.FLASH to os module
-    // Attach "/flash" and "/flash/lib" to sysytem path
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
-}
 
 void nlr_jump_fail(void *val) {
     mp_printf(&mp_plat_print, "FATAL: uncaught exception %p\r\n", val);

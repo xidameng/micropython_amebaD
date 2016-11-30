@@ -155,7 +155,7 @@ extern const struct _mp_obj_module_t mp_network_module;
 #define MICROPY_FTPD_STACK_SIZE             512
 #define MICROPY_FTPD_TASK_PRIORITY          (configMAX_PRIORITIES - 2)
 
-#define MICROPY_MAIN_TASK_STACK_SIZE        384
+#define MICROPY_MAIN_TASK_STACK_SIZE        512
 #define MICROPY_MAIN_TASK_PRIORITY          (configMAX_PRIORITIES - 1)
 
 #define MICROPY_PORT_ROOT_POINTERS          \

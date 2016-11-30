@@ -29,6 +29,9 @@
  * ***************************************************************************/
 #include "objcrypto.h"
 
+#define CRYPTO_ENCRYPT      (0)
+#define CRYPTO_DECRYPT      (1)
+
 STATIC crypto_obj_t crypto_obj = {
     .base.type = &crypto_type,
 };
@@ -56,17 +59,12 @@ STATIC mp_obj_t crypto_md5(mp_obj_t self_in, mp_obj_t array_in) {
 
     int8_t retVal;
 
-    if ((retVal = rtl_crypto_md5_init()) < 0) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
-                    "CRYPTO engine (md5) init failed [%u]", retVal));
-    }
-
     mp_buffer_info_t bufinfo_read;
     mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
 
     uint8_t *dest = m_new(uint8_t, CRYPTO_MD5_DIGEST_LENGTH);
 
-    if (retVal = rtl_crypto_md5_process(bufinfo_read.buf,
+    if (retVal = rtl_crypto_md5(bufinfo_read.buf,
                     bufinfo_read.len, dest) < 0) {
         m_del(uint8_t, dest, CRYPTO_MD5_DIGEST_LENGTH);
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
@@ -80,17 +78,12 @@ STATIC mp_obj_t crypto_sha1(mp_obj_t self_in, mp_obj_t array_in) {
 
     int8_t retVal;
 
-    if ((retVal = rtl_crypto_sha1_init()) < 0) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
-                    "CRYPTO engine (sha1) init failed [%u]", retVal));
-    }
-
     mp_buffer_info_t bufinfo_read;
     mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
 
     uint8_t *dest = m_new(uint8_t, CRYPTO_SHA1_DIGEST_LENGTH);
 
-    if (retVal = rtl_crypto_sha1_process(bufinfo_read.buf,
+    if (retVal = rtl_crypto_sha1(bufinfo_read.buf,
                     bufinfo_read.len, dest) < 0) {
         m_del(uint8_t, dest, CRYPTO_SHA1_DIGEST_LENGTH);
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
@@ -100,9 +93,9 @@ STATIC mp_obj_t crypto_sha1(mp_obj_t self_in, mp_obj_t array_in) {
 }
 STATIC  MP_DEFINE_CONST_FUN_OBJ_2(crypto_sha1_object, crypto_sha1);
 
-STATIC mp_obj_t crypto_sha2(mp_obj_t self_in, mp_obj_t array_in, mp_obj_t type_in) {
-    mp_buffer_info_t bufinfo;
-    uint8_t cache;
+STATIC mp_obj_t crypto_sha2(mp_obj_t self_in, mp_obj_t type_in, mp_obj_t array_in) {
+
+    int8_t retVal;
     uint8_t sha2_type;
 
     sha2_type = mp_obj_get_int(type_in);
@@ -111,58 +104,71 @@ STATIC mp_obj_t crypto_sha2(mp_obj_t self_in, mp_obj_t array_in, mp_obj_t type_i
         (sha2_type != SHA2_224) &&
         (sha2_type != SHA2_256) &&
         (sha2_type != SHA2_384) &&
-        (sha2_type != SHA2_512))
-    {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error SHA2 type"));
+        (sha2_type != SHA2_512)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError,
+                    "Invalid SHA2 type"));
     }
-    rtl_crypto_sha2_init(sha2_type);
-    vstr_t vstr;
-    pyb_buf_get_for_send(array_in, &bufinfo, &cache);
-    pyb_buf_get_for_recv(mp_obj_new_int(CRYPTO_SHA2_DIGEST_LENGTH), &vstr);
-    rtl_crypto_sha2_process(bufinfo.buf, bufinfo.len, vstr.buf);
 
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    mp_buffer_info_t bufinfo_read;
+    mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
+
+    uint8_t *dest = m_new(uint8_t, CRYPTO_SHA2_DIGEST_LENGTH);
+
+    if (retVal = rtl_crypto_sha2(sha2_type, bufinfo_read.buf,
+                    bufinfo_read.len, dest) < 0) {
+        m_del(uint8_t, dest, CRYPTO_SHA2_DIGEST_LENGTH);
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
+                    "CRYPTO engine (sha2) process failed [%u]", retVal));
+    }
+    return mp_obj_new_bytearray_by_ref(CRYPTO_SHA2_DIGEST_LENGTH, dest);
 }
-STATIC  MP_DEFINE_CONST_FUN_OBJ_3(crypto_sha2_object, crypto_sha2);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(crypto_sha2_object, crypto_sha2);
 
-STATIC mp_obj_t crypto_hmac_md5(mp_obj_t array_in, mp_obj_t key_in) {
-    mp_buffer_info_t bufinfo;
-    mp_buffer_info_t keyinfo;
-    uint8_t cache;
-    
-    pyb_buf_get_for_send(key_in, &keyinfo, &cache);
-    rtl_crypto_hmac_md5_init(keyinfo.buf, keyinfo.len);
+STATIC mp_obj_t crypto_hmac_md5(mp_obj_t self_in, mp_obj_t array_in, mp_obj_t key_in) {
 
-    vstr_t vstr;
-    pyb_buf_get_for_send(array_in, &bufinfo, &cache);
-    pyb_buf_get_for_recv(mp_obj_new_int(CRYPTO_MD5_DIGEST_LENGTH), &vstr);
-    rtl_crypto_hmac_md5_process(bufinfo.buf, bufinfo.len, vstr.buf);
+    int8_t retVal;
 
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    mp_buffer_info_t bufinfo_read;
+    mp_buffer_info_t bufinfo_key;
+    mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
+    mp_get_buffer_raise(key_in, &bufinfo_key, MP_BUFFER_READ);
+
+    uint8_t *dest = m_new(uint8_t, CRYPTO_MD5_DIGEST_LENGTH);
+
+    if (retVal = rtl_crypto_hmac_md5(bufinfo_read.buf, bufinfo_read.len,
+                        bufinfo_key.buf, bufinfo_key.len,
+                        dest) < 0) {
+        m_del(uint8_t, dest, CRYPTO_MD5_DIGEST_LENGTH);
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
+                    "CRYPTO engine (hmac_md5) process failed [%u]", retVal));
+    }
+    return mp_obj_new_bytearray_by_ref(CRYPTO_MD5_DIGEST_LENGTH, dest);
 }
-STATIC  MP_DEFINE_CONST_FUN_OBJ_2(crypto_hmac_md5_object, crypto_hmac_md5);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(crypto_hmac_md5_object, crypto_hmac_md5);
 
-STATIC mp_obj_t crypto_hmac_sha1(mp_obj_t array_in, mp_obj_t key_in) {
-    mp_buffer_info_t bufinfo;
-    mp_buffer_info_t keyinfo;
-    uint8_t cache;
-    
-    pyb_buf_get_for_send(key_in, &keyinfo, &cache);
-    rtl_crypto_hmac_sha1_init(keyinfo.buf, keyinfo.len);
+STATIC mp_obj_t crypto_hmac_sha1(mp_obj_t self_in, mp_obj_t array_in, mp_obj_t key_in) {
+    int8_t retVal;
 
-    vstr_t vstr;
-    pyb_buf_get_for_send(array_in, &bufinfo, &cache);
-    pyb_buf_get_for_recv(mp_obj_new_int(CRYPTO_SHA1_DIGEST_LENGTH), &vstr);
-    rtl_crypto_hmac_sha1_process(bufinfo.buf, bufinfo.len, vstr.buf);
+    mp_buffer_info_t bufinfo_read;
+    mp_buffer_info_t bufinfo_key;
+    mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
+    mp_get_buffer_raise(key_in, &bufinfo_key, MP_BUFFER_READ);
 
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t *dest = m_new(uint8_t, CRYPTO_SHA1_DIGEST_LENGTH);
+
+    if (retVal = rtl_crypto_hmac_sha1(bufinfo_read.buf, bufinfo_read.len,
+                        bufinfo_key.buf, bufinfo_key.len,
+                        dest) < 0) {
+        m_del(uint8_t, dest, CRYPTO_SHA1_DIGEST_LENGTH);
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
+                    "CRYPTO engine (hmac_sha1) process failed [%u]", retVal));
+    }
+    return mp_obj_new_bytearray_by_ref(CRYPTO_SHA1_DIGEST_LENGTH, dest);
 }
-STATIC  MP_DEFINE_CONST_FUN_OBJ_2(crypto_hmac_sha1_object, crypto_hmac_sha1);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(crypto_hmac_sha1_object, crypto_hmac_sha1);
 
-STATIC mp_obj_t crypto_hmac_sha2(mp_obj_t array_in, mp_obj_t key_in, mp_obj_t type_in) {
-    mp_buffer_info_t bufinfo;
-    mp_buffer_info_t keyinfo;
-    uint8_t cache;
+STATIC mp_obj_t crypto_hmac_sha2(mp_obj_t self_in, mp_obj_t type_in, mp_obj_t array_in, mp_obj_t key_in) {
+    int8_t retVal;
     uint8_t sha2_type;
 
     sha2_type = mp_obj_get_int(type_in);
@@ -171,22 +177,28 @@ STATIC mp_obj_t crypto_hmac_sha2(mp_obj_t array_in, mp_obj_t key_in, mp_obj_t ty
         (sha2_type != SHA2_224) &&
         (sha2_type != SHA2_256) &&
         (sha2_type != SHA2_384) &&
-        (sha2_type != SHA2_512))
-    {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error SHA2 type"));
+        (sha2_type != SHA2_512)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid SHA2 type"));
     }
-    
-    pyb_buf_get_for_send(key_in, &keyinfo, &cache);
-    rtl_crypto_hmac_sha2_init(sha2_type, keyinfo.buf, keyinfo.len);
 
-    vstr_t vstr;
-    pyb_buf_get_for_send(array_in, &bufinfo, &cache);
-    pyb_buf_get_for_recv(mp_obj_new_int(CRYPTO_MD5_DIGEST_LENGTH), &vstr);
-    rtl_crypto_hmac_sha2_process(bufinfo.buf, bufinfo.len, vstr.buf);
+    mp_buffer_info_t bufinfo_read;
+    mp_buffer_info_t bufinfo_key;
+    mp_get_buffer_raise(array_in, &bufinfo_read, MP_BUFFER_READ);
+    mp_get_buffer_raise(key_in, &bufinfo_key, MP_BUFFER_READ);
 
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t *dest = m_new(uint8_t, CRYPTO_SHA2_DIGEST_LENGTH);
+
+    if (retVal = rtl_crypto_hmac_sha2(sha2_type,
+                        bufinfo_read.buf, bufinfo_read.len,
+                        bufinfo_key.buf, bufinfo_key.len,
+                        dest) < 0) {
+        m_del(uint8_t, dest, CRYPTO_SHA2_DIGEST_LENGTH);
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Exception,
+                    "CRYPTO engine (hmac_sha1) process failed [%u]", retVal));
+    }
+    return mp_obj_new_bytearray_by_ref(CRYPTO_SHA2_DIGEST_LENGTH, dest);
 }
-STATIC  MP_DEFINE_CONST_FUN_OBJ_3(crypto_hmac_sha2_object, crypto_hmac_sha2);
+STATIC  MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(crypto_hmac_sha2_object, 4, 4, crypto_hmac_sha2);
 
 STATIC const mp_map_elem_t crypto_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_md5),       MP_OBJ_FROM_PTR(&crypto_md5_object) },
@@ -198,20 +210,27 @@ STATIC const mp_map_elem_t crypto_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_hmac_sha2), MP_OBJ_FROM_PTR(&crypto_hmac_sha2_object) },
 
 #if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_aes_cbc),   (mp_obj_t)&crypto_aes_cbc_object },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_aes_cbc),   MP_OBJ_FROM_PTR(&crypto_aes_cbc_object) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_aes_ecb),   (mp_obj_t)&crypto_aes_aes_object },
     { MP_OBJ_NEW_QSTR(MP_QSTR_aes_ctr),   (mp_obj_t)&crypto_aes_ctr_object },
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_3des_cbc),  (mp_obj_t)&crypto_3des_cbc_object },
     { MP_OBJ_NEW_QSTR(MP_QSTR_3des_ecb),  (mp_obj_t)&crypto_3des_ecb_object },
+
     { MP_OBJ_NEW_QSTR(MP_QSTR_des_cbc),   (mp_obj_t)&crypto_des_cbc_object },
     { MP_OBJ_NEW_QSTR(MP_QSTR_des_ecb),   (mp_obj_t)&crypto_des_ecb_object },
+
 #endif
+
     { MP_OBJ_NEW_QSTR(MP_QSTR_SHA2_NONE), MP_OBJ_NEW_SMALL_INT(SHA2_NONE) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SHA2_224),  MP_OBJ_NEW_SMALL_INT(SHA2_224) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SHA2_256),  MP_OBJ_NEW_SMALL_INT(SHA2_256) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SHA2_384),  MP_OBJ_NEW_SMALL_INT(SHA2_384) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SHA2_512),  MP_OBJ_NEW_SMALL_INT(SHA2_512) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ENCRYPT),  MP_OBJ_NEW_SMALL_INT(CRYPTO_ENCRYPT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DECRYPT),  MP_OBJ_NEW_SMALL_INT(CRYPTO_DECRYPT) },
 };
 STATIC MP_DEFINE_CONST_DICT(crypto_locals_dict, crypto_locals_dict_table);
 

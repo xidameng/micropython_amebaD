@@ -55,8 +55,8 @@
  * ***************************************************************************/
 
 void modmachine_init(void) {
-    rtc_init0();
     crypto_init0();
+    rtc_init0();
 }
 
 STATIC mp_obj_t machine_reset(void) {
