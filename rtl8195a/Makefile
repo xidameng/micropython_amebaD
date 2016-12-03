@@ -10,7 +10,8 @@ OS := $(shell uname)
 VENDOR := vendor
 GDB_SERVER := openocd
 TOOL := tool
-CHIP := RTL8195A
+CHIP := MP_RTL8711AF
+# CHIP would be MP_RTL8195A, MP_RTL8711AM, MP_RTL8711AF, MP_RTL8710AF
 
 # -------------------------------------------------------------------
 AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
@@ -25,6 +26,7 @@ AS = $(CROSS_COMPILE)as
 NM = $(CROSS_COMPILE)nm
 LD = $(CROSS_COMPILE)gcc
 GDB = $(CROSS_COMPILE)gdb
+SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 
@@ -71,7 +73,7 @@ SRC_QSTR_AUTO_DEPS +=
 # -------------------------------------------------------------------
 
 CFLAGS =
-CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -DARDUINO_SDK
+CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -DARDUINO_SDK -D$(CHIP)
 CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -O2 -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(INC)
 
@@ -92,6 +94,7 @@ mp: OTA_BIN = ota_mp.bin
 application: prerequirement build_info $(SRC_O) $(DRAM_O) $(ASM_O) $(PY_O)
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -T$(TOOL)/rlx8195A-symbol-v02-img2.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
+	
 
 .PHONY: manipulate_images
 manipulate_images:	
@@ -117,6 +120,8 @@ manipulate_images:
 	$(Q)if [ -s $(BUILD)/sdram.bin ]; then cat $(BUILD)/ram_3.p.bin >> $(BUILD)/$(OTA_BIN); fi
 	$(Q)$(CHKSUM) $(BUILD)/$(OTA_BIN) || true
 	$(Q)$(RM) $(BUILD)/ram_*.p.bin $(BUILD)/ram_*.ns.bin
+	$(Q)$(SIZE) -d $(BUILD)/$(TARGET).axf
+	$(Q)du -h $(BUILD)/$(RAMALL_BIN)
 
 # Generate build info
 # -------------------------------------------------------------------	
@@ -165,7 +170,6 @@ $(DRAM_O): $(BUILD)/%.o : %.c
 $(ASM_O): $(BUILD)/%.o : %.s
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(Q)$(CC) $(CFLAGS)  -c $< -o $@
-	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
 	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 .PHONY: setup

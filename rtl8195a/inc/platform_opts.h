@@ -29,7 +29,7 @@
  */
 #if SUPPORT_INTERACTIVE_MODE
 #define CONFIG_INTERACTIVE_MODE		1
-#define CONFIG_INTERACTIVE_EXT		0
+#define CONFIG_INTERACTIVE_EXT		1
 #else
 #define CONFIG_INTERACTIVE_MODE		0
 #define CONFIG_INTERACTIVE_EXT		0
@@ -63,7 +63,7 @@
 #define CONFIG_SSL_CLIENT	0
 #define CONFIG_WEBSERVER	0
 #define CONFIG_OTA_UPDATE	0
-#define CONFIG_BSD_TCP		1//NOTE : Enable CONFIG_BSD_TCP will increase about 11KB code size
+#define CONFIG_BSD_TCP		0//NOTE : Enable CONFIG_BSD_TCP will increase about 11KB code size
 #define CONFIG_AIRKISS		0//on or off tencent airkiss
 #define CONFIG_UART_SOCKET	0
 #define CONFIG_UART_XMODEM	0//support uart xmodem upgrade or not

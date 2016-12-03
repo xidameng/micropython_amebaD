@@ -32,6 +32,7 @@
 #include "py/gc.h"
 #include "gccollect.h"
 
+#if MICROPY_ENABLE_GC
 
 void gc_collect(void) {
     // start the GC
@@ -47,3 +48,5 @@ void gc_collect(void) {
     // end the GC
     gc_collect_end();
 }
+
+#endif

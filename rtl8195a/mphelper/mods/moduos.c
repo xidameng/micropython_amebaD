@@ -32,7 +32,9 @@
 #include "genhdr/mpversion.h"
 #include "py/mperrno.h"
 
+#if MICROPY_VFS_FAT
 extern const mp_obj_type_t mp_fat_vfs_type;
+#endif
 
 STATIC const qstr os_uname_info_fields[] = {
     MP_QSTR_sysname, MP_QSTR_nodename, MP_QSTR_release,

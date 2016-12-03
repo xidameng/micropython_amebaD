@@ -41,8 +41,9 @@
 
 #include "lib/fatfs/ff.h"
 #include "extmod/fsusermount.h"
-
+#include "flash_api.h"
 #include "FreeRTOS.h"
+#include "task.h"
 
 
 /*****************************************************************************
@@ -54,6 +55,7 @@ void main_task(void const *arg) {
     }
 }
 
+#if MICROPY_ENABLE_GC
 // When locate heap to TCM, the hardware crypto would be trouble
 // So it's a tradeoff.
 #if defined (__ICCARM__)
@@ -62,9 +64,12 @@ void main_task(void const *arg) {
 __attribute__((section(".tcm.heap")))
 #endif
 char heap[36*1024];
+#endif
 
 void main (void) {
+#if MICROPY_ENABLE_GC
     gc_init(heap, heap + sizeof(heap));
+#endif
     // Init micropython basic system
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
@@ -78,7 +83,7 @@ void main (void) {
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     modterm_init();
     modmachine_init();
-
+   
     network_init0();
     netif_init0();
     wlan_init0();
@@ -98,6 +103,12 @@ mp_import_stat_t mp_import_stat(const char *path) {
     return MP_IMPORT_STAT_NO_EXIST;
 #endif
 }
+
+#if !MICROPY_VFS_FAT
+mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
+    return NULL;
+}
+#endif
 
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
 #if MICROPY_VFS_FAT

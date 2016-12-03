@@ -217,8 +217,10 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_ssi.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_timer.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_uart.c
 
+ifeq ($(CHIP), $(filter $(CHIP), "MP_RTL8195A" "MP_RTL8711AM"))
 #SDRAM
 DRAM_C += $(VENDOR)/component/common/api/platform/stdlib_patch.c
+
 #SDRAM - polarssl
 DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/aes.c
 DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/aesni.c
@@ -292,6 +294,7 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/xtea.c
 #SDRAM - ssl_ram_map
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map.c
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
+endif
 
 SRC_C += main.c
 
@@ -332,6 +335,7 @@ SRC_C += \
 		lib/fatfs/ff.c \
 		lib/fatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
+		lib/netutils/netutils.c \
 		ftp/vfs.c \
 		ftp/ftpd.c \
 

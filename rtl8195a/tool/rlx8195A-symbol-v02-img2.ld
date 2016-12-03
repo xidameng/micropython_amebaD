@@ -27,8 +27,8 @@ SECTIONS
     {
     	.valid
     	{ 
-          /**mem.o (.bss*)*/
-          /**memp.o (.bss*)*/
+          *mem.o (.bss*)
+          *memp.o (.bss*)
           *(.tcm.heap)
     	}
     	.dummy 
@@ -73,14 +73,12 @@ SECTIONS
       *(.hal.flash.text*)    
       *(.hal.sdrc.text*)
       *(.hal.gpio.text*)
-      *(.fwu.text*)
       *(.text*)    
     } > BD_RAM
 
     .ram_image2.rodata :
     {
       *(.rodata*)
-      *(.fwu.rodata*)
     } > BD_RAM
 
     .ram.data : 
@@ -98,7 +96,6 @@ SECTIONS
       *(.hal.flash.data*)    
       *(.hal.sdrc.data*)    
       *(.hal.gpio.data*)
-      *(.fwu.data*)
       *(.bss*)
       *(COMMON)
       *(.bdsram.data*)
