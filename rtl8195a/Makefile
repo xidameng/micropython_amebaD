@@ -10,7 +10,7 @@ OS := $(shell uname)
 VENDOR := vendor
 GDB_SERVER := openocd
 TOOL := tool
-CHIP := MP_RTL8711AF
+CHIP := MP_RTL8195A
 # CHIP would be MP_RTL8195A, MP_RTL8711AM, MP_RTL8711AF, MP_RTL8710AF
 
 # -------------------------------------------------------------------
@@ -62,9 +62,7 @@ SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
 ASM_O = $(addprefix $(BUILD)/, $(ASM_S:.s=.o))
 
-PY_O += $(SRC_O) $(DRAM_O) $(ASM_O)
-
-OBJ = $(PY_O)
+OBJ = $(PY_O) $(SRC_O) $(DRAM_O) $(ASM_O)
 
 SRC_QSTR += $(SRC_C) $(DRAM_C)
 SRC_QSTR_AUTO_DEPS +=
@@ -92,6 +90,8 @@ mp: RAMALL_BIN = ram_all_mp.bin
 mp: OTA_BIN = ota_mp.bin
 
 application: prerequirement build_info $(SRC_O) $(DRAM_O) $(ASM_O) $(PY_O)
+	$(ECHO) "Building $(CHIP) "
+	$(Q)$(foreach OBJ, $(PY_O), $(OBJCOPY) --prefix-alloc-sections .sdram $(OBJ);)
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -T$(TOOL)/rlx8195A-symbol-v02-img2.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
 	
@@ -170,6 +170,7 @@ $(DRAM_O): $(BUILD)/%.o : %.c
 $(ASM_O): $(BUILD)/%.o : %.s
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(Q)$(CC) $(CFLAGS)  -c $< -o $@
+	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
 	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 .PHONY: setup

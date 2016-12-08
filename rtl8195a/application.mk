@@ -217,9 +217,8 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_ssi.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_timer.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_uart.c
 
-ifeq ($(CHIP), $(filter $(CHIP), "MP_RTL8195A" "MP_RTL8711AM"))
 #SDRAM
-DRAM_C += $(VENDOR)/component/common/api/platform/stdlib_patch.c
+SRC_C += $(VENDOR)/component/common/api/platform/stdlib_patch.c
 
 #SDRAM - polarssl
 DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/aes.c
@@ -294,40 +293,39 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/xtea.c
 #SDRAM - ssl_ram_map
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map.c
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
-endif
 
-SRC_C += main.c
+DRAM_C += main.c
 
 # put micropython source to sdram section
-SRC_C += mphelper/bufhelper.c
-SRC_C += mphelper/diskio.c
-SRC_C += mphelper/exception.c
-SRC_C += mphelper/help.c
-SRC_C += mphelper/mphal.c
-SRC_C += mphelper/pybstdio.c
-SRC_C += mphelper/input.c
-SRC_C += mphelper/gccollect/gccollect.c
-SRC_C += mphelper/mods/modmachine.c
-SRC_C += mphelper/mods/moduwireless.c
-SRC_C += mphelper/mods/modnetwork.c
-SRC_C += mphelper/mods/modutime.c
-SRC_C += mphelper/mods/modterm.c
-SRC_C += mphelper/mods/moduos.c
-SRC_C += mphelper/mods/modusocket.c
-SRC_C += mphelper/mods/modussl.c
-SRC_C += mphelper/mods/machine/objloguart.c
-SRC_C += mphelper/mods/machine/objsdio.c
-SRC_C += mphelper/mods/machine/objflash.c
-SRC_C += mphelper/mods/machine/objwdt.c
-SRC_C += mphelper/mods/machine/objrtc.c
-SRC_C += mphelper/mods/machine/objadc.c
-SRC_C += mphelper/mods/machine/objcrypto.c
+DRAM_C += mphelper/bufhelper.c
+DRAM_C += mphelper/diskio.c
+DRAM_C += mphelper/exception.c
+DRAM_C += mphelper/help.c
+DRAM_C += mphelper/mphal.c
+DRAM_C += mphelper/pybstdio.c
+DRAM_C += mphelper/input.c
+DRAM_C += mphelper/gccollect/gccollect.c
+DRAM_C += mphelper/mods/modmachine.c
+DRAM_C += mphelper/mods/moduwireless.c
+DRAM_C += mphelper/mods/modnetwork.c
+DRAM_C += mphelper/mods/modutime.c
+DRAM_C += mphelper/mods/modterm.c
+DRAM_C += mphelper/mods/moduos.c
+DRAM_C += mphelper/mods/modusocket.c
+DRAM_C += mphelper/mods/modussl.c
+DRAM_C += mphelper/mods/machine/objloguart.c
+DRAM_C += mphelper/mods/machine/objsdio.c
+DRAM_C += mphelper/mods/machine/objflash.c
+DRAM_C += mphelper/mods/machine/objwdt.c
+DRAM_C += mphelper/mods/machine/objrtc.c
+DRAM_C += mphelper/mods/machine/objadc.c
+DRAM_C += mphelper/mods/machine/objcrypto.c
 
-SRC_C += mphelper/mods/wireless/objwlan.c
-SRC_C += mphelper/mods/network/objnetif.c
-SRC_C += mphelper/mods/network/objpacket.c
+DRAM_C += mphelper/mods/wireless/objwlan.c
+DRAM_C += mphelper/mods/network/objnetif.c
+DRAM_C += mphelper/mods/network/objpacket.c
 
-SRC_C += \
+DRAM_C += \
 		lib/utils/pyexec.c \
 		lib/utils/pyhelp.c \
 		lib/mp-readline/readline.c \

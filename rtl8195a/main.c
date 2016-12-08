@@ -55,20 +55,11 @@ void main_task(void const *arg) {
     }
 }
 
-#if MICROPY_ENABLE_GC
-// When locate heap to TCM, the hardware crypto would be trouble
-// So it's a tradeoff.
-#if defined (__ICCARM__)
-#pragma location=".tcm.heap"
-#else
-__attribute__((section(".tcm.heap")))
-#endif
-char heap[36*1024];
-#endif
+char mp_heap[32 * 1024];
 
 void main (void) {
 #if MICROPY_ENABLE_GC
-    gc_init(heap, heap + sizeof(heap));
+    gc_init(mp_heap, mp_heap + sizeof(mp_heap));
 #endif
     // Init micropython basic system
     mp_init();

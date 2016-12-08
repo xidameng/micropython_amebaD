@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #ifdef MP_RTL8195A
-#include "mpconfigports/rtl895a_ports.h"
+#include "mpconfigports/rtl8195a_ports.h"
 #elif MP_RTL8711AM
 #include "mpconfigports/rtl8711am_ports.h"
 #elif MP_RTL8711AF
