@@ -38,7 +38,7 @@
 #include "machine/objpwm.h"
 #include "machine/objdac.h"
 #endif
-#include "machine/objsdio.h"
+#include "machine/objsdio_host.h"
 #include "machine/objflash.h"
 #include "machine/objloguart.h"
 #include "machine/objwdt.h"
@@ -70,11 +70,12 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
 #if MP_RTL8195A
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO),          MP_OBJ_FROM_PTR(&sdio_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO_HOST),     MP_OBJ_FROM_PTR(&sdio_host_type) },
 #endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
 #if MP_RTL8195A || MP_RTL8711AM
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
 #endif

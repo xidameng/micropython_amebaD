@@ -34,12 +34,13 @@
 
 #include "sd.h"
 
-extern const mp_obj_type_t sdio_type;
+extern const mp_obj_type_t sdio_host_type;
 
-#define SDIO_BLOCK_SIZE 512
+#define SDIO_HOST_BLOCK_SIZE 512
+#define SDIO_HOST_SET_CLOCK     (0xCC)
 
 typedef struct {
     mp_obj_base_t base;
-} sdio_obj_t;
+} sdio_host_obj_t;
 
 #endif  // _OBJSDIO_H_

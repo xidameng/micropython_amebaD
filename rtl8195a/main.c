@@ -55,7 +55,7 @@ void main_task(void const *arg) {
     }
 }
 
-char mp_heap[32 * 1024];
+char mp_heap[512 * 1024];
 
 void main (void) {
 #if MICROPY_ENABLE_GC
