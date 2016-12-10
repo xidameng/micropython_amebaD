@@ -2,6 +2,7 @@
 #define MICROPY_ALLOC_GC_STACK_SIZE             (32)
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
+#define MICROPY_PERSISTENT_CODE_LOAD            (1)
 #define MICROPY_COMP_MODULE_CONST               (0)
 #define MICROPY_COMP_CONST                      (0)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (1)
@@ -12,7 +13,7 @@
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_FINALISER                (1)
 #define MICROPY_HELPER_REPL                     (1)
-#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_LONGLONG)
+#define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_ENABLE_DOC_STRING               (1)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_NORMAL)
@@ -46,6 +47,9 @@
 #define MICROPY_PY_THREAD                       (0)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
+#define MICROPY_MODULE_FROZEN_STR               (1)
+#define MICROPY_MODULE_FROZEN_MPY               (1)
+#define MICROPY_QSTR_EXTRA_POOL                 mp_qstr_frozen_const_pool
 
 #define MICROPY_PY_TERM_NUM                     (3)
 

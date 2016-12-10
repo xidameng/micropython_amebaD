@@ -4,6 +4,8 @@ QSTR_DEFS += qstrdefsport.h
 
 # declare before py.mk
 MICROPY_PY_LWIP := 1
+FROZEN_DIR = scripts
+FROZEN_MPY_DIR = modules
 
 include ../py/py.mk
 

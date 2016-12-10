@@ -50,6 +50,8 @@
  *                              Internal variables
  * ***************************************************************************/
 void main_task(void const *arg) {
+    pyexec_frozen_module("_boot.py");
+    pyexec_file("main.py");
     if (pyexec_friendly_repl() != 0) {
         sys_reset();
     }
