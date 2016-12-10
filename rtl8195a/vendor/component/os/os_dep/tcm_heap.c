@@ -3,8 +3,6 @@
 
 #include <string.h>    // memset()
 
-#include <osdep_service.h>
-
 //#define _DEBUG
 
 #if CONFIG_USE_TCM_HEAP
@@ -45,11 +43,6 @@ void tcm_heap_init(void)
 	
 	g_heap_inited = 1;
 	rtw_spinlock_init(&tcm_lock);
-	
-#if PLATFORM_FREERTOS	
-	// let RTOS know how to free memory if using as task stack
-	vPortSetExtFree(tcm_heap_free, 0x20000000, 0x1fff0000);
-#endif
 }
 
 void tcm_heap_dump(void)

@@ -43,6 +43,8 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
+#define MICROPY_PY_THREAD                       (0)
+#define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 
 #define MICROPY_PY_TERM_NUM                     (3)
@@ -69,9 +71,10 @@ extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_uterminal;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uwireless;
-extern const struct _mp_obj_module_t mp_module_usocket;
 
 extern const struct _mp_obj_module_t mp_network_module;
+
+extern const struct _mp_obj_module_t mp_module_lwip;
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
@@ -86,7 +89,7 @@ extern const struct _mp_obj_module_t mp_network_module;
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_usocket) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
@@ -103,7 +106,7 @@ extern const struct _mp_obj_module_t mp_network_module;
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
 #define MICROPY_MAIN_TASK_STACK_SIZE        512
-#define MICROPY_MAIN_TASK_PRIORITY          (configMAX_PRIORITIES - 1)
+#define MICROPY_MAIN_TASK_PRIORITY          (1)
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \

@@ -10,7 +10,7 @@
 #include <wifi/wifi_conf.h>
 #include <wifi/wifi_util.h>
 #include <wifi/wifi_ind.h>
-#include "tcpip.h"
+#include "lwip/tcpip.h"
 #include <osdep_service.h>
 
 #if CONFIG_EXAMPLE_WLAN_FAST_CONNECT

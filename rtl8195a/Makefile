@@ -2,7 +2,8 @@ include ../py/mkenv.mk
 
 QSTR_DEFS += qstrdefsport.h
 
--include mpconfigport.mk
+# declare before py.mk
+MICROPY_PY_LWIP := 1
 
 include ../py/py.mk
 
@@ -161,18 +162,18 @@ prerequirement:
 
 $(SRC_O): $(BUILD)/%.o : %.c
 	$(Q)$(MKDIR) -p $(dir $@)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 	$(Q)$(CC) $(CFLAGS) -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 $(DRAM_O): $(BUILD)/%.o : %.c 
 	$(Q)$(MKDIR) -p $(dir $@)
-	$(Q)$(CC) $(CFLAGS)  -c $< -o $@
+	$(CC) $(CFLAGS)  -c $< -o $@
 	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
 	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 $(ASM_O): $(BUILD)/%.o : %.s
 	$(Q)$(MKDIR) -p $(dir $@)
-	$(Q)$(CC) $(CFLAGS)  -c $< -o $@
+	$(CC) $(CFLAGS)  -c $< -o $@
 	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
 	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
@@ -222,5 +223,9 @@ ifeq ($(findstring CYGWIN, $(OS)), CYGWIN)
 else
 	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
 endif
+
+.PHONY: print
+print:
+	echo $(SRC_C)
 
 include ../py/mkrules.mk

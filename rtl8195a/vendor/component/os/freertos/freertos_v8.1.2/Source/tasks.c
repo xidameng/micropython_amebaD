@@ -66,7 +66,6 @@
 /* Standard includes. */
 #include <stdlib.h>
 #include <string.h>
-#include <platform/platform_stdlib.h>
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
 all the API functions to use the MPU wrappers.  That should only be done when
@@ -104,20 +103,6 @@ privileged Vs unprivileged linkage and placement. */
  * Defines the size, in words, of the stack allocated to the idle task.
  */
 #define tskIDLE_STACK_SIZE	configMINIMAL_STACK_SIZE
-
-#define RTL_PLACE_IDLE_STACK_IN_SRAM
-#ifdef RTL_PLACE_IDLE_STACK_IN_SRAM
-
-	/* 20151104 User may place heap in SDRAM and cause tickless hang because SDRAM is susupend and idle stack is in SDRAM.
-	 * Fix it by place idle stack in SRAM.
-	 */
-#if ((defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B))
-	#include "section_config.h"
-	SRAM_BF_DATA_SECTION
-#endif
-	static unsigned char ucIdleTaskHeap[ tskIDLE_STACK_SIZE * sizeof( StackType_t ) ];
-
-#endif
 
 #if( configUSE_PREEMPTION == 0 )
 	/* If the cooperative scheduler is being used then a yield should not be
@@ -170,8 +155,6 @@ typedef struct tskTaskControlBlock
 
 	#if ( configGENERATE_RUN_TIME_STATS == 1 )
 		uint32_t		ulRunTimeCounter;	/*< Stores the amount of time the task has spent in the Running state. */
-		uint32_t		ulStartRunTimeCounterOfPeroid;	/*< Stores the amount of time the task has spent in the Running state during a peroid start. */
-		uint32_t		ulEndRunTimeCounterOfPeroid;	/*< Stores the amount of time the task has spent in the Running state when a peroid end */
 	#endif
 
 	#if ( configUSE_NEWLIB_REENTRANT == 1 )
@@ -256,7 +239,7 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 
 	PRIVILEGED_DATA static uint32_t ulTaskSwitchedInTime = 0UL;	/*< Holds the value of a timer/counter the last time a task was switched in. */
 	PRIVILEGED_DATA static uint32_t ulTotalRunTime = 0UL;		/*< Holds the total amount of execution time as defined by the run time counter clock. */
-	PRIVILEGED_DATA static uint32_t ulDeltaTotalRunTime = 0UL;		/*< Holds the delta total amount of execution time*/
+
 #endif
 
 /*lint +e956 */
@@ -1476,24 +1459,14 @@ BaseType_t xReturn;
 	/* Add the idle task at the lowest priority. */
 	#if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
 	{
-#ifdef RTL_PLACE_IDLE_STACK_IN_SRAM
-		// it's same function call as original FreeRTOS source except that it use stack in SRAM
-		xReturn = xTaskGenericCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle, (void *)&ucIdleTaskHeap, NULL);
-#else
 		/* Create the idle task, storing its handle in xIdleTaskHandle so it can
 		be returned by the xTaskGetIdleTaskHandle() function. */
 		xReturn = xTaskCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
-#endif
 	}
 	#else
 	{
-#ifdef RTL_PLACE_IDLE_STACK_IN_SRAM
-		// it's same function call as original FreeRTOS source except that it use stack in SRAM
-		xReturn = xTaskGenericCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), NULL, (void *)&ucIdleTaskHeap, NULL );
-#else
 		/* Create the idle task without storing its handle. */
 		xReturn = xTaskCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), NULL );  /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
-#endif
 	}
 	#endif /* INCLUDE_xTaskGetIdleTaskHandle */
 
@@ -1777,9 +1750,6 @@ UBaseType_t uxTaskGetNumberOfTasks( void )
 		vTaskSuspendAll();
 		{
 			/* Is there a space in the array for each task in the system? */
-#if ( configGENERATE_RUN_TIME_STATS == 1 )
-			ulDeltaTotalRunTime = 0;
-#endif
 			if( uxArraySize >= uxCurrentNumberOfTasks )
 			{
 				/* Fill in an TaskStatus_t structure with information on each
@@ -1876,77 +1846,6 @@ implementations require configUSE_TICKLESS_IDLE to be set to a value other than
 
 #endif /* configUSE_TICKLESS_IDLE */
 /*----------------------------------------------------------*/
-
-#if ( ( configGENERATE_RUN_TIME_STATS == 1 ) && ( configUSE_STATS_FORMATTING_FUNCTIONS == 1 ) )
-	static void prvGenerateRunTimeOfPeroid(xList *pxList, portTickType tickTmp)
-	{
-		volatile tskTCB *pxNextTCB, *pxFirstTCB;
-
-		/* Write the run time stats of all the TCB's in pxList into the buffer. */
-		listGET_OWNER_OF_NEXT_ENTRY( pxFirstTCB, pxList );
-		do
-		{
-			/* Get next TCB in from the list. */
-			listGET_OWNER_OF_NEXT_ENTRY( pxNextTCB, pxList );
-
-			/* Record start&end run time counter. */
-			if (tickTmp%(2*portCONFIGURE_STATS_PEROID_VALUE))
-				pxNextTCB->ulStartRunTimeCounterOfPeroid = pxNextTCB->ulRunTimeCounter;
-			else
-				pxNextTCB->ulEndRunTimeCounterOfPeroid = pxNextTCB->ulRunTimeCounter;
-
-		} while( pxNextTCB != pxFirstTCB );
-	}
-
-	static void prvGetRunTimeStatsOfPeroidForTasksInList(portTickType tickTmp)
-	{
-		unsigned portBASE_TYPE uxQueue;
-	
-		if (tickTmp%portCONFIGURE_STATS_PEROID_VALUE){
-			return;//only portCONFIGURE_STATS_PEROID_VALUE
-		}
-	
-		uxQueue = configMAX_PRIORITIES;
-	
-		do
-		{
-			uxQueue--;
-		
-			if( listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxQueue ] ) ) == pdFALSE )
-			{
-				prvGenerateRunTimeOfPeroid(( xList * ) &( pxReadyTasksLists[ uxQueue ] ), tickTmp );
-			}
-		}while( uxQueue > ( UBaseType_t ) tskIDLE_PRIORITY );
-		
-		if( listLIST_IS_EMPTY( pxDelayedTaskList ) == pdFALSE )
-		{
-			prvGenerateRunTimeOfPeroid(( xList * ) pxDelayedTaskList, tickTmp );
-		}
-		
-		if( listLIST_IS_EMPTY( pxOverflowDelayedTaskList ) == pdFALSE )
-		{
-			prvGenerateRunTimeOfPeroid(( xList * ) pxOverflowDelayedTaskList, tickTmp );
-		}
-		
-#if ( INCLUDE_vTaskDelete == 1 )
-		{
-			if( listLIST_IS_EMPTY( &xTasksWaitingTermination ) == pdFALSE )
-			{
-				prvGenerateRunTimeOfPeroid(&xTasksWaitingTermination, tickTmp );
-			}
-		}
-#endif
-		
-#if ( INCLUDE_vTaskSuspend == 1 )
-		{
-			if( listLIST_IS_EMPTY( &xSuspendedTaskList ) == pdFALSE )
-			{
-				prvGenerateRunTimeOfPeroid(&xSuspendedTaskList, tickTmp );
-			}
-		}
-#endif
-	}
-#endif
 
 BaseType_t xTaskIncrementTick( void )
 {
@@ -2104,9 +2003,6 @@ BaseType_t xSwitchRequired = pdFALSE;
 		}
 		#endif
 	}
-	#if ( configGENERATE_RUN_TIME_STATS == 1 )
-	prvGetRunTimeStatsOfPeroidForTasksInList(xTickCount);
-	#endif
 
 	#if ( configUSE_PREEMPTION == 1 )
 	{
@@ -2874,8 +2770,6 @@ UBaseType_t x;
 	#if ( configGENERATE_RUN_TIME_STATS == 1 )
 	{
 		pxTCB->ulRunTimeCounter = 0UL;
-		pxTCB->ulStartRunTimeCounterOfPeroid = 0UL;
-		pxTCB->ulEndRunTimeCounterOfPeroid = 0UL;
 	}
 	#endif /* configGENERATE_RUN_TIME_STATS */
 
@@ -3107,11 +3001,6 @@ TCB_t *pxNewTCB;
 				#if ( configGENERATE_RUN_TIME_STATS == 1 )
 				{
 					pxTaskStatusArray[ uxTask ].ulRunTimeCounter = pxNextTCB->ulRunTimeCounter;
-					if (pxNextTCB->ulEndRunTimeCounterOfPeroid > pxNextTCB->ulStartRunTimeCounterOfPeroid)
-						pxTaskStatusArray[ uxTask ].ulDelataRunTimeCounterOfPeroid = pxNextTCB->ulEndRunTimeCounterOfPeroid - pxNextTCB->ulStartRunTimeCounterOfPeroid;
-					else
-						pxTaskStatusArray[ uxTask ].ulDelataRunTimeCounterOfPeroid = pxNextTCB->ulStartRunTimeCounterOfPeroid - pxNextTCB->ulEndRunTimeCounterOfPeroid;
-					ulDeltaTotalRunTime += pxTaskStatusArray[ uxTask ].ulDelataRunTimeCounterOfPeroid;
 				}
 				#else
 				{
@@ -3571,7 +3460,7 @@ TCB_t *pxTCB;
 	{
 	TaskStatus_t *pxTaskStatusArray;
 	volatile UBaseType_t uxArraySize, x;
-	uint32_t ulTotalTime, ulStatsAsPercentage, ulDeltaRunTimeCounter;
+	uint32_t ulTotalTime, ulStatsAsPercentage;
 
 		#if( configUSE_TRACE_FACILITY != 1 )
 		{
@@ -3618,8 +3507,6 @@ TCB_t *pxTCB;
 		{
 			/* Generate the (binary) data. */
 			uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, uxArraySize, &ulTotalTime );
-			printf("\n\rCPU total run time is %u", ulTotalTime);
-			printf("\n\rTaskName\tDeltaRunTime\tpercentage\r\n");
 
 			/* For percentage calculations. */
 			ulTotalTime /= 100UL;
@@ -3633,36 +3520,19 @@ TCB_t *pxTCB;
 					/* What percentage of the total run time has the task used?
 					This will always be rounded down to the nearest integer.
 					ulTotalRunTimeDiv100 has already been divided by 100. */
-#if 0
 					ulStatsAsPercentage = pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalTime;
-#else
-					ulStatsAsPercentage = (100*pxTaskStatusArray[ x ].ulDelataRunTimeCounterOfPeroid) / ulDeltaTotalRunTime;
-					/* just make run time counter looks like more precise*/
-					if (100*(100*pxTaskStatusArray[ x ].ulDelataRunTimeCounterOfPeroid) % ulDeltaTotalRunTime >=50)
-						ulDeltaRunTimeCounter = portCONFIGURE_STATS_PEROID_VALUE*(ulStatsAsPercentage+1)/100;
-					else
-						ulDeltaRunTimeCounter = portCONFIGURE_STATS_PEROID_VALUE*ulStatsAsPercentage/100;
-#endif
 
 					if( ulStatsAsPercentage > 0UL )
 					{
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-#if 0
 							sprintf( pcWriteBuffer, "%s\t\t%lu\t\t%lu%%\r\n", pxTaskStatusArray[ x ].pcTaskName, pxTaskStatusArray[ x ].ulRunTimeCounter, ulStatsAsPercentage );
-#else
-							sprintf( pcWriteBuffer, "%s\t\t%lu\t\t%lu%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ulDeltaRunTimeCounter, ulStatsAsPercentage );
-#endif
 						}
 						#else
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. */
-#if 0							
 							sprintf( pcWriteBuffer, "%s\t\t%u\t\t%u%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter, ( unsigned int ) ulStatsAsPercentage );
-#else
-							sprintf( pcWriteBuffer, "%s\t\t%u\t\t%u%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ( unsigned int ) ulDeltaRunTimeCounter, ( unsigned int ) ulStatsAsPercentage );
-#endif
 						}
 						#endif
 					}
@@ -3672,21 +3542,13 @@ TCB_t *pxTCB;
 						consumed less than 1% of the total run time. */
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-#if 0						
 							sprintf( pcWriteBuffer, "%s\t\t%lu\t\t<1%%\r\n", pxTaskStatusArray[ x ].pcTaskName, pxTaskStatusArray[ x ].ulRunTimeCounter );
-#else
-							sprintf( pcWriteBuffer, "%s\t\t%lu\t\t<1%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ulDeltaRunTimeCounter );
-#endif
 						}
 						#else
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. */
-#if 0							
 							sprintf( pcWriteBuffer, "%s\t\t%u\t\t<1%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter );
-#else
-							sprintf( pcWriteBuffer, "%s\t\t%u\t\t<1%%\r\n", pxTaskStatusArray[ x ].pcTaskName, ( unsigned int ) ulDeltaRunTimeCounter );
-#endif
 						}
 						#endif
 					}
@@ -3742,10 +3604,6 @@ TickType_t uxReturn;
 #endif /* configUSE_MUTEXES */
 
 /*-----------------------------------------------------------*/
-void * vTaskGetCurrentTCB( void )
-{
-	return (void*)pxCurrentTCB;
-}
 
 #ifdef FREERTOS_MODULE_TEST
 	#include "tasks_test_access_functions.h"

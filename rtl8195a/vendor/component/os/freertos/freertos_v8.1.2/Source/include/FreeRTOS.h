@@ -615,10 +615,6 @@ extern "C" {
 
 #if ( configGENERATE_RUN_TIME_STATS == 1 )
 
-	#ifndef configUSE_STATS_FORMATTING_FUNCTIONS
-		#define configUSE_STATS_FORMATTING_FUNCTIONS 1
-	#endif
-
 	#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
 		#error If configGENERATE_RUN_TIME_STATS is defined then portCONFIGURE_TIMER_FOR_RUN_TIME_STATS must also be defined.  portCONFIGURE_TIMER_FOR_RUN_TIME_STATS should call a port layer function to setup a peripheral timer/counter that can then be used as the run time counter time base.
 	#endif /* portCONFIGURE_TIMER_FOR_RUN_TIME_STATS */

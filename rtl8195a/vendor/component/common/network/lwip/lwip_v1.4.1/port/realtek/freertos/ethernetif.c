@@ -50,10 +50,11 @@
 #include "lwip/sys.h"
 #include "lwip/tcpip.h"
 #include "lwip/icmp.h"
-#include "lwip/lwip_timers.h"
+#include "lwip/timers.h"
 #include "netif/etharp.h"
-#include "err.h"
+#include "lwip/err.h"
 #include "ethernetif.h"
+#include "FreeRTOS.h"
 #include "queue.h"
 #include "lwip_netconf.h"
 
@@ -341,7 +342,8 @@ int lwip_tickless_used = 0;
 
 int arp_timeout_exist(void)
 {
-	struct sys_timeouts *timeouts;
+#if 0 // TODO remove, we don't this inform 
+	struct sys_timeouts *timeouts = NULL;
 	struct sys_timeo *t;
 
 	timeouts = sys_arch_timeouts();
@@ -349,7 +351,7 @@ int arp_timeout_exist(void)
 	for(t = timeouts->next; t != NULL;t = t->next)
 		if(t->h == arp_timer)
 			return 1;
-
+#endif
 	return 0;
 }
 

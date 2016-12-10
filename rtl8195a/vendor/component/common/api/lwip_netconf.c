@@ -328,10 +328,12 @@ uint8_t* LwIP_GetMASK(struct netif *pnetif)
 	return (uint8_t *) &(pnetif->netmask);
 }
 
+#if 0 // Chester modify
 uint8_t* LwIP_GetBC(struct netif *pnetif)
 {
 	return (uint8_t *) &(pnetif->dhcp->offered_bc_addr);
 }
+#endif
 
 #if LWIP_DNS
 void LwIP_GetDNS(struct ip_addr* dns)

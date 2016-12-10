@@ -33,7 +33,7 @@
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/init.h"
-#include "lwip/lwip_timers.h"
+#include "lwip/timers.h"
 #include "lwip/tcp.h"
 #include "lwip/udp.h"
 #include "lwip/dns.h"

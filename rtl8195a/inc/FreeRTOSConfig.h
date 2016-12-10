@@ -86,7 +86,7 @@ extern uint32_t SystemCoreClock;
  *----------------------------------------------------------*/
 
 #define configUSE_PREEMPTION			1
-#define configUSE_IDLE_HOOK				0
+#define configUSE_IDLE_HOOK				1
 #define configUSE_TICK_HOOK				0
 #define configCPU_CLOCK_HZ				( SystemCoreClock )
 #define configTICK_RATE_HZ				( ( uint32_t ) 1000 )
@@ -94,13 +94,13 @@ extern uint32_t SystemCoreClock;
 #ifdef CONFIG_UVC
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 110 * 1024 ) )	// use HEAP5
 #else
-#define configTOTAL_HEAP_SIZE			( ( size_t ) ( 30 * 1024 ) )	// use HEAP5
+#define configTOTAL_HEAP_SIZE			( ( size_t ) ( 60 * 1024 ) )	// use HEAP5
 #endif
 #define configMAX_TASK_NAME_LEN			( 10 )
 #define configUSE_TRACE_FACILITY		0
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			0
-#define configUSE_CO_ROUTINES 			0
+#define configUSE_CO_ROUTINES 			1
 #define configUSE_MUTEXES				1
 #define configUSE_TIMERS                1
 

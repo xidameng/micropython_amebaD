@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
-#include "tcpip.h"
+#include "lwip/tcpip.h"
 #include "wifi/wifi_conf.h"
 
 #ifndef CONFIG_WLAN

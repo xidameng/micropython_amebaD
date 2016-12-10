@@ -39,7 +39,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "lwip/lwip_timers.h"
+#include "lwip/timers.h"
 #include "autoconf.h"
 #include "tcm_heap.h"
 
@@ -47,7 +47,9 @@ xTaskHandle xTaskGetCurrentTaskHandle( void ) PRIVILEGED_FUNCTION;
 extern void * vTaskGetCurrentTCB( void );
 struct timeoutlist
 {
+#if 0 //TODO remove, we don't need this inform
 	struct sys_timeouts timeouts;
+#endif
 	xTaskHandle pid;
 };
 
@@ -346,7 +348,9 @@ void sys_init(void)
 	for(i = 0; i < SYS_THREAD_MAX; i++)
 	{
 		s_timeoutlist[i].pid = 0;
+#if 0 //TODO remove, we don't need this inform
 		s_timeoutlist[i].timeouts.next = NULL;
+#endif
 	}
 
 	// keep track of how many threads have been created
@@ -370,7 +374,7 @@ struct sys_timeouts *sys_arch_timeouts(void)
 int i;
 xTaskHandle pid;
 struct timeoutlist *tl;
-
+#if 0 // TODO remove, we don't need this inform
 	pid =  xTaskGetCurrentTaskHandle();
               
 	for(i = 0; i < s_nextthread; i++)
@@ -382,6 +386,7 @@ struct timeoutlist *tl;
 		}
 	}
 	// Error
+#endif
 	return NULL;
 }
 /*-----------------------------------------------------------------------------------*/

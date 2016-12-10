@@ -1194,18 +1194,6 @@ STATIC const mp_obj_type_t lwip_socket_type = {
 };
 
 /******************************************************************************/
-// Support functions for memory protection. lwIP has its own memory management
-// routines for its internal structures, and since they might be called in
-// interrupt handlers, they need some protection.
-sys_prot_t sys_arch_protect() {
-    return (sys_prot_t)MICROPY_BEGIN_ATOMIC_SECTION();
-}
-
-void sys_arch_unprotect(sys_prot_t state) {
-    MICROPY_END_ATOMIC_SECTION((mp_uint_t)state);
-}
-
-/******************************************************************************/
 // Polling callbacks for the interfaces connected to lwIP. Right now it calls
 // itself a "list" but isn't; we only support a single interface.
 
@@ -1239,7 +1227,7 @@ STATIC mp_obj_t mod_lwip_callback() {
     if (lwip_poll_list.poll != NULL) {
         lwip_poll_list.poll(lwip_poll_list.poll_arg);
     }
-    sys_check_timeouts();
+    //sys_check_timeouts();
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(mod_lwip_callback_obj, mod_lwip_callback);

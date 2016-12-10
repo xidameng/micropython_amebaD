@@ -28,7 +28,7 @@
  extern "C" {
 #endif
 
-#include "tcpip.h"
+#include "lwip/tcpip.h"
 /* Includes ------------------------------------------------------------------*/
 #include <platform/platform_stdlib.h>
 #include "platform_opts.h"

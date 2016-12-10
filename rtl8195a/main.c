@@ -56,7 +56,9 @@ void main_task(void const *arg) {
 }
 
 char mp_heap[512 * 1024];
-
+#include "section_config.h"
+SRAM_BF_DATA_SECTION
+static unsigned char ucHeap[ configTOTAL_HEAP_SIZE ];
 void main (void) {
 #if MICROPY_ENABLE_GC
     gc_init(mp_heap, mp_heap + sizeof(mp_heap));
@@ -74,11 +76,21 @@ void main (void) {
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     modterm_init();
     modmachine_init();
-   
+#if 0
+    HeapRegion_t xHeapRegions[] =
+    {
+	{ (uint8_t*)0x10002300, 0x3D00 }, 	// Image1 recycle heap
+	{ ucHeap, sizeof(ucHeap) },	        // Defines a block from ucHeap
+#if 0
+	{ (uint8_t*)0x301b5000, 300*1024 },	// SDRAM heap
+#endif        
+	{ NULL, 0 }                             // Terminates the array.
+    };
+#endif
     network_init0();
     netif_init0();
     wlan_init0();
-
+    //vPortDefineHeapRegions(xHeapRegions);
     // Create main task
     xTaskCreate(main_task, (signed char*)"main task", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
     vTaskStartScheduler();
