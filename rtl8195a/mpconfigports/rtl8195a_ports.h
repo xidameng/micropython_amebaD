@@ -98,7 +98,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MICROPY_MAIN_TASK_STACK_SIZE        512
+#define MICROPY_MAIN_TASK_STACK_SIZE        1024
 #define MICROPY_MAIN_TASK_PRIORITY          (1)
 
 #define MICROPY_PORT_ROOT_POINTERS          \

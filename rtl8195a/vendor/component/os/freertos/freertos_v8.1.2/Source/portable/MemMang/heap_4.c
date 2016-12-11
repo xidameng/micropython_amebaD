@@ -81,7 +81,6 @@ task.h is included from an application file. */
 #include "FreeRTOS.h"
 #include "task.h"
 
-
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 /* Block sizes must not get too small. */
@@ -91,12 +90,6 @@ task.h is included from an application file. */
 #define heapBITS_PER_BYTE		( ( size_t ) 8 )
 
 /* Allocate the memory for the heap. */
-//TODO: remove section when combine BD and BF
-#if ((defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B))
-#include "section_config.h"
-SRAM_BF_DATA_SECTION
-#endif
-
 static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 
 /* Define the linked list structure.  This is used to link free blocks in order
@@ -295,7 +288,7 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void __vPortFree( void *pv )
+void vPortFree( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -341,27 +334,6 @@ BlockLink_t *pxLink;
 		}
 	}
 }
-/*-----------------------------------------------------------*/
-/* Add by Alfa 2015/02/04 -----------------------------------*/
-static void (*ext_free)( void *p ) = NULL;
-static uint32_t ext_upper = 0;
-static uint32_t ext_lower = 0;
-void vPortSetExtFree( void (*free)( void *p ), uint32_t upper, uint32_t lower )
-{
-	ext_free = free;
-	ext_upper = upper;
-	ext_lower = lower;
-}
-
-void vPortFree( void *pv )
-{
-	if( ((uint32_t)pv >= ext_lower) && ((uint32_t)pv < ext_upper) ){
-		// use external free function
-		if( ext_free )	ext_free( pv );
-	}else
-		__vPortFree( pv );
-}
-
 /*-----------------------------------------------------------*/
 
 size_t xPortGetFreeHeapSize( void )
@@ -488,57 +460,5 @@ uint8_t *puc;
 	{
 		mtCOVERAGE_TEST_MARKER();
 	}
-}
-
-void* pvPortReAlloc( void *pv,  size_t xWantedSize )
-{
-	BlockLink_t *pxLink;
-
-	if( ((uint32_t)pv >= ext_lower) && ((uint32_t)pv < ext_upper) ){
-		if( ext_free )  ext_free( pv );
-		pv = NULL;
-	}
-
-	unsigned char *puc = ( unsigned char * ) pv;
-
-	if( pv )
-	{
-		if( !xWantedSize )
-		{
-			vPortFree( pv );
-			return NULL;
-		}
-
-		void *newArea = pvPortMalloc( xWantedSize );
-		if( newArea )
-		{
-			/* The memory being freed will have an xBlockLink structure immediately
-				before it. */
-			puc -= xHeapStructSize;
-
-			/* This casting is to keep the compiler from issuing warnings. */
-			pxLink = ( void * ) puc;
-
-			int oldSize =  (pxLink->xBlockSize & ~xBlockAllocatedBit) - xHeapStructSize;
-			int copySize = ( oldSize < xWantedSize ) ? oldSize : xWantedSize;
-			memcpy( newArea, pv, copySize );
-
-			vTaskSuspendAll();
-			{
-				/* Add this block to the list of free blocks. */
-				pxLink->xBlockSize &= ~xBlockAllocatedBit;
-				xFreeBytesRemaining += pxLink->xBlockSize;
-				prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
-				}
-			xTaskResumeAll();
-				return newArea;
-		}
-	}
-	else if( xWantedSize )
-		return pvPortMalloc( xWantedSize );
-	else
-		return NULL;
-
-	return NULL;
 }
 

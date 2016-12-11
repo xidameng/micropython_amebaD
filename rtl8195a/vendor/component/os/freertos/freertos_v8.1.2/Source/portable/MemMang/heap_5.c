@@ -161,65 +161,12 @@ application.  When the bit is free the block is still part of the free heap
 space. */
 static size_t xBlockAllocatedBit = 0;
 
-/* Realtek test code start */
-//TODO: remove section when combine BD and BF
-#if ((defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B))
-#include "section_config.h"
-SRAM_BF_DATA_SECTION
-#endif
-static unsigned char ucHeap[ configTOTAL_HEAP_SIZE ];
-
-#if (defined CONFIG_PLATFORM_8195A)
-HeapRegion_t xHeapRegions[] =
-{
-	{ (uint8_t*)0x10002300, 0x3D00 }, 	// Image1 recycle heap
-	{ ucHeap, sizeof(ucHeap) },	        // Defines a block from ucHeap
-#if 0
-	{ (uint8_t*)0x301b5000, 300*1024 },	// SDRAM heap
-#endif        
-	{ NULL, 0 }                             // Terminates the array.
-};
-#elif (defined CONFIG_PLATFORM_8711B)
-HeapRegion_t xHeapRegions[] =
-{
-	{ ucHeap, sizeof(ucHeap) }, 	// Defines a block from ucHeap
-	{ NULL, 0 }                // Terminates the array.
-};
-#else
-#error NOT SUPPORT CHIP
-#endif
-/* Realtek test code end */
-
 /*-----------------------------------------------------------*/
-#if 1
-/*
-	Dump xBlock list
-*/
-void dump_mem_block_list()
-{
-	BlockLink_t *pxBlock = &xStart;
-	int count = 0;
-
-	printf("\n===============================>Memory List:\n");
-	while(pxBlock->pxNextFreeBlock != NULL)
-	{
-		printf("[%d]=0x%p, %d\n", count++, pxBlock, pxBlock->xBlockSize);
-		pxBlock = pxBlock->pxNextFreeBlock;
-	}
-}
-#endif
 
 void *pvPortMalloc( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
-
-	/* Realtek test code start */
-	if(pxEnd == NULL)
-	{
-		vPortDefineHeapRegions( xHeapRegions );
-	}
-	/* Realtek test code end */
 
 	/* The heap must be initialised before the first call to
 	prvPortMalloc(). */
@@ -356,7 +303,7 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void __vPortFree( void *pv )
+void vPortFree( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -402,28 +349,6 @@ BlockLink_t *pxLink;
 		}
 	}
 }
-
-/*-----------------------------------------------------------*/
-/* Add by Alfa 2015/02/04 -----------------------------------*/
-static void (*ext_free)( void *p ) = NULL;
-static uint32_t ext_upper = 0;
-static uint32_t ext_lower = 0;
-void vPortSetExtFree( void (*free)( void *p ), uint32_t upper, uint32_t lower )
-{
-	ext_free = free;
-	ext_upper = upper;
-	ext_lower = lower;
-}
-
-void vPortFree( void *pv )
-{
-	if( ((uint32_t)pv >= ext_lower) && ((uint32_t)pv < ext_upper) ){
-		// use external free function
-		if( ext_free )	ext_free( pv );
-	}else
-		__vPortFree( pv );
-}
-
 /*-----------------------------------------------------------*/
 
 size_t xPortGetFreeHeapSize( void )
@@ -527,7 +452,7 @@ const HeapRegion_t *pxHeapRegion;
 			/* Adjust the size for the bytes lost to alignment. */
 			xTotalRegionSize -= ulAddress - ( uint32_t ) pxHeapRegion->pucStartAddress;
 		}
-		
+
 		pucAlignedHeap = ( uint8_t * ) ulAddress;
 
 		/* Set xStart if it has not already been set. */
@@ -590,57 +515,5 @@ const HeapRegion_t *pxHeapRegion;
 
 	/* Work out the position of the top bit in a size_t variable. */
 	xBlockAllocatedBit = ( ( size_t ) 1 ) << ( ( sizeof( size_t ) * heapBITS_PER_BYTE ) - 1 );
-}
-
-void* pvPortReAlloc( void *pv,  size_t xWantedSize )
-{
-	BlockLink_t *pxLink;
-
-	if( ((uint32_t)pv >= ext_lower) && ((uint32_t)pv < ext_upper) ){
-		if( ext_free )  ext_free( pv );
-		pv = NULL;
-	}
-
-	unsigned char *puc = ( unsigned char * ) pv;
-
-	if( pv )
-	{
-		if( !xWantedSize )
-		{
-			vPortFree( pv );
-			return NULL;
-		}
-
-		void *newArea = pvPortMalloc( xWantedSize );
-	if( newArea )
-	{
-			/* The memory being freed will have an xBlockLink structure immediately
-				before it. */
-			puc -= uxHeapStructSize;
-
-			/* This casting is to keep the compiler from issuing warnings. */
-			pxLink = ( void * ) puc;
-
-			int oldSize =  (pxLink->xBlockSize & ~xBlockAllocatedBit) - uxHeapStructSize;
-			int copySize = ( oldSize < xWantedSize ) ? oldSize : xWantedSize;
-			memcpy( newArea, pv, copySize );
-
-			vTaskSuspendAll();
-			{
-				/* Add this block to the list of free blocks. */
-				pxLink->xBlockSize &= ~xBlockAllocatedBit;
-				xFreeBytesRemaining += pxLink->xBlockSize;
-				prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
-			}
-			xTaskResumeAll();
-			return newArea;
-		}
-	}
-	else if( xWantedSize )
-		return pvPortMalloc( xWantedSize );
-	else
-		return NULL;
-
-	return NULL;
 }
 
