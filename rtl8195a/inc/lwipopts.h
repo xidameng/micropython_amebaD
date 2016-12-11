@@ -26,8 +26,6 @@
 
 #include <platform/platform_stdlib.h>
 #include "platform_opts.h"
-#define WIFI_LOGO_CERTIFICATION_CONFIG 0    //for ping 10k test buffer setting
-    
 /**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
@@ -58,11 +56,7 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#if WIFI_LOGO_CERTIFICATION_CONFIG
-    #define MEM_SIZE                (10*1024) //for ping 10k test
-#else
-    #define MEM_SIZE                (5*1024)
-#endif
+#define MEM_SIZE                (50*1024) //for ping 10k test
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
@@ -70,7 +64,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_PBUF           100
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#define MEMP_NUM_UDP_PCB        6
+#define MEMP_NUM_UDP_PCB        10
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
 #define MEMP_NUM_TCP_PCB        10
@@ -87,18 +81,10 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#if WIFI_LOGO_CERTIFICATION_CONFIG
-    #define PBUF_POOL_SIZE          30 //for ping 10k test
-#else
-    #define PBUF_POOL_SIZE          20
-#endif
+#define PBUF_POOL_SIZE          30 //for ping 10k test
 
 /* IP_REASS_MAX_PBUFS: Total maximum amount of pbufs waiting to be reassembled.*/
-#if WIFI_LOGO_CERTIFICATION_CONFIG
-    #define IP_REASS_MAX_PBUFS              30 //for ping 10k test
-#else
-    #define IP_REASS_MAX_PBUFS              10
-#endif
+#define IP_REASS_MAX_PBUFS      30 //for ping 10k test
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
 #define PBUF_POOL_BUFSIZE       500
@@ -128,10 +114,10 @@ a lot of data that needs to be copied, this should be set high. */
 
 
 /* ---------- ICMP options ---------- */
-#define LWIP_ICMP                       1
+#define LWIP_ICMP               1
 
 /* ---------- ARP options ----------- */
-#define LWIP_ARP                        1
+#define LWIP_ARP                1
 
 /* ---------- DHCP options ---------- */
 /* Define LWIP_DHCP to 1 if you want DHCP configuration of
@@ -144,70 +130,21 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_UDP                1
 #define UDP_TTL                 255
 /* ---------- DNS options ---------- */
-#define LWIP_DNS                        1
+#define LWIP_DNS                1
 
 /* ---------- UPNP options --------- */
-#define LWIP_UPNP		0
+#define LWIP_UPNP		        0
 
 /* Support Multicast */
-#define LWIP_IGMP                   0
-#define LWIP_RAND()                 rand()
+#define LWIP_IGMP               1
+#define LWIP_RAND()             rand()
 
 /* Support TCP Keepalive */
-#define LWIP_TCP_KEEPALIVE				1
-
-/*LWIP_UART_ADAPTER==1: Enable LWIP_UART_ADAPTER when CONFIG_GAGENT is enabled, 
-   because some GAGENT functions denpond on the following macro definitions.*/
-#define LWIP_UART_ADAPTER                   0
-
-#if LWIP_UART_ADAPTER
-#undef  LWIP_SO_SNDTIMEO        
-#define LWIP_SO_SNDTIMEO                		1
-
-#undef  SO_REUSE        
-#define SO_REUSE                        			1
-
-#undef MEMP_NUM_NETCONN                	
-#define MEMP_NUM_NETCONN                	10
-
-#undef TCP_WND                
-#define TCP_WND                                       (4*TCP_MSS)
-
-#define TCP_KEEPIDLE_DEFAULT			10000UL
-#define TCP_KEEPINTVL_DEFAULT			1000UL
-#define TCP_KEEPCNT_DEFAULT			10U
-#endif
-
-#if CONFIG_EXAMPLE_UART_ATCMD
-#undef  LWIP_SO_SNDTIMEO        
-#define LWIP_SO_SNDTIMEO                		1
-
-#undef  SO_REUSE        
-#define SO_REUSE                        			1
-
-#undef MEMP_NUM_NETCONN                	
-#define MEMP_NUM_NETCONN                	10
-
-#undef MEMP_NUM_TCP_PCB
-#define MEMP_NUM_TCP_PCB				(MEMP_NUM_NETCONN)
-
-#undef MEMP_NUM_UDP_PCB
-#define MEMP_NUM_UDP_PCB				(MEMP_NUM_NETCONN)
-
-#undef TCP_WND                
-#define TCP_WND                                       	(4*TCP_MSS)
-
-#define TCP_KEEPIDLE_DEFAULT			10000UL
-#define TCP_KEEPINTVL_DEFAULT			1000UL
-#define TCP_KEEPCNT_DEFAULT			10U
-
-#define ERRNO   1
-#endif
+#define LWIP_TCP_KEEPALIVE	    1
 
 /* ---------- Statistics options ---------- */
-#define LWIP_STATS 0
-#define LWIP_PROVIDE_ERRNO 1
-
+#define LWIP_STATS              0
+#define LWIP_PROVIDE_ERRNO      1
 
 /*
    --------------------------------------
@@ -215,11 +152,6 @@ a lot of data that needs to be copied, this should be set high. */
    --------------------------------------
 */
 
-/* 
-The STM32F2x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums by hardware:
- - To use this feature let the following define uncommented.
- - To disable it and process by CPU comment the  the checksum.
-*/
 //Do checksum by lwip - WLAN nic does not support Checksum offload
 //#define CHECKSUM_BY_HARDWARE 
 
@@ -281,10 +213,6 @@ The STM32F2x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 
 #define LWIP_DEBUG                      0
 
-#ifdef LWIP_DEBUG
-#define TCP_DEBUG                        LWIP_DBG_OFF
-#endif
-
 
 /*
    ---------------------------------
@@ -299,9 +227,7 @@ The STM32F2x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define DEFAULT_RAW_RECVMBOX_SIZE		6
 #define DEFAULT_ACCEPTMBOX_SIZE         6
 #define DEFAULT_THREAD_STACKSIZE        512
-#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 2)
-
-
+#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 1)
 
 #endif /* __LWIPOPTS_H__ */
 

@@ -25,8 +25,6 @@ HEAP_DEFINE_BUF(tcm_heap, TCM_HEAP_SIZE);
 static int g_heap_inited=0;
 static	_lock	tcm_lock;
 
-extern void vPortSetExtFree( void (*free)( void *p ), uint32_t upper, uint32_t lower );
-
 void tcm_heap_init(void)
 {
 	//#ifdef _DEBUG

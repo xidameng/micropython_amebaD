@@ -7,6 +7,9 @@
 #include <osdep_service.h>
 #define OSDEP_DBG(x, ...) do {} while(0)
 
+// CHester modify
+#define CONFIG_USE_TCM_HEAP (0)
+
 extern struct osdep_service_ops osdep_service;
 
 #ifdef CONFIG_LITTLE_ENDIAN
