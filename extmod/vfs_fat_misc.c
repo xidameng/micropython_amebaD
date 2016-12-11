@@ -52,12 +52,24 @@ mp_obj_t fat_vfs_listdir(const char *path, bool is_str_type) {
     fno.lfsize = sizeof lfn;
 #endif
 
+    mp_obj_t dir_list = mp_obj_new_list(0, NULL);
+
+    if ((strncmp("/", path, strlen(path)) == 0) ||
+        (strncmp('\0', path, strlen(path)) == 0)) {
+        for (size_t i = 0; i < MP_ARRAY_SIZE(MP_STATE_PORT(fs_user_mount)); ++i) {
+            fs_user_mount_t *vfs = MP_STATE_PORT(fs_user_mount)[i];
+            if (vfs != NULL) {
+                mp_obj_t entry_o = mp_obj_new_str(vfs->str, strlen(vfs->str), false);
+                mp_obj_list_append(dir_list, entry_o);
+            }
+        }
+        return dir_list;
+    }
+
     res = f_opendir(&dir, path);                       /* Open the directory */
     if (res != FR_OK) {
         mp_raise_OSError(fresult_to_errno_table[res]);
     }
-
-    mp_obj_t dir_list = mp_obj_new_list(0, NULL);
 
     for (;;) {
         res = f_readdir(&dir, &fno);                   /* Read a directory item */

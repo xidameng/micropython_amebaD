@@ -51,6 +51,11 @@ fs_user_mount_t *fatfs_mount_mkfs(mp_uint_t n_args, const mp_obj_t *pos_args, mp
     mp_uint_t mnt_len;
     const char *mnt_str = mp_obj_str_get_data(mount_point, &mnt_len);
 
+    if ((strncmp("/", mnt_str, mnt_len) == 0) ||
+        (strncmp('\0', mnt_str, mnt_len) == 0)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "root path forbidden"));
+    }
+
     if (device == mp_const_none) {
         // umount
         FRESULT res = FR_NO_FILESYSTEM;

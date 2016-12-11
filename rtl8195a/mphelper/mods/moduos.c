@@ -133,10 +133,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_umount_obj, os_umount);
 
 
 STATIC const mp_map_elem_t os_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),        MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uname),           MP_OBJ_FROM_PTR(&os_uname_obj) },
-
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_uos) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uname),    MP_OBJ_FROM_PTR(&os_uname_obj) },
 #if MICROPY_VFS_FAT
     { MP_OBJ_NEW_QSTR(MP_QSTR_VfsFat),   MP_OBJ_FROM_PTR(&mp_fat_vfs_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_listdir),  MP_OBJ_FROM_PTR(&os_listdir_obj) },
