@@ -1,10 +1,9 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
+ * Copyright (c) 2016 Damien P. George on behalf of Pycom Ltd
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +23,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__
+#define __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__
 
-#include "py/mpstate.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 
-void gc_collect_init (uint32_t sp);
-void gc_collect(void);
+typedef struct _mp_thread_mutex_t {
+    SemaphoreHandle_t handle;
+} mp_thread_mutex_t;
+
+void mp_thread_init(void);
+void mp_thread_gc_others(void);
+
+#endif // __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__

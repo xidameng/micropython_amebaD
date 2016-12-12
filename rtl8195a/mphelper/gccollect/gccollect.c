@@ -38,12 +38,10 @@ void gc_collect(void) {
     // start the GC
     gc_collect_start();
 
-#if 0 // TODO Chester, should deal with stack gc collect
     mp_uint_t sp = gc_helper_get_sp();
 
     // trace the stack, including the registers (since they live on the stack in this function)
-    gc_collect_root((void**)sp, (0x30000000 - sp) / sizeof(uint32_t));
-#endif
+    gc_collect_root((void**)sp, ((mp_uint_t)MP_STATE_THREAD(stack_top) - sp) / sizeof(uint32_t));
 
     // end the GC
     gc_collect_end();

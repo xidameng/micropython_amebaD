@@ -5,13 +5,14 @@
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
 #define MICROPY_COMP_MODULE_CONST               (0)
 #define MICROPY_COMP_CONST                      (0)
+#define MICROPY_REPL_EVENT_DRIVEN               (0)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
 #define MICROPY_CPYTHON_COMPAT                  (1)
 #define MICROPY_ENABLE_GC                       (1)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO         (MICROPY_ENABLE_GC)
 #define MICROPY_ENABLE_COMPILER                 (1)
-#define MICROPY_ENABLE_FINALISER                (1)
+#define MICROPY_ENABLE_FINALISER                (0)
 #define MICROPY_HELPER_REPL                     (1)
 #define MICROPY_LONGINT_IMPL                    (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_FLOAT)
@@ -44,7 +45,7 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_THREAD                       (0)
+#define MICROPY_PY_THREAD                       (1)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 #define MICROPY_MODULE_FROZEN_STR               (1)
@@ -82,11 +83,11 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
@@ -98,11 +99,13 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MICROPY_MAIN_TASK_STACK_SIZE        1024
-#define MICROPY_MAIN_TASK_PRIORITY          (1)
+#define MICROPY_TASK_NAME                   "MicroPython"
+#define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
+#define MICROPY_TASK_PRIORITY               (2)
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \
+    vstr_t *repl_line;                      \
     mp_obj_list_t term_list_obj;            \
     mp_obj_list_t netif_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \

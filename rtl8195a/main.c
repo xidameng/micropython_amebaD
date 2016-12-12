@@ -38,7 +38,6 @@
 
 #include "gccollect.h"
 #include "exception.h"
-#include "section_config.h"
 
 #include "section_config.h"
 #include "lib/fatfs/ff.h"
@@ -50,29 +49,19 @@
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-void main_task(void const *arg) {
-    pyexec_frozen_module("_boot.py");
-    pyexec_file("main.py");
-    if (pyexec_friendly_repl() != 0) {
-        sys_reset();
-    }
-}
+SECTION(".sdram.bss") uint8_t mpHeap[512 * 1024];      // MicroPython core' heap 
 
-uint8_t mpHeap[512 * 1024];
-uint8_t ucHeap[configTOTAL_HEAP_SIZE];
-HeapRegion_t xHeapRegions[] =
-{
-	{ ucHeap, sizeof(ucHeap) },	        // Defines a block from ucHeap
-	{ NULL, 0 }                         // Terminates the array.
-};
+void micropython_task(void const *arg) {
+// get the top of the stack to initialize the garbage collector
+    uint32_t sp = gc_helper_get_sp();
 
-void main (void) {
+#if MICROPY_PY_THREAD
+    mp_thread_init();
+#endif
+    mp_stack_set_top((void*)sp);
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
 #endif
-
-    vPortDefineHeapRegions(xHeapRegions);
-
     // Init micropython basic system
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
@@ -84,14 +73,57 @@ void main (void) {
     memset(MP_STATE_PORT(fs_user_mount), 0, sizeof(MP_STATE_PORT(fs_user_mount)));
 #endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
+
     modterm_init();
     modmachine_init();
+
     network_init0();
     netif_init0();
     wlan_init0();
-    // Create main task
-    xTaskCreate(main_task, (signed char*)"main task", MICROPY_MAIN_TASK_STACK_SIZE, NULL, MICROPY_MAIN_TASK_PRIORITY, NULL );
-    vTaskStartScheduler();
+
+    pyexec_frozen_module("_boot.py");
+    pyexec_file("main.py");
+    if (pyexec_friendly_repl() != 0) {
+        sys_reset();
+    }
+    vTaskDelay(NULL);
+}
+
+/*
+ * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of indenpend memory,
+ * so it's not quite easy to predictable.
+ */
+SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
+
+/* MicroPython Task's stack memory
+ * Put this memory to on-board sram to accerlate speed
+ * ".bdsram.data" section
+ */
+SECTION(".bdsram.data") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
+
+void main (void) {
+    /* 
+     * lwip init will use freertos thread, so vPortDefineHeapRegions
+     * should be called before lwip init
+     */
+    HeapRegion_t xHeapRegions[] = {{ ucHeap, sizeof(ucHeap) },{ NULL, 0 }};
+    vPortDefineHeapRegions(xHeapRegions);
+
+    // Create MicroPython main task
+    BaseType_t xReturn = xTaskGenericCreate(micropython_task,
+            (signed char *)MICROPY_TASK_NAME, 
+            MICROPY_TASK_STACK_DEPTH, 
+            NULL,
+            MICROPY_TASK_PRIORITY,
+            NULL,           // No arguments to pass to mp thread
+            mpTaskStack,    // Use user define stack memory to make it predictable.
+            NULL);
+
+    if (xReturn != pdTRUE)
+        mp_printf(&mp_plat_print, "Create %s task failed", MICROPY_TASK_NAME);
+    else
+        vTaskStartScheduler();
+
     for(;;);
     return;
 }
