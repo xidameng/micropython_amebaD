@@ -32,32 +32,19 @@
 #include "py/gc.h"
 #include "py/mpthread.h"
 #include "py/mphal.h"
-#include "FreeRTOS.h"
-#include "task.h"
+
 
 #if MICROPY_PY_THREAD
-
-// this structure forms a linked list, one node per active thread
-typedef struct _thread_t {
-    TaskHandle_t id;        // system id of thread
-    int ready;              // whether the thread is ready and running
-    void *arg;              // thread Python args, a GC root pointer
-    void *stack;            // pointer to the stack
-    size_t stack_len;       // number of words in the stack
-    struct _thread_t *next;
-} thread_t;
 
 extern StackType_t mpTaskStack[];
 
 // the mutex controls access to the linked list
 STATIC mp_thread_mutex_t thread_mutex;
-STATIC thread_t thread_entry0;
-STATIC thread_t *thread; // root pointer, handled bp mp_thread_gc_others
-STATIC void *_status_cache;
+STATIC mp_thread_t thread_entry0;
+STATIC mp_thread_t *thread;        // root pointer, handled bp mp_thread_gc_others
 
 void mp_thread_init(void) {
     mp_thread_mutex_init(&thread_mutex);
-    mp_thread_set_state(&mp_state_ctx.thread);
 
     // create first entry in linked list of all threads
     thread              = &thread_entry0;
@@ -67,11 +54,13 @@ void mp_thread_init(void) {
     thread->stack       = mpTaskStack;
     thread->stack_len   = MICROPY_TASK_STACK_DEPTH;
     thread->next        = NULL;
+
+    mp_thread_set_state(&mp_state_ctx.thread);
 }
 
 void mp_thread_gc_others(void) {
     mp_thread_mutex_lock(&thread_mutex, 1);
-    for (thread_t *th = thread; th != NULL; th = th->next) {
+    for (mp_thread_t *th = thread; th != NULL; th = th->next) {
         gc_collect_root((void**)&th, 1);
         gc_collect_root(&th->arg, 1); // probably not needed
         if (th->id == xTaskGetCurrentTaskHandle()) {
@@ -85,17 +74,35 @@ void mp_thread_gc_others(void) {
     mp_thread_mutex_unlock(&thread_mutex);
 }
 
+// TODO(Chester) Recursive find may cause lantency
 mp_state_thread_t *mp_thread_get_state(void) {
-    return _status_cache;
+    mp_state_thread_t *state;
+    mp_thread_mutex_lock(&thread_mutex, 1);
+    for (mp_thread_t *th = thread; th != NULL; th = th->next) {
+        if (th->id == xTaskGetCurrentTaskHandle()) {
+            state = th->state;
+            break;
+        }
+    }
+    mp_thread_mutex_unlock(&thread_mutex);
+    return state;
 }
 
+// TODO(Chester) Recursive find may cause lantency
 void mp_thread_set_state(void *state) {
-    _status_cache = state;
+    mp_thread_mutex_lock(&thread_mutex, 1);
+    for (mp_thread_t *th = thread; th != NULL; th = th->next) {
+        if (th->id == xTaskGetCurrentTaskHandle()) {
+            th->state = state;
+            break;
+        }
+    }
+    mp_thread_mutex_unlock(&thread_mutex);
 }
 
 void mp_thread_start(void) {
     mp_thread_mutex_lock(&thread_mutex, 1);
-    for (thread_t *th = thread; th != NULL; th = th->next) {
+    for (mp_thread_t *th = thread; th != NULL; th = th->next) {
         if (th->id == xTaskGetCurrentTaskHandle()) {
             th->ready = 1;
             break;
@@ -132,7 +139,7 @@ void mp_thread_create(void *(*entry)(void*), void *arg, size_t *stack_size) {
      */
     StackType_t *stack = (StackType_t *)pvPortMalloc(*stack_size);
 
-    thread_t *th = m_new_obj(thread_t);
+    mp_thread_t *th = m_new_obj(mp_thread_t);
 
     mp_thread_mutex_lock(&thread_mutex, 1);
 
@@ -169,7 +176,7 @@ void mp_thread_create(void *(*entry)(void*), void *arg, size_t *stack_size) {
 void mp_thread_finish(void) {
     mp_thread_mutex_lock(&thread_mutex, 1);
     // TODO unlink from list
-    for (thread_t *th = thread; th != NULL; th = th->next) {
+    for (mp_thread_t *th = thread; th != NULL; th = th->next) {
         if (th->id == xTaskGetCurrentTaskHandle()) {
             th->ready = 0;
             break;

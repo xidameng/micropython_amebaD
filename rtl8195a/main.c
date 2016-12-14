@@ -40,8 +40,6 @@
 #include "exception.h"
 
 #include "section_config.h"
-#include "lib/fatfs/ff.h"
-#include "extmod/fsusermount.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -66,9 +64,6 @@ void micropython_task(void const *arg) {
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); 
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash));
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_flash_slash_lib));
 #if MICROPY_VFS_FAT
     memset(MP_STATE_PORT(fs_user_mount), 0, sizeof(MP_STATE_PORT(fs_user_mount)));
 #endif
@@ -76,8 +71,8 @@ void micropython_task(void const *arg) {
 
     modterm_init();
     modmachine_init();
+    modnetwork_init();
 
-    network_init0();
     netif_init0();
     wlan_init0();
 
@@ -90,8 +85,8 @@ void micropython_task(void const *arg) {
 }
 
 /*
- * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of indenpend memory,
- * so it's not quite easy to predictable.
+ * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
+ * so it's not quite easy to predict usage.
  */
 SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 
@@ -110,7 +105,7 @@ void main (void) {
     vPortDefineHeapRegions(xHeapRegions);
 
     // Create MicroPython main task
-    BaseType_t xReturn = xTaskGenericCreate(micropython_task,
+    TaskHandle_t xReturn = xTaskGenericCreate(micropython_task,
             (signed char *)MICROPY_TASK_NAME, 
             MICROPY_TASK_STACK_DEPTH, 
             NULL,

@@ -31,21 +31,30 @@
 #include "exception.h"
 
 #include "lwip/netif.h"
-#include "lwip/tcpip.h"
 #include "lwip/init.h"
-#include "lwip/timers.h"
-#include "lwip/tcp.h"
-#include "lwip/udp.h"
-#include "lwip/dns.h"
+#include "lwip/sys.h"
+#include "lwip/memp.h"
+#include "lwip/netif.h"
 #include "ethernetif.h"
-
-#include "lwip/ip_addr.h"
-
+#include "wifi_ind.h"
+#include "lwip/dhcp.h"
 #include "lwip_netconf.h"
 
-#include "wifi_ind.h"
+enum network_msg_type {
+    NETWORK_MSG_INPKT,
+};
 
-#include "lwip/dhcp.h"
+struct network_msg {
+    enum network_msg_type type;
+    xSemaphoreHandle *sem;
+    union {
+        struct {
+            struct pbuf *p;
+            struct netif *netif;
+        } inp;
+    } msg;
+};
 
+err_t modnetwork_input(struct pbuf *, struct netif *);
 
 #endif

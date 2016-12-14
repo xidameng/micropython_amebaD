@@ -64,7 +64,7 @@ bool flash_read_block(uint8_t *dest, uint32_t block) {
     if (flash_addr < 0) {
         return false;
     }
-
+    DiagPrintf("read flash_addr = 0x%x\r\n", flash_addr);
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     ret = flash_burst_read(&(flash_obj.obj), flash_addr, flash_get_block_size(), dest);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
@@ -78,6 +78,7 @@ bool flash_write_block(const uint8_t *src, uint32_t block) {
         return false;
     }
 
+    DiagPrintf("write flash_addr = 0x%x\r\n", flash_addr);
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     // Erase should be before write
     flash_erase_sector(&(flash_obj.obj), flash_addr); 
@@ -88,20 +89,26 @@ bool flash_write_block(const uint8_t *src, uint32_t block) {
 }
 
 mp_uint_t flash_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks) {
+    DiagPrintf("read dest = 0x%x, block_num = %d, num_blocks = %d\r\n", dest, block_num, num_blocks);
     for (size_t i = 0; i < num_blocks; i++) {
         if (!flash_read_block(dest + i * flash_get_block_size(), block_num + i)) {
+            DiagPrintf("read error\r\n");
             return 1; // error
         }
     }
+    DiagPrintf("read success\r\n");
     return 0; // success
 }
 
 mp_uint_t flash_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks) {
+    DiagPrintf("write src = 0x%x, block_num = %d, num_blocks = %d\r\n", src, block_num, num_blocks);
     for (size_t i = 0; i < num_blocks; i++) {
         if (!flash_write_block(src + i * flash_get_block_size(), block_num + i)) {
+            DiagPrintf("write error\r\n");
             return 1; // error
         }
     }
+    DiagPrintf("write success\r\n");
     return 0; // success
 }
 

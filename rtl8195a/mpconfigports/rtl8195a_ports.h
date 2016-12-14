@@ -1,5 +1,4 @@
 // options to control how Micro Python is built
-#define MICROPY_ALLOC_GC_STACK_SIZE             (32)
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
@@ -19,6 +18,7 @@
 #define MICROPY_ENABLE_DOC_STRING               (1)
 #define MICROPY_ERROR_REPORTING                 (MICROPY_ERROR_REPORTING_NORMAL)
 #define MICROPY_REPL_AUTO_INDENT                (1)
+#define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF  (1)
 #define MICROPY_PY_BUILTINS_BYTEARRAY           (1)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW          (1)
 #define MICROPY_PY_BUILTINS_ENUMERATE           (1)
@@ -46,6 +46,7 @@
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_THREAD                       (1)
+#define MICROPY_PY_THREAD_GIL                   (1)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 #define MICROPY_MODULE_FROZEN_STR               (1)
@@ -102,6 +103,10 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
 #define MICROPY_TASK_PRIORITY               (2)
+
+#define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
+#define MICROPY_NETWORK_CORE_STACK_DEPTH    (1 * 1024) + 0
+#define MICROPY_NETWORK_CORE_STACK_PRIORITY (configMAX_PRIORITIES - 1)
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \

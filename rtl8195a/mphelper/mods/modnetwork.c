@@ -40,21 +40,92 @@
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-
+STATIC sys_mbox_t mbox;
+STATIC sys_mutex_t network_core_lock;
+extern StackType_t mpNetworkCoreStack[];
 
 /*****************************************************************************
  *                              Local functions
  * ***************************************************************************/
 
-void network_init0(void) {
+STATIC void 
+modnetwork_thread (void *arg) {
+    struct network_msg *msg;
+    sys_mutex_lock(&network_core_lock);
+    while (1) {
+        sys_mutex_unlock(&network_core_lock);
+        // Fetch mailbox
+        sys_timeouts_mbox_fetch(&mbox, (void **)&msg);
+        sys_mutex_lock(&network_core_lock);
+        switch (msg->type) {
+            case NETWORK_MSG_INPKT:
+#if LWIP_ETHERNET
+                if (msg->msg.inp.netif->flags &
+                        (NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET)) {
+                    ethernet_input(msg->msg.inp.p, msg->msg.inp.netif);
+                } else 
+#endif
+                {
+                    ip_input(msg->msg.inp.p, msg->msg.inp.netif);
+                }
+                memp_free(MEMP_TCPIP_MSG_INPKT, msg);
+            break;
+        }
+    }
+    sys_mutex_unlock(&network_core_lock);
+    vTaskDelete(NULL);
+}
+
+err_t
+modnetwork_input(struct pbuf *p, struct netif *inp) {
+    struct network_msg *msg;
+
+    if (!sys_mbox_valid(&mbox)) {
+        return ERR_VAL;
+    }
+
+    msg = (struct network_msg *)memp_malloc(MEMP_TCPIP_MSG_INPKT);
+    if (msg == NULL) {
+        return ERR_MEM;
+    }
+
+    msg->type = NETWORK_MSG_INPKT;
+    msg->msg.inp.p = p;
+    msg->msg.inp.netif = inp;
+
+    if (sys_mbox_trypost(&mbox, msg) != ERR_OK) {
+        memp_free(MEMP_TCPIP_MSG_INPKT, msg);
+        return ERR_MEM;
+    }
+    return ERR_OK;
+}
+
+void modnetwork_init(void) {
     // Init modnetwork here
     mp_obj_list_init(&MP_STATE_PORT(netif_list_obj), 0);
+    
+    // RTL8195A / RTL8711AM use lwip as network core
+    lwip_init();
 
-    /**
-     * tcpip_init is a lwip tcpip stack init function, it create a new task: tcpip_thread
-     * to recv message from mailbox
-     */
-    tcpip_init(NULL, NULL);
+    if(sys_mbox_new(&mbox, TCPIP_MBOX_SIZE) != ERR_OK) {
+        mp_printf(&mp_plat_print, "Create network core mailbox failed");
+    }
+
+    if (sys_mutex_new(&network_core_lock) != ERR_OK) {
+        mp_printf(&mp_plat_print, "Create network core lock failed");
+    }
+
+    TaskHandle_t xReturn = xTaskGenericCreate(modnetwork_thread,
+            (signed char *)MICROPY_NETWORK_CORE_STACK_NAME,
+            MICROPY_NETWORK_CORE_STACK_DEPTH,
+            NULL,
+            MICROPY_NETWORK_CORE_STACK_PRIORITY,
+            NULL,
+            mpNetworkCoreStack,
+            NULL);
+
+     if (xReturn != pdTRUE)
+        mp_printf(&mp_plat_print, "Create network core thread failed");
 }
 
 STATIC mp_obj_t netif_iflist(void) {

@@ -23,17 +23,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__
-#define __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__
+#ifndef __MICROPY_MPTHREADPORT_H__
+#define __MICROPY_MPTHREADPORT_H__
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "task.h"
 
 typedef struct _mp_thread_mutex_t {
     SemaphoreHandle_t handle;
 } mp_thread_mutex_t;
 
+// this structure forms a linked list, one node per active thread
+typedef struct _mp_thread_t {
+    TaskHandle_t id;            // FreeRTOS thread id
+    int ready;                  // whether the thread is ready and running
+    void *arg;                  // thread Python args, a GC root pointer
+    void *stack;                // pointer to the stack
+    size_t stack_len;           // numbers of words in the stack
+    struct _mp_thread_t *next;
+    void *state;
+} mp_thread_t;
+
 void mp_thread_init(void);
 void mp_thread_gc_others(void);
 
-#endif // __MICROPY_INCLUDED_CC3200_MPTHREADPORT_H__
+#endif // __MICROPY_MPTHREADPORT_H__

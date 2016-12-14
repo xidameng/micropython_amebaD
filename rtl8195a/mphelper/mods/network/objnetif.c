@@ -57,7 +57,7 @@ void netif_init0(void) {
     IP4_ADDR(&netmask, DEFAULT_AP_NETMASK_ADDR0, DEFAULT_AP_NETMASK_ADDR1, DEFAULT_AP_NETMASK_ADDR2, DEFAULT_AP_NETMASK_ADDR3);
     IP4_ADDR(&gateway, DEFAULT_AP_GW_ADDR0, DEFAULT_AP_GW_ADDR1, DEFAULT_AP_GW_ADDR2, DEFAULT_AP_GW_ADDR3);
 
-    netif_add(&xnetif[netif_obj_0.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_add(&xnetif[netif_obj_0.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &modnetwork_input);
     netif_set_up(&xnetif[netif_obj_0.index]);
 
     netif_set_default(&xnetif[netif_obj_0.index]);
@@ -66,7 +66,7 @@ void netif_init0(void) {
     IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
     IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
 
-    netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &tcpip_input);
+    netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &modnetwork_input);
     netif_set_up(&xnetif[netif_obj_1.index]);
 }
 
