@@ -33,38 +33,36 @@ STATIC const flash_obj_t flash_obj = {
     .base.type = &flash_type,
 };
 
+STATIC uint32_t fatfs_start_address = 0;
+STATIC uint32_t fatfs_end_address = 0;
+STATIC uint32_t fatfs_num_blocks = 0;
+STATIC uint32_t fatfs_block_size = 0x1000;
+
 void flash_init(void) {
     // Do nothing here
+    fatfs_start_address = &__fatfs_start_address__;
+    fatfs_end_address = &__fatfs_end_address__;
+    fatfs_num_blocks = &__fatfs_num_blocks__;
 }
 
 void flash_flush(void) {
     // Do nothing here
 }
 
-mp_uint_t flash_get_block_count(void) {
-    return FLASH_START_BLOCK + FLASH_NUM_BLOCKS;
+uint32_t flash_get_block_count(void) {
+    return fatfs_num_blocks;
 }
 
-mp_uint_t flash_get_block_size(void) {
-    return FLASH_BLOCK_SIZE;
-}
-
-mp_uint_t convert_block_to_flash_addr(uint32_t block) {
-    if (FLASH_START_BLOCK <= block && block < FLASH_START_BLOCK + FLASH_NUM_BLOCKS) {
-        block -= FLASH_START_BLOCK;
-        return FLASH_START_BLOCK + block * FLASH_BLOCK_SIZE + FLASH_START_BASE;
-    }
-    // bad block
-    return -1;
+uint32_t flash_get_block_size(void) {
+    return fatfs_block_size;
 }
 
 bool flash_read_block(uint8_t *dest, uint32_t block) {
     int16_t ret = -1;
-    uint32_t flash_addr = convert_block_to_flash_addr(block);
-    if (flash_addr < 0) {
-        return false;
+    if (block > flash_get_block_count()) {
+        block -= flash_get_block_count();
     }
-    DiagPrintf("read flash_addr = 0x%x\r\n", flash_addr);
+    uint32_t flash_addr = (block * flash_get_block_size()) + fatfs_start_address;
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     ret = flash_burst_read(&(flash_obj.obj), flash_addr, flash_get_block_size(), dest);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
@@ -73,12 +71,10 @@ bool flash_read_block(uint8_t *dest, uint32_t block) {
 
 bool flash_write_block(const uint8_t *src, uint32_t block) {
     int16_t ret = -1;
-    uint32_t flash_addr = convert_block_to_flash_addr(block);
-    if (flash_addr < 0) {
-        return false;
+    if (block > flash_get_block_count()) {
+        block -= flash_get_block_count();
     }
-
-    DiagPrintf("write flash_addr = 0x%x\r\n", flash_addr);
+    uint32_t flash_addr = (block * flash_get_block_size()) + fatfs_start_address;
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     // Erase should be before write
     flash_erase_sector(&(flash_obj.obj), flash_addr); 
@@ -89,26 +85,22 @@ bool flash_write_block(const uint8_t *src, uint32_t block) {
 }
 
 mp_uint_t flash_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks) {
-    DiagPrintf("read dest = 0x%x, block_num = %d, num_blocks = %d\r\n", dest, block_num, num_blocks);
     for (size_t i = 0; i < num_blocks; i++) {
         if (!flash_read_block(dest + i * flash_get_block_size(), block_num + i)) {
-            DiagPrintf("read error\r\n");
+            DiagPrintf("block %d read error\r\n", block_num);
             return 1; // error
         }
     }
-    DiagPrintf("read success\r\n");
     return 0; // success
 }
 
 mp_uint_t flash_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks) {
-    DiagPrintf("write src = 0x%x, block_num = %d, num_blocks = %d\r\n", src, block_num, num_blocks);
     for (size_t i = 0; i < num_blocks; i++) {
         if (!flash_write_block(src + i * flash_get_block_size(), block_num + i)) {
-            DiagPrintf("write error\r\n");
+            DiagPrintf("block %d write error\r\n", block_num);
             return 1; // error
         }
     }
-    DiagPrintf("write success\r\n");
     return 0; // success
 }
 
@@ -124,7 +116,7 @@ STATIC mp_obj_t flash_readblocks(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf
     mp_uint_t ret;
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
-    ret = flash_read_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / FLASH_BLOCK_SIZE);
+    ret = flash_read_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / fatfs_block_size);
     return MP_OBJ_NEW_SMALL_INT(ret);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(flash_readblocks_obj, flash_readblocks);
@@ -133,7 +125,7 @@ STATIC mp_obj_t flash_writeblocks(mp_obj_t self, mp_obj_t block_num, mp_obj_t bu
     mp_uint_t ret;
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
-    ret = flash_write_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / FLASH_BLOCK_SIZE);
+    ret = flash_write_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / fatfs_block_size);
     return MP_OBJ_NEW_SMALL_INT(ret);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(flash_writeblocks_obj, flash_writeblocks);
