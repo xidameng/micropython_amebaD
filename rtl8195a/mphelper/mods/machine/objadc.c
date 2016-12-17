@@ -32,25 +32,29 @@
  * ***************************************************************************/
 
 /*****************************************************************************
+ *                              Inernal variables
+ * ***************************************************************************/
+STATIC const adc_obj_t adc_obj[3] = {{.base.type = &adc_type, .unit = 0, .pin = AD_1 },
+                                     {.base.type = &adc_type, .unit = 1, .pin = AD_2 },
+                                     {.base.type = &adc_type, .unit = 2, .pin = AD_3 }};
+
+/*****************************************************************************
  *                              Internal functions
  * ***************************************************************************/
-STATIC const adc_obj_t adc_obj[3] = {{.unit = 0, .pin = AD_1 },
-                                     {.unit = 1, .pin = AD_2 },
-                                     {.unit = 2, .pin = AD_3 }};
+STATIC uint16_t offset = 0;
+STATIC uint16_t gain = 0;
 
-STATIC mp_obj_t adc_read(mp_obj_t self_in) {
-    adc_obj_t *self = self_in;
-    uint16_t value = analogin_read_u16(&(self->obj));
-    return mp_obj_new_int(value);
+void adc_init0(void) {
+	sys_adc_calibration(0, &offset, &gain);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(adc_read_obj, adc_read);
 
 STATIC void adc_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     adc_obj_t *self = self_in;
     mp_printf(print, "ADC(%d)", self->unit);
 }
 
-STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
+STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args,
+        mp_uint_t n_kw, const mp_obj_t *all_args) {
     const mp_arg_t adc_init_args[] = {
         { MP_QSTR_id,                          MP_ARG_INT, {.u_int = 0} },
     };
@@ -61,20 +65,39 @@ STATIC mp_obj_t adc_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), adc_init_args, args);
 
     if ((args[0].u_int < 0) || (args[0].u_int > 2)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, mpexception_os_resource_not_avaliable));
+        mp_raise_ValueError(mpexception_os_resource_not_avaliable);
     }
     
     adc_obj_t *self = &adc_obj[args[0].u_int];
-    self->base.type = &adc_type;
 
     analogin_init(&(self->obj), self->pin);
 
     return self;
 }
 
+STATIC mp_obj_t adc_read(mp_obj_t self_in) {
+    adc_obj_t *self = self_in;
+    uint16_t value = analogin_read_u16(&(self->obj));
+    return mp_obj_new_int(value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(adc_read_obj, adc_read);
+
+STATIC mp_obj_t adc_ad2mv(mp_obj_t self_in, mp_obj_t ad_in) {
+    adc_obj_t *self = self_in;
+#if MICROPY_FLOAT_IMPL
+    uint16_t ad_value = mp_obj_get_int(ad_in);
+    return mp_obj_new_float(((ad_value / 16) - offset) * 1000 / gain);
+#else
+    mp_not_implemented("float not support");
+    return mp_const_none;
+#endif
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(adc_ad2mv_obj, adc_ad2mv);
+
 STATIC const mp_map_elem_t adc_locals_dict_table[] = {
     // instance methods
     { MP_OBJ_NEW_QSTR(MP_QSTR_read),       MP_OBJ_FROM_PTR(&adc_read_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ad2mv),      MP_OBJ_FROM_PTR(&adc_ad2mv_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(adc_locals_dict, adc_locals_dict_table);
 

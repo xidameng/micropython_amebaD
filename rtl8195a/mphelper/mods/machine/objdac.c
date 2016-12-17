@@ -29,7 +29,7 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-STATIC const dac_obj_t dac_obj = {.unit = 0, .resolution = 10};
+STATIC const dac_obj_t dac_obj = {.base.type = &dac_type, .unit = 0, .resolution = 10};
 
 /*****************************************************************************
  *                              Internal functions
@@ -68,7 +68,7 @@ STATIC mp_obj_t dac_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     }
 
     dac_obj_t *self = &dac_obj;
-    self->base.type = &dac_type;
+
     self->resolution = args[1].u_int;
 
     analogout_init(&(self->obj), DA_0);
@@ -77,7 +77,7 @@ STATIC mp_obj_t dac_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 }
 
 STATIC const mp_map_elem_t dac_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_write),    (mp_obj_t)&dac_write_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_write),    MP_OBJ_FROM_PTR(&dac_write_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(dac_locals_dict, dac_locals_dict_table);
 

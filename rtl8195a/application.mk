@@ -203,6 +203,7 @@ SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/wdt_api.c
 #peripheral - hal
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_32k.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_adc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_dac.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gdma.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gpio.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2c.c
@@ -221,6 +222,7 @@ SRC_C += $(VENDOR)/component/os/freertos/freertos_pmu.c
 
 #peripheral - rtl8195a
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_adc.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_dac.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gdma.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gpio.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2c.c
@@ -335,6 +337,7 @@ DRAM_C += mphelper/mods/machine/objflash.c
 DRAM_C += mphelper/mods/machine/objwdt.c
 DRAM_C += mphelper/mods/machine/objrtc.c
 DRAM_C += mphelper/mods/machine/objadc.c
+DRAM_C += mphelper/mods/machine/objdac.c
 DRAM_C += mphelper/mods/machine/objcrypto.c
 
 DRAM_C += mphelper/mods/wireless/objwlan.c

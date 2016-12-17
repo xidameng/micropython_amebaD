@@ -36,9 +36,10 @@
 #include "machine/objuart.h"
 #include "machine/objspi.h"
 #include "machine/objpwm.h"
-#include "machine/objdac.h"
+
 #endif
 #include "machine/objsdio_host.h"
+#include "machine/objdac.h"
 #include "machine/objflash.h"
 #include "machine/objloguart.h"
 #include "machine/objwdt.h"
@@ -58,6 +59,7 @@ void modmachine_init(void) {
     crypto_init0();
     rtc_init0();
     loguart_init0();
+    adc_init0();
 }
 
 STATIC mp_obj_t machine_reset(void) {
@@ -72,6 +74,7 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
 #if MP_RTL8195A
     { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO_HOST),     MP_OBJ_FROM_PTR(&sdio_host_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
 #endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
@@ -82,7 +85,6 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
 #endif
 
 #if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           (mp_obj_t)&pin_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
