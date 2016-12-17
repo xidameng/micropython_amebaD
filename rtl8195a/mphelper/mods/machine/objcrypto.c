@@ -39,7 +39,7 @@ STATIC crypto_obj_t crypto_obj = {
 void crypto_init0(void) {
     const char *error_str = "Crypto engine init failed\r\n";
     if (rtl_cryptoEngine_init() != 0)
-        mp_hal_stdout_tx_strn_cooked(error_str, strlen(error_str));
+        mp_printf(&mp_plat_print, "Crypto engine init failed\r\n");
 }
 
 STATIC void crypto_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {

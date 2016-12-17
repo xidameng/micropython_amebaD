@@ -29,11 +29,12 @@
 #include "py/mpconfig.h"
 #include "py/runtime.h"
 #include "py/stream.h"
+#include "lib/utils/interrupt_char.h"
 
 // mbed lib headers
 #include "log_uart_api.h"
 
-#define LOG_UART_DEFAULT_BAUDRATE       (115200)
+#define LOG_UART_DEFAULT_BAUDRATE       (38400)
 #define LOG_UART_DEFAULT_DATA_BITS      (8)
 #define LOG_UART_DEFAULT_PARITY         (0)
 #define LOG_UART_DEFAULT_STOP_BITS      (1)
@@ -55,11 +56,13 @@ typedef struct {
 } UartLane;
 
 typedef struct {
-    mp_obj_base_t    base;
-    log_uart_t       obj;
-    UartParams       params;
-    UartLane         tx;
-    UartLane         rx;
+    mp_obj_base_t   base;
+    log_uart_t      obj;
+    UartParams      params;
+    UartLane        tx;
+    UartLane        rx;
+    bool            irq_enabled;
+    mp_obj_t        irq_handler;
 } log_uart_obj_t;
 
 #endif /* OBJLOGUART_H_ */

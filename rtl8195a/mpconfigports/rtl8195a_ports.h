@@ -4,7 +4,7 @@
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
 #define MICROPY_COMP_MODULE_CONST               (0)
 #define MICROPY_COMP_CONST                      (0)
-#define MICROPY_REPL_EVENT_DRIVEN               (0)
+#define MICROPY_REPL_EVENT_DRIVEN               (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
 #define MICROPY_CPYTHON_COMPAT                  (1)
@@ -37,6 +37,8 @@
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_IO                           (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
+#define MICROPY_PY_UCTYPES                      (1)
+#define MICROPY_PY_UHEAPQ                       (1)
 #define MICROPY_PY_UJSON                        (1)
 #define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
@@ -45,8 +47,8 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_THREAD                       (1)
-#define MICROPY_PY_THREAD_GIL                   (1)
+#define MICROPY_PY_THREAD                       (0)
+#define MICROPY_PY_THREAD_GIL                   (0)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 #define MICROPY_MODULE_FROZEN_STR               (1)
@@ -87,7 +89,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uterm),        MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
@@ -102,7 +104,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
-#define MICROPY_TASK_PRIORITY               (2)
+#define MICROPY_TASK_PRIORITY               (configMAX_PRIORITIES - 1)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (1 * 1024) + 0
@@ -111,7 +113,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \
     vstr_t *repl_line;                      \
-    mp_obj_list_t term_list_obj;            \
-    mp_obj_list_t netif_list_obj;           \
+    mp_obj_list_t  term_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
+    mp_obj_list_t netif_list_obj;           \
     mp_obj_t mp_kbd_exception;              \

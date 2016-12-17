@@ -40,17 +40,10 @@
 
 #include <stdio.h>
 #include "osdep_api.h"
-#include "device.h"
 
 int mp_hal_stdin_rx_chr(void) {
-    for (;;) {
-        int c = mp_term_rx_chr();
-        if (c > 0) {
-            return c;
-        }
-        // Delay for a while to prevent from hungry task
-        mp_hal_delay_us(100);
-    }
+    return  mp_term_rx_chr();
+
 }
 
 void mp_hal_stdout_tx_chr(char c) {
