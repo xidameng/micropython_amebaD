@@ -47,7 +47,7 @@
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-SECTION(".sdram.bss") uint8_t mpHeap[512 * 1024];      // MicroPython core' heap 
+SECTION(".sdram.bss") uint8_t mpHeap[1024 * 1024];      // MicroPython core' heap 
 
 void micropython_task(void const *arg) {
 // get the top of the stack to initialize the garbage collector

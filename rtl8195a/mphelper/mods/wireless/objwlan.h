@@ -26,7 +26,9 @@
 #ifndef OBJWLAN_H_
 #define OBJWLAN_H_
 
+#include "py/mpconfig.h"
 #include "py/runtime.h"
+#include "py/stream.h"
 #include "wifi_conf.h"
 #include "wireless.h"
 #include "modnetwork.h"
@@ -42,8 +44,6 @@
 
 #define WLAN_WPA_MIN_PASS_CHAR_LEN  8
 #define WLAN_WPA_MAC_PASS_CHAR_LEN  63
-
-#define WLAN_MAX_SCAN_NETWORKS  50
 
 extern const mp_obj_type_t wlan_type;
 extern struct netif xnetif[NET_IF_NUM];

@@ -87,7 +87,7 @@ STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind
 bool dhcp_request_func(uint8_t id, u_int timeout) {
     int8_t  err      = ERR_MEM;
     uint8_t counter  = 0;
-    wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
+    //wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
     xnetif[id].ip_addr.addr = 0;
     xnetif[id].netmask.addr = 0;
     xnetif[id].gw.addr      = 0;
@@ -98,7 +98,7 @@ bool dhcp_request_func(uint8_t id, u_int timeout) {
     }
     while(timeout) {
         if (xnetif[id].ip_addr.addr != 0) {
-            wifi_reg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl, NULL);
+            //wifi_reg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl, NULL);
 
             dhcp_stop(&xnetif[id]);
             return true;
