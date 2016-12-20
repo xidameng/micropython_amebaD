@@ -45,6 +45,8 @@ const PinMap PinMap_UART_TX[] = {
     AF(PA_4, UART, 2, S0),
     AF(PC_9, UART, 2, S1),
     AF(PD_7, UART, 2, S2),
+
+    {NC,    NC,     0}
 };
 
 const PinMap PinMap_UART_RX[] = {
@@ -59,6 +61,8 @@ const PinMap PinMap_UART_RX[] = {
     AF(PA_0, UART, 2, S0),
     AF(PC_6, UART, 2, S1),
     AF(PD_4, UART, 2, S2),
+
+    {NC,    NC,     0}
 };
 
 
@@ -80,6 +84,8 @@ const PinMap PinMap_I2C_SDA[] = {
     AF(PE_3, I2C, 3, S1),
     AF(PE_5, I2C, 3, S2),
     AF(PD_9, I2C, 3, S3),
+
+    {NC,    NC,     0}
 };
 
 const PinMap PinMap_I2C_SCL[] = {
@@ -100,6 +106,8 @@ const PinMap PinMap_I2C_SCL[] = {
     AF(PE_2, I2C, 3, S1),
     AF(PE_4, I2C, 3, S2),
     AF(PD_8, I2C, 3, S3),
+
+    {NC,    NC,     0}
 };
 
 const PinMap PinMap_SPI_MOSI[] = {
@@ -113,6 +121,8 @@ const PinMap PinMap_SPI_MOSI[] = {
     AF(PG_2, SPI, 2, S0),
     AF(PE_6, SPI, 2, S1),
     AF(PD_2, SPI, 2, S2),
+
+    {NC,    NC,     0}
 };
 
 const PinMap PinMap_SPI_MISO[] = {
@@ -126,6 +136,8 @@ const PinMap PinMap_SPI_MISO[] = {
     AF(PG_3, SPI, 2, S0),
     AF(PE_7, SPI, 2, S1),
     AF(PD_3, SPI, 2, S2),
+
+    {NC,    NC,     0}
 };
 
 #define PIN(p_pin_name, p_pull, p_dir, p_value) \

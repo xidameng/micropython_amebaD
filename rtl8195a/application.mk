@@ -180,7 +180,10 @@ SRC_C += $(VENDOR)/component/common/drivers/ethernet_mii/ethernet_mii.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/flash_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/gpio_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/gpio_irq_api.c
-SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/i2c_api.c
+
+# i2c_api.c is a special file that it has so many bss, so put it in SDRAM
+DRAM_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/i2c_api.c
+
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/i2s_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/log_uart_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/nfc_api.c
@@ -206,7 +209,10 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_adc.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_dac.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gdma.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_gpio.c
-SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2c.c
+
+# hal_i2c.c is a special file that it has so many bss, so put it in SDRAM
+DRAM_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2c.c
+
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_i2s.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_mii.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_nfc.c
@@ -225,7 +231,10 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_adc.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_dac.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gdma.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gpio.c
-SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2c.c
+
+# rtl8195a_i2c.c is a special file that it has so many bss, so put it in SDRAM
+DRAM_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2c.c
+
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2s.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_mii.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_nfc.c
@@ -316,7 +325,7 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 
 # put micropython source to sdram section
 DRAM_C += pins.c
-DRAM_C += mphelper/bufhelper.c
+#DRAM_C += mphelper/bufhelper.c
 DRAM_C += mphelper/diskio.c
 DRAM_C += mphelper/exception.c
 DRAM_C += mphelper/help.c
@@ -340,6 +349,7 @@ DRAM_C += mphelper/mods/machine/objrtc.c
 DRAM_C += mphelper/mods/machine/objadc.c
 DRAM_C += mphelper/mods/machine/objdac.c
 DRAM_C += mphelper/mods/machine/objpin.c
+DRAM_C += mphelper/mods/machine/obji2c.c
 DRAM_C += mphelper/mods/machine/objcrypto.c
 
 DRAM_C += mphelper/mods/wireless/objwlan.c
