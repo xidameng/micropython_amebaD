@@ -39,7 +39,7 @@
 #define SIGNED_FIT24(x) (((x) & 0xff800000) == 0) || (((x) & 0xff000000) == 0xff000000)
 
 void asm_arm_end_pass(asm_arm_t *as) {
-    if (as->pass == ASM_ARM_PASS_EMIT) {
+    if (as->base.pass == ASM_ARM_PASS_EMIT) {
 #ifdef __arm__
         // flush I- and D-cache
         asm volatile(
@@ -55,7 +55,10 @@ void asm_arm_end_pass(asm_arm_t *as) {
 
 // Insert word into instruction flow
 STATIC void emit(asm_arm_t *as, uint op) {
-    *(uint*)asm_arm_get_cur_to_write_bytes(as, 4) = op;
+    uint8_t *c = mp_asm_base_get_cur_to_write_bytes(&as->base, 4);
+    if (c != NULL) {
+        *(uint32_t*)c = op;
+    }
 }
 
 // Insert word into instruction flow, add "ALWAYS" condition code
@@ -330,9 +333,9 @@ void asm_arm_strb_reg_reg_reg(asm_arm_t *as, uint rd, uint rm, uint rn) {
 }
 
 void asm_arm_bcc_label(asm_arm_t *as, int cond, uint label) {
-    assert(label < as->max_num_labels);
-    mp_uint_t dest = as->label_offsets[label];
-    mp_int_t rel = dest - as->code_offset;
+    assert(label < as->base.max_num_labels);
+    mp_uint_t dest = as->base.label_offsets[label];
+    mp_int_t rel = dest - as->base.code_offset;
     rel -= 8; // account for instruction prefetch, PC is 8 bytes ahead of this instruction
     rel >>= 2; // in ARM mode the branch target is 32-bit aligned, so the 2 LSB are omitted
 

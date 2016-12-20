@@ -40,9 +40,6 @@ typedef struct _mp_asm_base_t {
 
     size_t max_num_labels;
     size_t *label_offsets;
-
-    // must be last in struct
-    uint8_t dummy_data[4];
 } mp_asm_base_t;
 
 void mp_asm_base_init(mp_asm_base_t *as, size_t max_num_labels);
@@ -62,7 +59,11 @@ static inline size_t mp_asm_base_get_code_size(mp_asm_base_t *as) {
 }
 
 static inline void *mp_asm_base_get_code(mp_asm_base_t *as) {
+    #if defined(MP_PLAT_COMMIT_EXEC)
+    return MP_PLAT_COMMIT_EXEC(as->code_base, as->code_size);
+    #else
     return as->code_base;
+    #endif
 }
 
 #endif // MICROPY_INCLUDED_PY_ASMBASE_H

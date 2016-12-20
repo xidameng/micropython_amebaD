@@ -1,5 +1,10 @@
 #include <mpconfigport.h>
 
+#undef MICROPY_EMIT_XTENSA
+#define MICROPY_EMIT_XTENSA             (0)
+#undef MICROPY_EMIT_INLINE_XTENSA
+#define MICROPY_EMIT_INLINE_XTENSA      (0)
+
 #undef MICROPY_FSUSERMOUNT
 #define MICROPY_FSUSERMOUNT             (0)
 #undef MICROPY_VFS_FAT

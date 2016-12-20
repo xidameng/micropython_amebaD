@@ -101,29 +101,37 @@
 #define SIGNED_FIT8(x) (((x) & 0xffffff80) == 0) || (((x) & 0xffffff80) == 0xffffff80)
 
 STATIC void asm_x86_write_byte_1(asm_x86_t *as, byte b1) {
-    byte* c = asm_x86_get_cur_to_write_bytes(as, 1);
-    c[0] = b1;
+    byte* c = mp_asm_base_get_cur_to_write_bytes(&as->base, 1);
+    if (c != NULL) {
+        c[0] = b1;
+    }
 }
 
 STATIC void asm_x86_write_byte_2(asm_x86_t *as, byte b1, byte b2) {
-    byte* c = asm_x86_get_cur_to_write_bytes(as, 2);
-    c[0] = b1;
-    c[1] = b2;
+    byte* c = mp_asm_base_get_cur_to_write_bytes(&as->base, 2);
+    if (c != NULL) {
+        c[0] = b1;
+        c[1] = b2;
+    }
 }
 
 STATIC void asm_x86_write_byte_3(asm_x86_t *as, byte b1, byte b2, byte b3) {
-    byte* c = asm_x86_get_cur_to_write_bytes(as, 3);
-    c[0] = b1;
-    c[1] = b2;
-    c[2] = b3;
+    byte* c = mp_asm_base_get_cur_to_write_bytes(&as->base, 3);
+    if (c != NULL) {
+        c[0] = b1;
+        c[1] = b2;
+        c[2] = b3;
+    }
 }
 
 STATIC void asm_x86_write_word32(asm_x86_t *as, int w32) {
-    byte* c = asm_x86_get_cur_to_write_bytes(as, 4);
-    c[0] = IMM32_L0(w32);
-    c[1] = IMM32_L1(w32);
-    c[2] = IMM32_L2(w32);
-    c[3] = IMM32_L3(w32);
+    byte* c = mp_asm_base_get_cur_to_write_bytes(&as->base, 4);
+    if (c != NULL) {
+        c[0] = IMM32_L0(w32);
+        c[1] = IMM32_L1(w32);
+        c[2] = IMM32_L2(w32);
+        c[3] = IMM32_L3(w32);
+    }
 }
 
 STATIC void asm_x86_write_r32_disp(asm_x86_t *as, int r32, int disp_r32, int disp_offset) {
@@ -224,7 +232,7 @@ void asm_x86_mov_i32_to_r32(asm_x86_t *as, int32_t src_i32, int dest_r32) {
 // src_i32 is stored as a full word in the code, and aligned to machine-word boundary
 void asm_x86_mov_i32_to_r32_aligned(asm_x86_t *as, int32_t src_i32, int dest_r32) {
     // mov instruction uses 1 byte for the instruction, before the i32
-    while (((as->code_offset + 1) & (WORD_SIZE - 1)) != 0) {
+    while (((as->base.code_offset + 1) & (WORD_SIZE - 1)) != 0) {
         asm_x86_nop(as);
     }
     asm_x86_mov_i32_to_r32(as, src_i32, dest_r32);
@@ -331,13 +339,13 @@ void asm_x86_setcc_r8(asm_x86_t *as, mp_uint_t jcc_type, int dest_r8) {
 }
 
 STATIC mp_uint_t get_label_dest(asm_x86_t *as, mp_uint_t label) {
-    assert(label < as->max_num_labels);
-    return as->label_offsets[label];
+    assert(label < as->base.max_num_labels);
+    return as->base.label_offsets[label];
 }
 
 void asm_x86_jmp_label(asm_x86_t *as, mp_uint_t label) {
     mp_uint_t dest = get_label_dest(as, label);
-    mp_int_t rel = dest - as->code_offset;
+    mp_int_t rel = dest - as->base.code_offset;
     if (dest != (mp_uint_t)-1 && rel < 0) {
         // is a backwards jump, so we know the size of the jump on the first pass
         // calculate rel assuming 8 bit relative jump
@@ -359,7 +367,7 @@ void asm_x86_jmp_label(asm_x86_t *as, mp_uint_t label) {
 
 void asm_x86_jcc_label(asm_x86_t *as, mp_uint_t jcc_type, mp_uint_t label) {
     mp_uint_t dest = get_label_dest(as, label);
-    mp_int_t rel = dest - as->code_offset;
+    mp_int_t rel = dest - as->base.code_offset;
     if (dest != (mp_uint_t)-1 && rel < 0) {
         // is a backwards jump, so we know the size of the jump on the first pass
         // calculate rel assuming 8 bit relative jump
@@ -491,7 +499,7 @@ void asm_x86_call_ind(asm_x86_t *as, void *ptr, mp_uint_t n_args, int temp_r32) 
     // this reduces code size by 2 bytes per call, but doesn't seem to speed it up at all
     /*
     asm_x86_write_byte_1(as, OPCODE_CALL_REL32);
-    asm_x86_write_word32(as, ptr - (void*)(as->code_base + as->code_offset + 4));
+    asm_x86_write_word32(as, ptr - (void*)(as->code_base + as->base.code_offset + 4));
     */
 
     // the caller must clean up the stack
