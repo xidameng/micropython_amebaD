@@ -165,13 +165,13 @@ STATIC mp_obj_t log_uart_irq_enable(mp_uint_t n_args, const mp_obj_t *args) {
     log_uart_obj_t *self = args[0];
     if (n_args == 1) {
         // get the value
-        return MP_OBJ_NEW_SMALL_INT(self->irq_enabled);
+        return self->irq_enabled ? mp_const_true:mp_const_false;
     } else {
         // set the pin value
         if (mp_obj_is_true(args[1])) {
-            self->irq_enabled = 1;
+            self->irq_enabled = true;
         } else {
-            self->irq_enabled = 0;
+            self->irq_enabled = false;
         }
         log_uart_irq_set(&(self->obj), IIR_RX_RDY, self->irq_enabled);
         return mp_const_none;

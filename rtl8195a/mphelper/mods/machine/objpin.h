@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,8 +26,11 @@
 #ifndef OBJPIN_H_
 #define OBJPIN_H_
 
+#include "py/obj.h"
+
 #include "gpio_api.h"
-#include "gpio_irq_api.h"
+#include "PinNames.h"
+#include "pinmap.h"
 
 extern const mp_obj_type_t pin_type;
 extern const mp_obj_dict_t pin_board_pins_locals_dict;
@@ -42,6 +43,7 @@ enum {
     PIN_FN_PCM,
     PIN_FN_ADC,
     PIN_FN_DAC,
+    PIN_FN_PINIRQ,
 };
 
 enum {
@@ -81,29 +83,14 @@ enum {
 };
 
 typedef struct {
-  qstr name;
-  int8_t  idx;
-  uint8_t fn;
-  uint8_t unit;
-  uint8_t type;
-} pin_af_t;
-
-typedef struct {
     const mp_obj_base_t base;
     const qstr          name;
     gpio_t              obj;
-    gpio_irq_t          irq_obj;
     uint8_t             id;
-    uint16_t            port;
     uint16_t            pull;
-    const uint8_t       pin_num;
-    const pin_af_t      *af_list;
-    const uint8_t       num_afs;
     uint8_t             dir;         
     uint8_t             value;
-    uint8_t             irq_registered;
-    uint8_t             irq_masked;
-    mp_obj_t            isr_handler;
+    const PinMap        *af;
 } pin_obj_t;
 
 typedef struct {

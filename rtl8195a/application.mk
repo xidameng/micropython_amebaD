@@ -315,6 +315,7 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 
 # put micropython source to sdram section
+DRAM_C += pins.c
 DRAM_C += mphelper/bufhelper.c
 DRAM_C += mphelper/diskio.c
 DRAM_C += mphelper/exception.c
@@ -338,6 +339,7 @@ DRAM_C += mphelper/mods/machine/objwdt.c
 DRAM_C += mphelper/mods/machine/objrtc.c
 DRAM_C += mphelper/mods/machine/objadc.c
 DRAM_C += mphelper/mods/machine/objdac.c
+DRAM_C += mphelper/mods/machine/objpin.c
 DRAM_C += mphelper/mods/machine/objcrypto.c
 
 DRAM_C += mphelper/mods/wireless/objwlan.c
