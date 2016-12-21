@@ -50,6 +50,7 @@
 
 // mbed lib headers
 #include "sys_api.h"
+#include "sleep_ex_api.h"
 
 /*****************************************************************************
  *                              External variables
@@ -69,9 +70,17 @@ STATIC mp_obj_t machine_reset(void) {
 }
 MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
+STATIC mp_obj_t machine_deepsleep(mp_obj_t duration_in) {
+    uint32_t duration = mp_obj_get_int(duration_in);
+    deepsleep_ex(DSLEEP_WAKEUP_BY_TIMER, duration);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(machine_deepsleep_obj, machine_deepsleep);
+
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
 #if MP_RTL8195A
     { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO_HOST),     MP_OBJ_FROM_PTR(&sdio_host_type) },
@@ -88,7 +97,6 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
 #endif
 
 #if 0
-
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          (mp_obj_t)&uart_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           (mp_obj_t)&spi_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
