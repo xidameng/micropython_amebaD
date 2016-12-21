@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Daniel Campora
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,95 +34,52 @@
 
 #include "bufhelper.h"
 #include "objuart.h"
-#include "rtc_api.h"
 
-extern ringbuf_t input_buf;
-extern int interrupt_char;
+STATIC uart_obj_t uart_obj[3] = {
+    {.base.type = &uart_type, .unit = 0, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
+    {.base.type = &uart_type, .unit = 1, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
+    {.base.type = &uart_type, .unit = 2, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
+};
 
-void term_irq(uart_obj_t *self, SerialIrq event) {
-    serial_t *sobj = &(self->obj);
-    int c = serial_getc(sobj);
-    if (c == interrupt_char) {
-        mp_keyboard_interrupt();
-    } else {
-        ringbuf_put(&input_buf, c);
-    }
-}
+void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
+    /*
+     * At least read one char from register to prevent from interrupt pending
+     */
+    if (event == RxIrq) {
 
-void uart_rx_irq_handler(uart_obj_t *self, SerialIrq event) {
-    if (self->isr_handler != mp_const_none) {
-        gc_lock();
-        nlr_buf_t nlr;
-        if (nlr_push(&nlr) == 0) {
-            mp_call_function_1(self->isr_handler, self->unit);
-            nlr_pop();
-        } else {
-            mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
-        }
-        gc_unlock();
-    }
-}
-
-bool uart_rx_wait(uint32_t timeout_us) {
-    mp_uint_t start = xTaskGetTickCount();
-    for (;;) {
-        if (input_buf.iget != input_buf.iput) {
-            return true;
-        }
-        if (xTaskGetTickCount() - start >= timeout_us) {
-            return false;
+        char chr = serial_getc(&(self->obj));
+       
+        if (self->irq_handler != mp_const_none) {
+        /*
+        * Don't lock gc (gc_lock) here because we need to create a new queue for mallo, if locked
+        * gc_alloc would be wrong
+        */
+            nlr_buf_t nlr;
+            if (nlr_push(&nlr) == 0) {
+                mp_call_function_2(self->irq_handler, MP_OBJ_FROM_PTR(self), 
+                        mp_obj_new_bytes(&chr, 1));
+                nlr_pop();
+            } else {
+                self->irq_handler = mp_const_none;
+                mp_printf(&mp_plat_print, "Uncaught exception in callback handler");
+                if (nlr.ret_val != MP_OBJ_NULL)
+                    mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
+            }
         }
     }
-}
-
-STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
-    uart_obj_t *self = self_in;
-
-    if (size == 0) {
-        return 0;
-    }
-
-    // wait for first char to become available
-    if (!uart_rx_wait(self->timeout * 1000)) {
-        *errcode = MP_EAGAIN;
-        return MP_STREAM_ERROR;
-    }
-
-    uint8_t *buf = buf_in;
-
-    for (;;) {
-        *buf++ = ringbuf_get(&input_buf);       
-        if (--size == 0 || !uart_rx_wait(self->timeout_char * 1000)) {
-            return buf - (uint8_t *)buf_in;
-        }
-    }
-}
-
-STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
-    uart_obj_t *self = self_in;
-    const uint8_t *buf = buf_in;
-
-    for (size_t i=0; i<size; i++) {
-        serial_putc(&(self->obj), buf[i]);
-    }
-
-    return size;
 }
 
 STATIC void uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     uart_obj_t *self = self_in;
-    mp_printf(print, "UART(%d, baudrate=%u, bits=%d, stop=%d, parity=%d, TX=%q, Rx=%q)", self->unit, \
-            self->baudrate, self->bits, self->stop, self->parity, self->tx->name, self->rx->name);
+    mp_printf(print, "UART(%d, baudrate=%u, bits=%d, stop=%d, parity=%d, TX=%q, Rx=%q)",
+            self->unit, self->baudrate, self->bits, self->stop, self->parity,
+            self->tx->name, self->rx->name);
 }
 
 STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
-
-    // TODO: alloc a new tulpe ???
     // TODO: CTS/RTS pin and flow control needed!
-    mp_obj_t tuple[2];
-    tuple[0] = &pin_PA_7;
-    tuple[1] = &pin_PA_6;
-
+    enum {ARG_unit, ARG_baudrate, ARG_bits, ARG_stop, 
+        ARG_parity, ARG_timeout, ARG_tx, ARG_rx};
     const mp_arg_t uart_init_args[] = {
         { MP_QSTR_unit,                          MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_baudrate,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_BAUD_RATE} },
@@ -132,8 +87,8 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         { MP_QSTR_stop,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
         { MP_QSTR_parity,       MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ParityNone} },
         { MP_QSTR_timeout,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_timeout_char, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_pins,         MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_obj_new_tuple(2, tuple)} },
+        { MP_QSTR_tx,           MP_ARG_REQUIRED | MP_ARG_OBJ },
+        { MP_QSTR_rx,           MP_ARG_REQUIRED | MP_ARG_OBJ },
     };
     // parse args
     mp_map_t kw_args;
@@ -141,29 +96,24 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     mp_arg_val_t args[MP_ARRAY_SIZE(uart_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), uart_init_args, args);
 
-    mp_obj_t *pins;
+    pin_obj_t *tx = pin_find(args[ARG_tx].u_obj);
+    pin_obj_t *rx = pin_find(args[ARG_rx].u_obj);
 
-    mp_obj_get_array_fixed_n(args[7].u_obj, 2, &pins);
+    PinName pn_tx = (PinName)pinmap_peripheral(tx->id, PinMap_UART_TX);
+    PinName pn_rx = (PinName)pinmap_peripheral(tx->id, PinMap_UART_RX);
 
-    pin_obj_t *tx = pin_find(pins[0]);
-    pin_obj_t *rx = pin_find(pins[1]);
+    if (pn_tx == NC)
+        mp_raise_ValueError("UART TX pin not match");
 
-    if (pin_obj_find_af(tx, PIN_FN_UART, args[0].u_int, PIN_TYPE_UART_TX) < 0) 
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid TX pin"));
+    if (pn_rx == NC)
+        mp_raise_ValueError("UART RX pin not mathc");
 
-    if (pin_obj_find_af(rx, PIN_FN_UART, args[0].u_int, PIN_TYPE_UART_RX) < 0) 
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid RX pin"));
-
-    uart_obj_t *self    = m_new_obj(uart_obj_t);
-    self->base.type     = &uart_type;
-    self->unit          = args[0].u_int;
-    self->is_inited     = false;
-    self->baudrate      = MIN(MAX(args[1].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
-    self->bits          = args[2].u_int;
-    self->stop          = args[3].u_int;
-    self->parity        = args[4].u_int;
-    self->timeout       = args[5].u_int;
-    self->timeout_char  = args[6].u_int;
+    uart_obj_t *self    = &uart_obj[args[ARG_unit].u_int];
+    self->baudrate      = MIN(MAX(args[ARG_baudrate].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
+    self->bits          = args[ARG_bits].u_int;
+    self->stop          = args[ARG_stop].u_int;
+    self->parity        = args[ARG_parity].u_int;
+    self->timeout       = args[ARG_timeout].u_int;
     self->tx            = tx;
     self->rx            = rx;
 
@@ -172,72 +122,108 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
 
 STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    if (self->is_inited ==  true) 
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "UART object has init"));
     serial_init(&(self->obj), self->tx->id, self->rx->id);
     serial_baud(&(self->obj), self->baudrate);
     serial_format(&(self->obj), self->bits, self->parity, self->stop);
-    self->is_inited = true;
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_init_obj, uart_init0);
 
 STATIC mp_obj_t uart_deinit0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    if (self->is_inited == false)
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "UART object has not init"));
     serial_free(&(self->obj));
-    self->is_inited = false;
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_deinit_obj, uart_deinit0);
 
-STATIC mp_obj_t uart_dupterm_notify(mp_obj_t self_in, mp_obj_t enable_in) {
-    uart_obj_t *self = self_in;
-    bool enable = mp_obj_is_true(enable_in);
-    serial_irq_handler(&(self->obj), term_irq, (uint32_t)&(self->obj));
-    serial_irq_set(&(self->obj), RxIrq, enable);
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_dupterm_notify_obj, uart_dupterm_notify);
-
-STATIC mp_obj_t uart_callback(mp_obj_t self_in, mp_obj_t func_in) {
-    uart_obj_t *self = self_in;
-    if (func_in == mp_const_none) {
-        serial_irq_handler(&(self->obj), NULL, (uint32_t)&(self->obj));
-        serial_irq_set(&(self->obj), RxIrq, false);
+STATIC mp_obj_t uart_irq_enable(mp_uint_t n_args, const mp_obj_t *args) {
+    uart_obj_t *self = args[0];
+    if (n_args == 1) {
+        // get the value
+        return self->irq_enabled ? mp_const_true:mp_const_false;
     } else {
-        serial_irq_handler(&(self->obj), uart_rx_irq_handler, (uint32_t)&(self->obj));
-        serial_irq_set(&(self->obj), RxIrq, true);
+        // set the pin value
+        if (mp_obj_is_true(args[1])) {
+            self->irq_enabled = true;
+        } else {
+            self->irq_enabled = false;
+        }
+        serial_irq_set(&(self->obj), RxIrq, self->irq_enabled);
+        return mp_const_none;
     }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(uart_irq_enable_obj, 1, 2, uart_irq_enable);
+
+STATIC mp_obj_t uart_irq_handler0(mp_obj_t self_in, mp_obj_t func_in) {
+    uart_obj_t *self = self_in;
+
+    if (!MP_OBJ_IS_FUN(func_in) && (func_in != mp_const_none)) {
+        mp_raise_ValueError("Error function type");
+    }
+
+    self->irq_handler = func_in;
+    serial_irq_handler(&(self->obj), mp_obj_uart_irq_handler, self);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_callback_obj, uart_callback);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_irq_handler_obj, uart_irq_handler0);
 
 STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     // instance methods
-    { MP_OBJ_NEW_QSTR(MP_QSTR_init),            (mp_obj_t)&uart_init_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),          (mp_obj_t)&uart_deinit_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_write),           (mp_obj_t)&mp_stream_write_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read),            (mp_obj_t)&mp_stream_read_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readline),        (mp_obj_t)(&mp_stream_unbuffered_readline_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),        (mp_obj_t)(&mp_stream_readinto_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dupterm_notify),  (mp_obj_t)(&uart_dupterm_notify_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_callback),        (mp_obj_t)(&uart_callback_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_init),        MP_OBJ_FROM_PTR(&uart_init_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),      MP_OBJ_FROM_PTR(&uart_deinit_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),        MP_OBJ_FROM_PTR(&mp_stream_read_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readline),    MP_OBJ_FROM_PTR((&mp_stream_unbuffered_readline_obj)) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),    MP_OBJ_FROM_PTR((&mp_stream_readinto_obj)) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_write),       MP_OBJ_FROM_PTR(&mp_stream_write_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_irq_enable),  MP_OBJ_FROM_PTR((&uart_irq_enable_obj)) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_irq_handler), MP_OBJ_FROM_PTR((&uart_irq_handler_obj)) },
 
     // class constants
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityNone),      MP_OBJ_NEW_SMALL_INT(ParityNone) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityOdd),       MP_OBJ_NEW_SMALL_INT(ParityOdd) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityEven),      MP_OBJ_NEW_SMALL_INT(ParityEven) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced1),   MP_OBJ_NEW_SMALL_INT(ParityForced1) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced0),   MP_OBJ_NEW_SMALL_INT(ParityForced0) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlNone),     MP_OBJ_NEW_SMALL_INT(FlowControlNone) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTS),      MP_OBJ_NEW_SMALL_INT(FlowControlRTS) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlCTS),      MP_OBJ_NEW_SMALL_INT(FlowControlCTS) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTSCTS),   MP_OBJ_NEW_SMALL_INT(FlowControlRTSCTS) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityNone),    MP_OBJ_NEW_SMALL_INT(ParityNone) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityOdd),     MP_OBJ_NEW_SMALL_INT(ParityOdd) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityEven),    MP_OBJ_NEW_SMALL_INT(ParityEven) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced1), MP_OBJ_NEW_SMALL_INT(ParityForced1) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced0), MP_OBJ_NEW_SMALL_INT(ParityForced0) },
+#if 0 // Not support yes
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlNone),   MP_OBJ_NEW_SMALL_INT(FlowControlNone) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTS),    MP_OBJ_NEW_SMALL_INT(FlowControlRTS) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlCTS),    MP_OBJ_NEW_SMALL_INT(FlowControlCTS) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTSCTS), MP_OBJ_NEW_SMALL_INT(FlowControlRTSCTS) },
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(uart_locals_dict, uart_locals_dict_table);
+
+STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+    uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
+    // Direct return 0 when size = 0, to save the time
+    if (size == 0) {
+        return 0;
+    }
+
+    // Here we use the blocking mode with timeout to receive the RX bytes
+    int32_t ret = serial_recv_blocked(&(self->obj), buf_in, size, self->timeout);
+
+    if (ret < 0) {
+        *errcode = MP_EAGAIN;
+        return MP_STREAM_ERROR;
+    } else {
+        return ret;
+    }
+}
+
+STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
+    uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
+    int32_t ret = serial_send_blocked(&(self->obj), buf_in, size, self->timeout);
+
+    if (ret < 0) {
+        *errcode = MP_EAGAIN;
+        return MP_STREAM_ERROR;
+    } else {
+        return ret;
+    }
+}
 
 STATIC const mp_stream_p_t uart_stream_p = {
     .read    = uart_recv,
@@ -253,5 +239,5 @@ const mp_obj_type_t uart_type = {
     .getiter     = mp_identity,
     .iternext    = mp_stream_unbuffered_iter,
     .protocol    = &uart_stream_p,
-    .locals_dict = (mp_obj_t)&uart_locals_dict,
+    .locals_dict = (mp_obj_dict_t *)&uart_locals_dict,
 };

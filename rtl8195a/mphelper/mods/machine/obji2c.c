@@ -57,10 +57,10 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     PinName pn_scl = (PinName)pinmap_peripheral(scl->id, PinMap_I2C_SCL);
 
     if (pn_sda == NC)
-        mp_raise_ValueError("UART SDA pin not match");
+        mp_raise_ValueError("I2C SDA pin not match");
 
     if (pn_scl == NC)
-        mp_raise_ValueError("UART SCL pin not match");
+        mp_raise_ValueError("I2C SCL pin not match");
     
     i2c_obj_t *self = &i2c_obj[args[ARG_unit].u_int];
     self->mode      = args[ARG_mode].u_int;
