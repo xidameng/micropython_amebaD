@@ -169,7 +169,7 @@ SRC_C += $(VENDOR)/component/os/freertos/freertos_service.c
 SRC_C += $(VENDOR)/component/os/os_dep/mailbox.c
 SRC_C += $(VENDOR)/component/os/os_dep/osdep_api.c
 SRC_C += $(VENDOR)/component/os/os_dep/osdep_service.c
-#SRC_C += $(VENDOR)/component/os/os_dep/tcm_heap.c
+SRC_C += $(VENDOR)/component/os/os_dep/tcm_heap.c
 
 #peripheral - api
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/analogin_api.c

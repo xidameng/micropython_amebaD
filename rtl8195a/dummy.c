@@ -39,7 +39,7 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-SECTION(".bdsram.data") StackType_t mpNetworkCoreStack[MICROPY_NETWORK_CORE_STACK_DEPTH];
+SECTION(".sdram.bss") StackType_t mpNetworkCoreStack[MICROPY_NETWORK_CORE_STACK_DEPTH];
 
 /*****************************************************************************
  *                              Local functions

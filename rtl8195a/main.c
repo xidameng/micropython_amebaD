@@ -92,7 +92,7 @@ SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
  * Put this memory to on-board sram to accerlate speed
  * ".bdsram.data" section
  */
-SECTION(".bdsram.data") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
+SECTION(".sdram.bss") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
 
 void main (void) {
     /* 

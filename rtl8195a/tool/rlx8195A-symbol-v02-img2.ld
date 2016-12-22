@@ -27,7 +27,7 @@ SECTIONS
     {
     	.valid
     	{ 
-          *mem.o (.bss*)
+          /**mem.o (.bss*)*/
           /**memp.o (.bss*)*/
           *(.tcm.heap)
     	}
