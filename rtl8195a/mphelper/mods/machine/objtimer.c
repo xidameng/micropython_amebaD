@@ -136,7 +136,7 @@ STATIC mp_obj_t timer_start(mp_uint_t n_args, const mp_obj_t *args) {
     timer_obj_t *self = args[ARG_self];
     uint32_t duration = mp_obj_get_int(args[ARG_duration]);
 
-    if (!MP_OBJ_IS_FUN(args[ARG_callback] && (args[ARG_callback] != mp_const_none)))
+    if (!MP_OBJ_IS_FUN(args[ARG_callback]) && (args[ARG_callback] != mp_const_none))
         mp_raise_ValueError("Error function type");
 
     uint8_t type = mp_obj_get_int(args[ARG_type]);
