@@ -29,11 +29,13 @@
 #include "pwmout_api.h"
 
 extern const mp_obj_type_t pwm_type;
+extern const PinMap PinMap_PWM[];
 
 typedef struct {
     mp_obj_base_t base;
-    void      *obj;
-    uint8_t   id;
+    pwmout_t  obj;
+    uint8_t   unit;
+    pin_obj_t *pin;
 } pwm_obj_t;
 
 #endif  // OBJPWM_H_

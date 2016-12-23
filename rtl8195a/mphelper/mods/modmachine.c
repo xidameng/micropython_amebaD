@@ -30,10 +30,8 @@
 // micropython headers
 
 // local object headers
-#if 0
+//
 #include "machine/objpwm.h"
-
-#endif
 #include "machine/objspi.h"
 #include "machine/objuart.h"
 #include "machine/obji2c.h"
@@ -96,12 +94,9 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
 #if MP_RTL8195A || MP_RTL8711AM
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
-#endif
-
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           (mp_obj_t)&pwm_type },
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);

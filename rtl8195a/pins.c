@@ -140,6 +140,30 @@ const PinMap PinMap_SPI_MISO[] = {
     {NC,    NC,     0}
 };
 
+const PinMap PinMap_PWM[] = {
+    AF(PB_4, PWM, 0, S0),
+    AF(PB_5, PWM, 1, S0),
+    AF(PB_6, PWM, 2, S0),
+    AF(PB_7, PWM, 3, S0),
+
+    AF(PC_0, PWM, 0, S1),
+    AF(PC_1, PWM, 1, S1),
+    AF(PC_2, PWM, 2, S1),
+    AF(PC_3, PWM, 3, S1),
+
+    AF(PD_3, PWM, 0, S2),
+    AF(PD_4, PWM, 1, S2),
+    AF(PD_5, PWM, 2, S2),
+    AF(PD_6, PWM, 3, S2),
+
+    AF(PE_0, PWM, 0, S3),
+    AF(PE_1, PWM, 1, S3),
+    AF(PE_2, PWM, 2, S3),
+    AF(PE_3, PWM, 3, S3),
+
+    {NC,    NC,     0}
+};
+
 #define PIN(p_pin_name, p_pull, p_dir, p_value) \
 { \
     {&pin_type },                     \
