@@ -352,6 +352,7 @@ DRAM_C += mphelper/mods/machine/objadc.c
 DRAM_C += mphelper/mods/machine/objdac.c
 DRAM_C += mphelper/mods/machine/objpin.c
 DRAM_C += mphelper/mods/machine/obji2c.c
+DRAM_C += mphelper/mods/machine/objtimer.c
 DRAM_C += mphelper/mods/machine/objspi.c
 DRAM_C += mphelper/mods/machine/objuart.c
 DRAM_C += mphelper/mods/machine/objcrypto.c

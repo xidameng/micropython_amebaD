@@ -23,19 +23,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef OBJWDT_H_
-#define OBJWDT_H_
+#ifndef OBJTIMER_H_
+#define OBJTIMER_H_
 
 #include "py/mpstate.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#include "wdt_api.h"
+#include "exception.h"
 
-extern const mp_obj_type_t wdt_type;
+#include "objpin.h"
+#include "timer_api.h"
+
+extern const mp_obj_type_t timer_type;
+
+#define TIMER_PERIODICAL    (0)
+#define TIMER_ONESHOT       (1)
 
 typedef struct {
     mp_obj_base_t base;
-} wdt_obj_t;
+    gtimer_t obj;
+    uint8_t id;
+    mp_obj_t callback;
+} timer_obj_t;
 
-#endif  // OBJWDT_H_
+#endif  // OBJTIMER_H_

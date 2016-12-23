@@ -37,12 +37,11 @@
  * ***************************************************************************/
 STATIC wdt_obj_t wdt_obj = {
     .base.type = &wdt_type,
-    .callback  = mp_const_none,
 };
 
 STATIC void wdt_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     wdt_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "WDT(");
+    mp_printf(print, "WDT()");
 }
 
 STATIC mp_obj_t wdt_start(mp_obj_t self_in, mp_obj_t msec_in) {
@@ -90,5 +89,5 @@ const mp_obj_type_t wdt_type = {
     .name        = MP_QSTR_WDT,
     .print       = wdt_print,
     .make_new    = wdt_make_new,
-    .locals_dict = (mp_obj_t)&wdt_locals_dict,
+    .locals_dict = (mp_obj_dict_t *)&wdt_locals_dict,
 };
