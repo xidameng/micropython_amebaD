@@ -78,6 +78,7 @@ extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_uterminal;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uwireless;
+extern const struct _mp_obj_module_t mp_module_ussl;
 
 extern const struct _mp_obj_module_t mp_network_module;
 
@@ -91,6 +92,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
@@ -104,7 +106,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
-#define MICROPY_TASK_PRIORITY               (configMAX_PRIORITIES - 2)
+#define MICROPY_TASK_PRIORITY               (2)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (1 * 1024) + 0

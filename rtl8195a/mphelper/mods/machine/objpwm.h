@@ -26,7 +26,12 @@
 #ifndef OBJPWM_H_
 #define OBJPWM_H_
 
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
 #include "pwmout_api.h"
+#include "PinNames.h"
+#include "objpin.h"
 
 extern const mp_obj_type_t pwm_type;
 extern const PinMap PinMap_PWM[];

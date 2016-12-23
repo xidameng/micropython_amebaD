@@ -193,7 +193,7 @@ a lot of data that needs to be copied, this should be set high. */
 /**
  * LWIP_NETCONN==1: Enable Netconn API (require to use api_lib.c)
  */
-#define LWIP_NETCONN                    1
+#define LWIP_NETCONN                    0
 
 /*
    ------------------------------------
@@ -203,7 +203,7 @@ a lot of data that needs to be copied, this should be set high. */
 /**
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
-#define LWIP_SOCKET                     1
+#define LWIP_SOCKET                     0
 
 /*
    -----------------------------------
