@@ -2,13 +2,7 @@ print("hello!!!")
 from uwireless import WLAN
 import utime
 import umachine, uos
-def test_connect():
-    wlan = WLAN(mode=WLAN.STA)
-    auth=(WLAN.WPA2_AES_PSK, "22238392abcd")
-    wlan.connect(ssid="VIP_WirelessAP", auth=auth, dhcp=True)
-    netif = wlan.getnetif()
-    print(netif)
-
+import WiFiTool
 
 def sdio_test(count, delay):
     global sdio_vfs
@@ -23,3 +17,16 @@ def sdio_test(count, delay):
         f.close()
         utime.sleep_ms(delay)
         print("i = %d" % i)
+
+def wifi_connect():
+    ssid = "VIP_WirelessAP"
+    password = "22238392abcd"
+
+    def wlan_connected():
+        print("wlan connected")
+
+    def wlan_disconnected():
+        print("wlan disconnected")
+
+    wlan = WiFiTool.SimpleConnect(ssid=ssid, password=password, connect=wlan_connected, disconnect=wlan_disconnected);
+    wlan.connect()
