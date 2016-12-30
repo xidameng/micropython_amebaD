@@ -362,7 +362,6 @@
 #endif
 
 // Whether to build functions that print debugging info:
-//   mp_lexer_show_token
 //   mp_bytecode_print
 //   mp_parse_node_print
 #ifndef MICROPY_DEBUG_PRINTERS
@@ -943,6 +942,11 @@ typedef double mp_float_t;
 
 #ifndef MICROPY_PY_UHEAPQ
 #define MICROPY_PY_UHEAPQ (0)
+#endif
+
+// Optimized heap queue for relative timestamps
+#ifndef MICROPY_PY_UTIMEQ
+#define MICROPY_PY_UTIMEQ (0)
 #endif
 
 #ifndef MICROPY_PY_UHASHLIB

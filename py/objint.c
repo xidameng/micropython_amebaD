@@ -151,23 +151,21 @@ typedef mp_int_t fmt_int_t;
 #endif
 
 STATIC const uint8_t log_base2_floor[] = {
-    0,
     0, 1, 1, 2,
     2, 2, 2, 3,
     3, 3, 3, 3,
     3, 3, 3, 4,
+    /* if needed, these are the values for higher bases
     4, 4, 4, 4,
     4, 4, 4, 4,
     4, 4, 4, 4,
     4, 4, 4, 5
+    */
 };
 
 size_t mp_int_format_size(size_t num_bits, int base, const char *prefix, char comma) {
-    if (base < 2 || base > 32) {
-        return 0;
-    }
-
-    size_t num_digits = num_bits / log_base2_floor[base] + 1;
+    assert(2 <= base && base <= 16);
+    size_t num_digits = num_bits / log_base2_floor[base - 1] + 1;
     size_t num_commas = comma ? num_digits / 3 : 0;
     size_t prefix_len = prefix ? strlen(prefix) : 0;
     return num_digits + num_commas + prefix_len + 2; // +1 for sign, +1 for null byte
@@ -353,12 +351,6 @@ mp_int_t mp_obj_int_get_truncated(mp_const_obj_t self_in) {
 mp_int_t mp_obj_int_get_checked(mp_const_obj_t self_in) {
     return MP_OBJ_SMALL_INT_VALUE(self_in);
 }
-
-#if MICROPY_PY_BUILTINS_FLOAT
-mp_float_t mp_obj_int_as_float(mp_obj_t self_in) {
-    return MP_OBJ_SMALL_INT_VALUE(self_in);
-}
-#endif
 
 #endif // MICROPY_LONGINT_IMPL == MICROPY_LONGINT_IMPL_NONE
 
