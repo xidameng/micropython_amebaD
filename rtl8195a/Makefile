@@ -97,11 +97,6 @@ application: prerequirement build_info $(SRC_O) $(DRAM_O) $(ASM_O) $(PY_O)
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -l_analout_api -l_usbd -l_usbh -T$(TOOL)/rlx8195A-symbol-v02-img2.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
 
-.PHONY: add_prefix
-add_prefix:
-	$(Q)$(foreach OBJ, $(PY_O), $(OBJCOPY) --prefix-alloc-sections .sdram $(OBJ);)
-	
-
 .PHONY: manipulate_images
 manipulate_images:	
 	$(Q)echo ===========================================================

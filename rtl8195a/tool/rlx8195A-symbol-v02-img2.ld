@@ -55,6 +55,54 @@ SECTIONS
     	}
     } > TCM
 
+    .sdr_text :
+    {
+      __sdram_data_start__ = .;
+      *(.sdram.text*)
+      *(.p2p.text*)
+      *(.wps.text*)
+      *(.websocket.text*)
+      */py/*.o(.text*)
+      */lib/*.o(.text*)
+      */extmod/*.o(.text*)
+    } > SDRAM_RAM
+
+    .sdr_rodata :
+    {
+      *(.sdram.rodata*)
+      *(.p2p.rodata*)
+      *(.wps.rodata*)
+      *(.websocket.rodata*)
+      */py/*.o(.rodata*)
+      */lib/*.o(.rodata*)
+      */extmod/*.o(.rodata*)
+    } > SDRAM_RAM
+
+    .sdr_data : 
+    {
+      *(.sdram.data*)
+      *(.p2p.data*)
+      *(.wps.data*)
+      *(.websocket.data*)
+      */py/*.o(.data*)
+      */lib/*.o(.data*)
+      */extmod/*.o(.data*)
+      __sdram_data_end__ = .;
+    } > SDRAM_RAM
+
+    .sdr_bss :
+    {
+      __sdram_bss_start__ = .;
+      *(.sdram.bss*)
+      *(.p2p.bss*)
+      *(.wps.bss*)
+      *(.websocket.bss*)
+      */py/*.o(.bss*)
+      */lib/*.o(.bss*)
+      */extmod/*.o(.bss*)
+      __sdram_bss_end__ = .;
+    } > SDRAM_RAM
+
     .image2.start.table :
     {
       __ram_image2_text_start__ = .;
@@ -135,42 +183,6 @@ SECTIONS
 
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
-
-    .sdr_text :
-    {
-      __sdram_data_start__ = .;
-      *(.sdram.text*)
-      *(.p2p.text*)
-      *(.wps.text*)
-      *(.websocket.text*)
-    } > SDRAM_RAM
-
-    .sdr_rodata :
-    {
-      *(.sdram.rodata*)
-      *(.p2p.rodata*)
-      *(.wps.rodata*)
-      *(.websocket.rodata*)
-    } > SDRAM_RAM
-
-    .sdr_data : 
-    {
-      *(.sdram.data*)
-      *(.p2p.data*)
-      *(.wps.data*)
-      *(.websocket.data*)
-      __sdram_data_end__ = .;
-    } > SDRAM_RAM
-
-    .sdr_bss :
-    {
-      __sdram_bss_start__ = .;
-      *(.sdram.bss*)
-      *(.p2p.bss*)
-      *(.wps.bss*)
-      *(.websocket.bss*)
-      __sdram_bss_end__ = .;
-    } > SDRAM_RAM
 
 	.flash_map : 
     {
