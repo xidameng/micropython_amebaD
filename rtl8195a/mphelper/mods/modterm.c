@@ -45,6 +45,7 @@
  *                              Internal variables
  * ***************************************************************************/
 STATIC xQueueHandle xRXCharQueue;
+STATIC struct terminal_msg xmsg;
 
 /*****************************************************************************
  *                              External variables
@@ -88,11 +89,12 @@ int mp_term_rx_chr() {
     mp_not_implemented("mp_term_rx_chr and mp_hal_stdin_rx_chr not implement");
 }
 
-void modterminal_rx_loop(void) {
+void modterm_rx_loop(void) {
 
     pyexec_event_repl_init();
 
     struct terminal_msg *msg;
+
     for (;;) {
         /* 
          *  Queue is blocking forever until queue is incoming
@@ -127,7 +129,6 @@ void modterminal_rx_loop(void) {
                 break;
             }
             // Should delete object at final or mpHeap would leak
-            m_del_obj(struct terminal_msg *, msg);
         }   
     }
     vTaskDelete(NULL);
@@ -151,11 +152,7 @@ STATIC mp_obj_t term_rx_post(mp_obj_t obj_in, mp_obj_t array_in) {
         return mp_const_none;
     }
 
-    /* 
-     * Malloc a queue from the mpHeap, it will be free in the modterminal_rx_loop after
-     * the queue is consumed.
-     */
-    struct terminal_msg *msg = m_new_obj(struct terminal_msg *);
+    struct terminal_msg *msg = &xmsg;
 
     msg->type = TERM_RX_CHR;
     msg->msg.chr.obj_from = obj_in;

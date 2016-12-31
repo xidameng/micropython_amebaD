@@ -77,27 +77,27 @@ void mp_thread_gc_others(void) {
 // TODO(Chester) Recursive find may cause lantency
 mp_state_thread_t *mp_thread_get_state(void) {
     mp_state_thread_t *state;
-    mp_thread_mutex_lock(&thread_mutex, 1);
+    //mp_thread_mutex_lock(&thread_mutex, 1);
     for (mp_thread_t *th = thread; th != NULL; th = th->next) {
         if (th->id == xTaskGetCurrentTaskHandle()) {
             state = th->state;
             break;
         }
     }
-    mp_thread_mutex_unlock(&thread_mutex);
+    //mp_thread_mutex_unlock(&thread_mutex);
     return state;
 }
 
 // TODO(Chester) Recursive find may cause lantency
 void mp_thread_set_state(void *state) {
-    mp_thread_mutex_lock(&thread_mutex, 1);
+    //mp_thread_mutex_lock(&thread_mutex, 1);
     for (mp_thread_t *th = thread; th != NULL; th = th->next) {
         if (th->id == xTaskGetCurrentTaskHandle()) {
             th->state = state;
             break;
         }
     }
-    mp_thread_mutex_unlock(&thread_mutex);
+    //mp_thread_mutex_unlock(&thread_mutex);
 }
 
 void mp_thread_start(void) {

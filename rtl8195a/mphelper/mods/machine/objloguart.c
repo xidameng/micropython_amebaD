@@ -65,28 +65,32 @@ void mp_obj_log_uart_irq_handler (log_uart_obj_t *self, LOG_UART_INT_ID event) {
 
         if (self->irq_handler != mp_const_none) {
             /*
-             * Don't lock gc (gc_lock) here because we need to create a new queue for mallo, if locked
-             * gc_alloc would be wrong
-             *
+             * Lock mpHeap to prevent from too many gc_alloc
              */
+            gc_lock();
             nlr_buf_t nlr;
             if (nlr_push(&nlr) == 0) {
+                mp_obj_array_t *arr = MP_OBJ_TO_PTR(MP_STATE_PORT(log_uart_rx_chr_obj));
+                arr->items = (void *)&chr;
+                arr->len = 1;
                 mp_call_function_2(self->irq_handler, MP_OBJ_FROM_PTR(self),
-                        mp_obj_new_bytes(&chr, 1));
+                        MP_STATE_PORT(log_uart_rx_chr_obj));
                 nlr_pop();
             } else {
                 self->irq_handler = mp_const_none;
-                mp_printf(&mp_plat_print, "Uncaught exception in callback handler");
+                mp_printf(&mp_plat_print, "Uncaught exception in callback handler, clear irq_handler to None\r\n");
                 if (nlr.ret_val != MP_OBJ_NULL) {
                     mp_obj_print_exception(&mp_plat_print, nlr.ret_val);
                 }
             }
+            gc_unlock();
         }
     }
 }
 
 void loguart_init0(void) {
     // Do nothing here
+    MP_STATE_PORT(log_uart_rx_chr_obj) = mp_obj_new_bytearray(1, "");
 }
 
 STATIC void log_uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {

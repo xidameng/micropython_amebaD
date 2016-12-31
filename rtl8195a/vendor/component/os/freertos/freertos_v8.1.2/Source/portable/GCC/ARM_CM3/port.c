@@ -723,6 +723,7 @@ __attribute__(( weak )) void vPortSetupTimerInterrupt( void )
 
 #endif /* configASSERT_DEFINED */
 
+#include "diag.h"
 /*-----------------------------------------------------------*/
 void vApplicationIdleHook( void )
 {
@@ -730,7 +731,7 @@ void vApplicationIdleHook( void )
 	saving could be achieved by not including any demo tasks that never block. */
 }
 
-#include "diag.h"
+
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
 {
 	/* This function will be called if a task overflows its stack, if

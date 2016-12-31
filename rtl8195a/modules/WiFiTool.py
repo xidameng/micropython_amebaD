@@ -55,10 +55,10 @@ class SimpleConnect:
         raise OSError("STA has not connect to AP")
 
 def wifi_connect():
-    #ssid = "VIP_WirelessAP"
-    ssid = "LIN1"
-    #password = "22238392abcd"
-    password = "12345678"
+    ssid = "VIP_WirelessAP"
+    #ssid = "LIN1"
+    password = "22238392abcd"
+    #password = "12345678"
 
     def wlan_connected():
         print("wlan connected")

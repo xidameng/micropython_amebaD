@@ -80,7 +80,5 @@ void mp_hal_delay_us(uint32_t us) {
 }
 
 uint32_t mp_hal_ticks_ms(void) {
-    return xTaskGetTickCount() * configTICK_RATE_HZ;
+    return xTaskGetTickCount();
 }
-
-

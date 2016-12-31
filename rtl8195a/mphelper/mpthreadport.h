@@ -41,8 +41,8 @@ typedef struct _mp_thread_t {
     void *arg;                  // thread Python args, a GC root pointer
     void *stack;                // pointer to the stack
     size_t stack_len;           // numbers of words in the stack
-    struct _mp_thread_t *next;
     void *state;
+    struct _mp_thread_t *next;
 } mp_thread_t;
 
 void mp_thread_init(void);

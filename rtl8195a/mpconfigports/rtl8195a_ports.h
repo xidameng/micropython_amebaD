@@ -2,8 +2,8 @@
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
-#define MICROPY_COMP_MODULE_CONST               (0)
-#define MICROPY_COMP_CONST                      (0)
+#define MICROPY_COMP_MODULE_CONST               (1)
+#define MICROPY_COMP_CONST                      (1)
 #define MICROPY_REPL_EVENT_DRIVEN               (1)
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
@@ -50,10 +50,11 @@
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
-#define MICROPY_PY_THREAD                       (1)
-#define MICROPY_PY_THREAD_GIL                   (0)
+#define MICROPY_PY_USELECT                      (1)
+#define MICROPY_PY_UTIMEQ                       (1)
 #define MICROPY_PY_LWIP                         (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
+#define MICROPY_PY_UTIME_MP_HAL                 (1)
 #define MICROPY_MODULE_FROZEN_STR               (1)
 #define MICROPY_MODULE_FROZEN_MPY               (1)
 #define MICROPY_QSTR_EXTRA_POOL                 mp_qstr_frozen_const_pool
@@ -69,6 +70,9 @@
 #define MICROPY_FATFS_RPATH                     (2)
 #define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
+
+#include "rtl8195a.h"
+#define MICROPY_EVENT_POLL_HOOK            __WFI();
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
@@ -120,5 +124,6 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     vstr_t *repl_line;                      \
     mp_obj_list_t  term_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
+    mp_obj_t log_uart_rx_chr_obj;           \
     mp_obj_list_t netif_list_obj;           \
     mp_obj_t mp_kbd_exception;              \

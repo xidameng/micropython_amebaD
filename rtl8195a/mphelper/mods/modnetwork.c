@@ -3,8 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 Galen Hazelwood
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -126,6 +124,8 @@ void modnetwork_init(void) {
 
      if (xReturn != pdTRUE)
         mp_printf(&mp_plat_print, "Create network core thread failed");
+
+     netif_init0();
 }
 
 STATIC mp_obj_t netif_iflist(void) {

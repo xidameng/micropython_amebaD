@@ -29,6 +29,7 @@
 #include "py/mpconfig.h"
 #include "py/runtime.h"
 #include "py/stream.h"
+#include "py/objarray.h"
 #include "lib/utils/interrupt_char.h"
 
 // mbed lib headers

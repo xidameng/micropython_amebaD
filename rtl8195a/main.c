@@ -68,17 +68,16 @@ void micropython_task(void const *arg) {
     memset(MP_STATE_PORT(fs_user_mount), 0, sizeof(MP_STATE_PORT(fs_user_mount)));
 #endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
+    MP_STATE_PORT(dupterm_arr_obj) = MP_OBJ_NULL;
 
     modterm_init();
     modmachine_init();
+    modwireless_init();
     modnetwork_init();
-
-    netif_init0();
-    wlan_init0();
 
     pyexec_frozen_module("_boot.py");
     pyexec_file("main.py");
-    modterminal_rx_loop();
+    modterm_rx_loop();
     vTaskDelete(NULL);
 }
 
