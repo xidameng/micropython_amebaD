@@ -110,15 +110,16 @@ STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),  MP_OBJ_FROM_PTR(&time_localtime_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),     MP_OBJ_FROM_PTR(&time_mktime_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ctime),      MP_OBJ_FROM_PTR(&time_ctime_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_ms),       MP_OBJ_FROM_PTR(&mp_utime_sleep_ms_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_us),       MP_OBJ_FROM_PTR(&mp_utime_sleep_us_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_ms),       MP_OBJ_FROM_PTR(&mp_utime_ticks_ms_obj) },
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_us),       MP_OBJ_FROM_PTR(&mp_utime_ticks_us_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_cpu),      MP_OBJ_FROM_PTR(&mp_utime_ticks_cpu_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep),      MP_OBJ_FROM_PTR(&mp_utime_sleep_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_ms),   MP_OBJ_FROM_PTR(&mp_utime_sleep_ms_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_us),   MP_OBJ_FROM_PTR(&mp_utime_sleep_us_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_ms),   MP_OBJ_FROM_PTR(&mp_utime_ticks_ms_obj) },
+#if 0 // Not support us level
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_us),   MP_OBJ_FROM_PTR(&mp_utime_ticks_us_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_cpu),  MP_OBJ_FROM_PTR(&mp_utime_ticks_cpu_obj) },
 #endif
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_add),      MP_OBJ_FROM_PTR(&mp_utime_ticks_add_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_diff),     MP_OBJ_FROM_PTR(&mp_utime_ticks_diff_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_add),  MP_OBJ_FROM_PTR(&mp_utime_ticks_add_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ticks_diff), MP_OBJ_FROM_PTR(&mp_utime_ticks_diff_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);
 
