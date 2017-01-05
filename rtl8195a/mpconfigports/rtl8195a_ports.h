@@ -10,6 +10,7 @@
 #define MICROPY_CPYTHON_COMPAT                  (1)
 #define MICROPY_ENABLE_GC                       (1)
 #define MICROPY_ENABLE_SOURCE_LINE              (1)
+#define MICROPY_STREAMS_NON_BLOCK               (1)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO         (MICROPY_ENABLE_GC)
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_FINALISER                (1)
@@ -74,7 +75,7 @@
 
 #include "rtl8195a.h"
 #define MICROPY_EVENT_POLL_HOOK                             \
-    __WFI();                                                \
+    mp_hal_delay_ms(1);                                     \
     if (MP_STATE_VM(mp_pending_exception) != NULL) {        \
         mp_obj_t obj = MP_STATE_VM(mp_pending_exception);   \
         MP_STATE_VM(mp_pending_exception) = MP_OBJ_NULL;    \

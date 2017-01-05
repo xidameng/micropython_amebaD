@@ -38,9 +38,15 @@ PICK = $(AMEBA_TOOLDIR)pick.exe
 PAD  = $(AMEBA_TOOLDIR)padding.exe
 CHKSUM = $(AMEBA_TOOLDIR)checksum.exe
 else
+ifeq ($(findstring Darwin, $(OS)), Darwin) 
+PICK = $(TOOL)/mac/pick
+PAD  = $(TOOL)/mac/padding
+CHKSUM = $(TOOL)/mac/checksum
+else
 PICK = $(AMEBA_TOOLDIR)pick
 PAD  = $(AMEBA_TOOLDIR)padding
 CHKSUM = $(AMEBA_TOOLDIR)checksum
+endif
 endif
 
 
@@ -142,7 +148,7 @@ build_info:
 		echo \#define RTL8195AFW_COMPILE_DOMAIN ; \
 	fi >> .ver
 
-	@echo \#define RTL195AFW_COMPILER \"gcc `$(CC) $(CFLAGS) -dumpversion | tr --delete '\r'`\" >> .ver
+	@echo \#define RTL195AFW_COMPILER \"gcc `$(CC) $(CFLAGS) -dumpversion `\" >> .ver
 	@mv -f .ver inc/$@.h
 
 

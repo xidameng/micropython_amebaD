@@ -31,6 +31,9 @@
  * critical regions during buffer allocation, deallocation and memory
  * allocation and deallocation.
  */
+
+#define DNS_SERVER_ADDRESS(ipaddr)        (ip4_addr_set_u32(ipaddr, ipaddr_addr("8.8.8.8"))) /* google DNS resolver */
+
 #define SYS_LIGHTWEIGHT_PROT    1
 
 /* Define LWIP_COMPAT_MUTEX if the port has no mutexes and binary semaphores

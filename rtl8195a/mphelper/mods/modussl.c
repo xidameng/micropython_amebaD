@@ -159,6 +159,8 @@ STATIC mp_uint_t ussl_socket_read(mp_obj_t self_in, void *buf, mp_uint_t size, i
     mp_obj_ussl_socket_t *o = self_in;
     mp_int_t r = ssl_read(o->ssl, buf, size);
     if (r < 0) {
+        if (r == POLARSSL_ERR_SSL_PEER_CLOSE_NOTIFY) 
+            return 0;
         *errcode = r;
         return MP_STREAM_ERROR;
     }
@@ -169,6 +171,8 @@ STATIC mp_uint_t ussl_socket_write(mp_obj_t self_in, const void *buf, mp_uint_t 
     mp_obj_ussl_socket_t *o = self_in;
     mp_int_t r = ssl_write(o->ssl, buf, size);
     if (r < 0) {
+        if (r == POLARSSL_ERR_SSL_PEER_CLOSE_NOTIFY) 
+            return 0;
         *errcode = r;
         return MP_STREAM_ERROR;
     }
@@ -186,7 +190,7 @@ STATIC const mp_obj_type_t ussl_socket_type = {
     .name        = MP_QSTR_ussl,
     .print       = ussl_socket_print,
     .make_new    = ussl_socket_make_new,
-    .getiter     = mp_identity,
+    .getiter     = NULL,
     .iternext    = NULL,
     .protocol    = &ussl_socket_stream_p,
     .locals_dict = (mp_obj_dict_t *)&ussl_socket_locals_dict,
