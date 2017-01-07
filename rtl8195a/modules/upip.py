@@ -43,7 +43,11 @@ def _makedirs(name, mode=0o777):
         if s and s[-1] != "/":
             s += "/"
         s += c
+        if s == '/':
+            continue
         try:
+            if debug:
+                print("mkdir %s" % s)
             os.mkdir(s)
             ret = True
         except OSError as e:

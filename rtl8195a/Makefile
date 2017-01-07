@@ -69,9 +69,8 @@ include $(TARGET).mk
 
 SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
-ASM_O = $(addprefix $(BUILD)/, $(ASM_S:.s=.o))
 
-OBJ = $(PY_O) $(SRC_O) $(DRAM_O) $(ASM_O)
+OBJ = $(PY_O) $(SRC_O) $(DRAM_O)
 
 SRC_QSTR += $(SRC_C) $(DRAM_C)
 SRC_QSTR_AUTO_DEPS +=
@@ -98,7 +97,7 @@ all: OTA_BIN = ota.bin
 mp: RAMALL_BIN = ram_all_mp.bin
 mp: OTA_BIN = ota_mp.bin
 
-application: prerequirement build_info $(SRC_O) $(DRAM_O) $(ASM_O) $(PY_O)
+application: prerequirement build_info $(SRC_O) $(DRAM_O) $(PY_O)
 	$(ECHO) "Building $(CHIP) "
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -l_analout_api -l_usbd -l_usbh -T$(TOOL)/rlx8195A-symbol-v02-img2.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
@@ -109,8 +108,8 @@ manipulate_images:
 	$(Q)echo Image manipulating
 	$(Q)echo ===========================================================
 	$(Q)$(NM) $(BUILD)/$(TARGET).axf | sort > $(BUILD)/$(TARGET).nmap
-	$(Q)$(OBJCOPY) -j .image2.start.table -j .ram_image2.text -j .ram_image2.rodata -j .ram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/ram_2.bin
-	$(Q)$(OBJCOPY) -j .sdr_text -j .sdr_rodata -j .sdr_data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
+	$(Q)$(OBJCOPY) -j .ram.start.table -j .ram.text -j .ram.rodata -j .ram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/ram_2.bin
+	$(Q)$(OBJCOPY) -j .sdrm_text -j .sdrm_rodata -j .sdrm_data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
 	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.p.bin $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rw $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rx $(PICK) $(CHKSUM) $(PAD)
@@ -169,12 +168,6 @@ $(SRC_O): $(BUILD)/%.o : %.c
 	$(Q)$(CC) $(CFLAGS) -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 $(DRAM_O): $(BUILD)/%.o : %.c 
-	$(Q)$(MKDIR) -p $(dir $@)
-	$(CC) $(CFLAGS)  -c $< -o $@
-	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
-	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
-
-$(ASM_O): $(BUILD)/%.o : %.s
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(CC) $(CFLAGS)  -c $< -o $@
 	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@

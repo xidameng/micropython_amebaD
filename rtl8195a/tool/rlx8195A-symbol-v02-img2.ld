@@ -8,7 +8,7 @@ MEMORY
 {
   FLASH (rwx) : ORIGIN = 0x00000000, LENGTH = 0x200000
   ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 0x5438
-  BD_RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
+  RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
   SDRAM_RAM (rwx)  : ORIGIN = 0x30000000, LENGTH = 2M
 }
@@ -55,7 +55,7 @@ SECTIONS
     	}
     } > TCM
 
-    .sdr_text :
+    .sdrm_text :
     {
       __sdram_data_start__ = .;
       *(.sdram.text*)
@@ -67,7 +67,7 @@ SECTIONS
       */extmod/*.o(.text*)
     } > SDRAM_RAM
 
-    .sdr_rodata :
+    .sdrm_rodata :
     {
       *(.sdram.rodata*)
       *(.p2p.rodata*)
@@ -78,7 +78,7 @@ SECTIONS
       */extmod/*.o(.rodata*)
     } > SDRAM_RAM
 
-    .sdr_data : 
+    .sdrm_data : 
     {
       *(.sdram.data*)
       *(.p2p.data*)
@@ -90,7 +90,7 @@ SECTIONS
       __sdram_data_end__ = .;
     } > SDRAM_RAM
 
-    .sdr_bss :
+    .sdrm_bss :
     {
       __sdram_bss_start__ = .;
       *(.sdram.bss*)
@@ -103,18 +103,18 @@ SECTIONS
       __sdram_bss_end__ = .;
     } > SDRAM_RAM
 
-    .image2.start.table :
+    .ram.start.table :
     {
       __ram_image2_text_start__ = .;
       __image2_entry_func__ = .;
-      .image2.start.table1$$Base = .;
+      .ram.start.table1$$Base = .;
       KEEP(*(SORT(.image2.ram.data*)))
       __image2_validate_code__ = .;
       KEEP(*(.image2.validate.rodata*))
       KEEP(*(.custom.validate.rodata*))
-    } > BD_RAM
+    } > RAM
 
-    .ram_image2.text :
+    .ram.text :
     {
       KEEP(*(.infra.ram.start*))
       *(.mon.ram.text*)
@@ -122,12 +122,12 @@ SECTIONS
       *(.hal.sdrc.text*)
       *(.hal.gpio.text*)
       *(.text*)    
-    } > BD_RAM
+    } > RAM
 
-    .ram_image2.rodata :
+    .ram.rodata :
     {
       *(.rodata*)
-    } > BD_RAM
+    } > RAM
 
     .ram.data : 
     {
@@ -135,7 +135,7 @@ SECTIONS
       *(.data*)
       __data_end__ = .;
     	__ram_image2_text_end__ = .;    
-    } > BD_RAM
+    } > RAM
     
     .ram.bss :
     {
@@ -149,7 +149,7 @@ SECTIONS
       *(.bdsram.data*)
       __bss_end__ = .;
       .ram.bss$$Limit = .;
-    } > BD_RAM
+    } > RAM
 
     .bf_data : 
     {
@@ -157,7 +157,7 @@ SECTIONS
       *(.bfsram.data*)
       __buffer_data_end__ = .;
       
-    } > BD_RAM
+    } > RAM
 
     .heap :
     {
@@ -165,7 +165,7 @@ SECTIONS
        end = __end__;
        *(.heap*)
        __HeapLimit = .;
-    } > BD_RAM
+    } > RAM
 
 	/* .stack_dummy section doesn't contains any symbols. It is only
 	 * used for linker to calculate size of stack sections, and assign
@@ -173,29 +173,29 @@ SECTIONS
 	.stack_dummy :
 	{
 		*(.stack)
-	} > BD_RAM
+	} > RAM
 
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */
-	__StackTop = ORIGIN(BD_RAM) + LENGTH(BD_RAM);
+	__StackTop = ORIGIN(RAM) + LENGTH(RAM);
 	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
 	PROVIDE(__stack = __StackTop);
 
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 
-	.flash_map : 
+	.flash : 
     {
       __image1_flash_size__ = 0xB000;
       . = . + __image1_flash_size__;
       __image1_flash_end__ = .;
 
       __image2_flash_start__ = .;
-      . = . + SIZEOF(.image2.start.table) + SIZEOF(.ram_image2.text) + +SIZEOF(.ram_image2.rodata) + SIZEOF(.ram.data);
+      . = . + SIZEOF(.ram.start.table) + SIZEOF(.ram.text) + +SIZEOF(.ram.rodata) + SIZEOF(.ram.data);
       __image2_flash_end__ = .;
 
       __sdram_text_flash_start__ = .;
-      . = . + SIZEOF(.sdr_text) + SIZEOF(.sdr_rodata) + SIZEOF(.sdr_data);
+      . = . + SIZEOF(.sdrm_text) + SIZEOF(.sdrm_rodata) + SIZEOF(.sdrm_data);
       __sdram_text_flash_end__ = .;
 
       /* ALIGN flash address to 4K address because of the Ameba flash driver's restriction */
@@ -205,8 +205,4 @@ SECTIONS
       __fatfs_end_address__ = .;
       __fatfs_num_blocks__ = (__fatfs_end_address__ - __fatfs_start_address__ + 1) / 4096;
     } > FLASH
-
-
 }
-
-

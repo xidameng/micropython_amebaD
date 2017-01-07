@@ -372,5 +372,3 @@ DRAM_C += \
 		lib/timeutils/timeutils.c \
 		ftp/vfs.c \
 		ftp/ftpd.c \
-
-ASM_S += mphelper/gccollect/gchelper.s

@@ -50,13 +50,12 @@
 SECTION(".sdram.bss") uint8_t mpHeap[1024 * 1024];      // MicroPython core' heap 
 
 void micropython_task(void const *arg) {
-// get the top of the stack to initialize the garbage collector
-    uint32_t sp = gc_helper_get_sp();
+
+    mp_stack_ctrl_init();
 
 #if MICROPY_PY_THREAD
     mp_thread_init();
 #endif
-    mp_stack_set_top((void*)sp);
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
 #endif
