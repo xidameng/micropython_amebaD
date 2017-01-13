@@ -149,6 +149,9 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_STATS              0
 #define LWIP_PROVIDE_ERRNO      1
 
+
+#define LWIP_HAVE_LOOPIF        (1)
+
 /*
    --------------------------------------
    ---------- Checksum options ----------

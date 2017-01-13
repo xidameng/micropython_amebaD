@@ -57,13 +57,10 @@ modnetwork_thread (void *arg) {
         sys_mutex_lock(&network_core_lock);
         switch (msg->type) {
             case NETWORK_MSG_INPKT:
-#if LWIP_ETHERNET
                 if (msg->msg.inp.netif->flags &
                         (NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET)) {
                     ethernet_input(msg->msg.inp.p, msg->msg.inp.netif);
-                } else 
-#endif
-                {
+                } else {
                     ip_input(msg->msg.inp.p, msg->msg.inp.netif);
                 }
                 memp_free(MEMP_TCPIP_MSG_INPKT, msg);

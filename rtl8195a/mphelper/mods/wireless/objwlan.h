@@ -57,6 +57,7 @@ typedef struct {
     uint8_t       channel;                    // WLAN channel 0 ~ 11
     int8_t        ssid[WLAN_MAX_SSID_LEN];    // WLAN STA mode ssid
     int8_t        ap_ssid[WLAN_MAX_SSID_LEN]; // WLAN AP mode ssid
+    netif_obj_t   netif[];
 } wlan_obj_t;
 
 #endif  // OBJWLAN_H_

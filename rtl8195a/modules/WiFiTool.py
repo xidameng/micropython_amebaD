@@ -46,7 +46,7 @@ class SimpleConnect:
         while timeout:
             utime.sleep_ms(1)
             if self.is_connect_to_ap is True:
-                netif = NETIF(0)
+                netif = self.wlan.interface(0)
                 netif.dhcp_request(10)
                 print(netif)
                 return

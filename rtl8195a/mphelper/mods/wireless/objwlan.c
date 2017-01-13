@@ -33,11 +33,17 @@
  * ***************************************************************************/
 STATIC xSemaphoreHandle xSTAConnectAPSema;
 
+extern struct netif xnetif[NET_IF_NUM];
+
 STATIC wlan_obj_t wlan_obj = {
     .base.type      = &wlan_type,
     .mode           = RTW_MODE_STA,
     .security_type  = RTW_SECURITY_OPEN,
     .channel        = 6,
+    .netif          = {
+        { .base.type = &netif_type, .piface = &xnetif[0], .index = 0 },
+        { .base.type = &netif_type, .piface = &xnetif[1], .index = 1 },
+    }
 };
 
 /*****************************************************************************
@@ -143,6 +149,24 @@ void wlan_init0(void) {
     // to wlan init here
     init_event_callback_list();
     xSTAConnectAPSema = xSemaphoreCreateBinary();
+
+    ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gw;
+
+    netif_obj_t netif_obj_0 = wlan_obj.netif[0];
+
+    netif_obj_t netif_obj_1 = wlan_obj.netif[1];
+
+    netif_add(netif_obj_0.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &modnetwork_input);
+    
+    netif_add(netif_obj_1.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &modnetwork_input);
+
+    netif_set_up(netif_obj_0.piface);
+
+    netif_set_up(netif_obj_1.piface);
+
+    netif_set_default(netif_obj_0.piface);
 }
 
 STATIC const qstr wlan_scan_info_fields[] = {
@@ -512,6 +536,21 @@ STATIC mp_obj_t wlan_wifi_is_running(mp_obj_t self_in, mp_obj_t idx_in) {
     return mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(wlan_wifi_is_running_obj, wlan_wifi_is_running);
+
+STATIC mp_obj_t wlan_get_interface(mp_obj_t self_in, mp_obj_t idx_in) {
+
+    mp_uint_t index = mp_obj_get_int(idx_in);
+
+    if (index > 1) 
+        mp_raise_ValueError("Invalid WLAN index");
+
+    wlan_obj_t *self = self_in;
+
+    netif_obj_t *netif = &self->netif[index];
+
+    return netif;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(wlan_get_interface_obj, wlan_get_interface);
 
 STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
 
@@ -908,7 +947,7 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
 
     wlan_obj_t *self = &wlan_obj;
 
-    self->mode = args[0].u_int;
+    self->mode = args[ARG_mode].u_int;
 
     validate_wlan_mode(self->mode);
 
@@ -931,6 +970,7 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_off),              MP_OBJ_FROM_PTR(&wlan_off_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_wifi_is_running),  MP_OBJ_FROM_PTR(&wlan_wifi_is_running_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_interface),        MP_OBJ_FROM_PTR(&wlan_get_interface_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap), MP_OBJ_FROM_PTR(&wlan_is_connect_to_ap_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_event_handler),    MP_OBJ_FROM_PTR(&wlan_event_handler_obj) },
 

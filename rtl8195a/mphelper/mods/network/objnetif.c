@@ -32,126 +32,124 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-extern struct netif xnetif[NET_IF_NUM];
-
-STATIC netif_obj_t netif_obj_0 = {
-    .base.type      = &netif_type,
-    .index          = 0,
-};
-
-STATIC netif_obj_t netif_obj_1 = {
-    .base.type      = &netif_type,
-    .index          = 1,
-};
 
 /*****************************************************************************
  *                              Local functions
  * ***************************************************************************/
 
 void netif_init0(void) {
-    struct ip_addr ipaddr;   
-    struct ip_addr netmask;   
-    struct ip_addr gateway;   
-
-    IP4_ADDR(&ipaddr, DEFAULT_AP_IP_ADDR0, DEFAULT_AP_IP_ADDR1, DEFAULT_AP_IP_ADDR2, DEFAULT_AP_IP_ADDR3);
-    IP4_ADDR(&netmask, DEFAULT_AP_NETMASK_ADDR0, DEFAULT_AP_NETMASK_ADDR1, DEFAULT_AP_NETMASK_ADDR2, DEFAULT_AP_NETMASK_ADDR3);
-    IP4_ADDR(&gateway, DEFAULT_AP_GW_ADDR0, DEFAULT_AP_GW_ADDR1, DEFAULT_AP_GW_ADDR2, DEFAULT_AP_GW_ADDR3);
-
-    netif_add(&xnetif[netif_obj_0.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &modnetwork_input);
-    netif_set_up(&xnetif[netif_obj_0.index]);
-
-    netif_set_default(&xnetif[netif_obj_0.index]);
-
-    IP4_ADDR(&ipaddr, DEFAULT_IP_ADDR0, DEFAULT_IP_ADDR1, DEFAULT_IP_ADDR2, DEFAULT_IP_ADDR3);
-    IP4_ADDR(&netmask, DEFAULT_NETMASK_ADDR0, DEFAULT_NETMASK_ADDR1, DEFAULT_NETMASK_ADDR2, DEFAULT_NETMASK_ADDR3);
-    IP4_ADDR(&gateway, DEFAULT_GW_ADDR0, DEFAULT_GW_ADDR1, DEFAULT_GW_ADDR2, DEFAULT_GW_ADDR3);
-
-    netif_add(&xnetif[netif_obj_1.index], &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &modnetwork_input);
-    netif_set_up(&xnetif[netif_obj_1.index]);
+    // DO nothing here
 }
 
 STATIC void netif_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     netif_obj_t *self = self_in;
-    struct ip_addr ipaddr;   
-    struct ip_addr netmask;   
-    struct ip_addr gateway;
-    ipaddr  = xnetif[self->index].ip_addr;
-    netmask = xnetif[self->index].netmask;
-    gateway = xnetif[self->index].gw;
-    mp_printf(print, "NETIF(%d, ", self->index);
-    mp_printf(print, "ip=%s ,", ip_ntoa(&ipaddr));
-    mp_printf(print, "netmask=%s ,", ip_ntoa(&netmask));
+    struct ip_addr ipaddr  = self->piface->ip_addr;
+    struct ip_addr netmask = self->piface->netmask;
+    struct ip_addr gateway = self->piface->gw;
+    mp_printf(print, "NETIF(%c%c, ", self->piface->name[0], self->piface->name[1]);
+    mp_printf(print, "ip=%s, ", ip_ntoa(&ipaddr));
+    mp_printf(print, "netmask=%s, ", ip_ntoa(&netmask));
     mp_printf(print, "gateway=%s)", ip_ntoa(&gateway));
 }
 
-bool dhcp_request_func(uint8_t id, u_int timeout) {
-    int8_t  err      = ERR_MEM;
-    uint8_t counter  = 0;
-    //wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
-    xnetif[id].ip_addr.addr = 0;
-    xnetif[id].netmask.addr = 0;
-    xnetif[id].gw.addr      = 0;
+STATIC mp_obj_t ip_get(mp_uint_t n_args, const mp_obj_t *args) {
+    netif_obj_t *self = args[0];
+    ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gateway;
+    if (n_args == 1) {
+        mp_obj_t tuple[3];
+        ipaddr = self->piface->ip_addr;   
+        netmask = self->piface->netmask;   
+        gateway = self->piface->gw;
+        tuple[0] = mp_obj_new_str(ip_ntoa(&ipaddr), strlen(ip_ntoa(&ipaddr)), false);
+        tuple[1] = mp_obj_new_str(ip_ntoa(&netmask), strlen(ip_ntoa(&netmask)), false);
+        tuple[2] = mp_obj_new_str(ip_ntoa(&gateway), strlen(ip_ntoa(&gateway)), false);
+        return mp_obj_new_tuple(3, tuple);
+    } else {
+        mp_obj_t *sec;
+        mp_obj_get_array_fixed_n(args[1], 3, &sec);
+        int8_t *paddr = mp_obj_str_get_str(sec[0]);
+        int8_t *pnetmask = mp_obj_str_get_str(sec[1]);
+        int8_t *pgw = mp_obj_str_get_str(sec[2]);
+        if (ipaddr_aton(paddr, &ipaddr) == 0)
+            mp_raise_ValueError("NETIF ip format invalid");
+        if (ipaddr_aton(pnetmask, &netmask) == 0)
+            mp_raise_ValueError("NETIF netmask format invalid");
+        if (ipaddr_aton(pgw, &gateway) == 0)
+            mp_raise_ValueError("NETIF gateway format invalid");
 
-    err = dhcp_start(&xnetif[id]);
-    if (err != ERR_OK) {
-        return false;
+        netif_set_addr(self->piface, &ipaddr, &netmask, &gateway);
+
+        return mp_const_none;
     }
-    while(timeout) {
-        if (xnetif[id].ip_addr.addr != 0) {
-            //wifi_reg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl, NULL);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ip_get_obj, 1, 2, ip_get);
 
-            dhcp_stop(&xnetif[id]);
-            return true;
+STATIC mp_obj_t netif_set_default0(mp_obj_t self_in) {
+    netif_obj_t *self = self_in;
+    
+    netif_set_default(self->piface);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(netif_set_default_obj, netif_set_default0);
+
+STATIC mp_obj_t netif_set_linkup0(mp_obj_t self_in) {
+    netif_obj_t *self = self_in;
+    
+    netif_set_link_up(self->piface);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(netif_set_linkup_obj, netif_set_linkup0);
+
+STATIC mp_obj_t netif_set_linkdown0(mp_obj_t self_in) {
+    netif_obj_t *self = self_in;
+    
+    netif_set_link_down(self->piface);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(netif_set_linkdown_obj, netif_set_linkdown0);
+
+STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
+    netif_obj_t *self = self_in;
+    self->piface->ip_addr.addr = 0;
+    self->piface->netmask.addr = 0;
+    self->piface->gw.addr = 0;
+
+    int8_t err = dhcp_start(self->piface);
+
+    if (err != ERR_OK) {
+        mp_raise_msg(&mp_type_OSError, "NETIF dhcp start error");
+    }
+
+    uint16_t timeout = 0;
+    uint16_t counter = 0;
+
+    timeout = mp_obj_get_int(timeout_in);
+
+    while (timeout) {
+        if (self->piface->ip_addr.addr != 0) {
+            return mp_const_none;
         }
         mp_hal_delay_ms(DHCP_FINE_TIMER_MSECS);
         dhcp_fine_tmr();
         counter += DHCP_FINE_TIMER_MSECS;
-        if (counter >= DHCP_COARSE_TIMER_SECS*1000) {
+        if (counter >= (DHCP_COARSE_TIMER_SECS * 1000)) {
             dhcp_coarse_tmr();
             counter = 0;
             timeout--;
         }
     }
-    return false;
-}
-
-STATIC mp_obj_t ip_get(mp_obj_t self_in) {
-    netif_obj_t *self = self_in;
-    mp_obj_t tuple[8];
-    struct ip_addr ipaddr;   
-    struct ip_addr netmask;   
-    struct ip_addr gateway;
-    ipaddr  = xnetif[self->index].ip_addr;
-    netmask = xnetif[self->index].netmask;
-    gateway = xnetif[self->index].gw;
-    tuple[0] = mp_obj_new_str(ip_ntoa(&ipaddr), strlen(ip_ntoa(&ipaddr)), false);
-    tuple[1] = mp_obj_new_str(ip_ntoa(&netmask), strlen(ip_ntoa(&netmask)), false);
-    tuple[2] = mp_obj_new_str(ip_ntoa(&gateway), strlen(ip_ntoa(&gateway)), false);
-    return mp_obj_new_tuple(3, tuple);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(ip_get_obj, ip_get);
-
-STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
-    netif_obj_t *self = self_in;
-    bool ret = false;
-
-    uint16_t timeout = 0;
-
-    timeout = mp_obj_get_int(timeout_in);
-    ret = dhcp_request_func(self->index, timeout);
-    if (ret == false)
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TimeoutError, "NETIF(%d) DHCP request timeout", self->index));
-    else 
-        return mp_const_none;
+    mp_raise_msg(&mp_type_TimeoutError, "NETIF DHCP request timeout");
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(dhcp_request_obj, dhcp_request0);
 
 STATIC mp_obj_t dhcp_renew0(mp_obj_t self_in) {
     int8_t err ;
     netif_obj_t *self = self_in;
-    err = dhcp_renew(&xnetif[self->index]);
+    err = dhcp_renew(self->piface);
     if (err != ERR_OK) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "NETIF(%d) DHCP renew failed", self->index));
+        mp_raise_ValueError("NETIF DHCP renew failed");
     }
     return mp_const_none;
 }
@@ -160,9 +158,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(dhcp_renew_obj, dhcp_renew0);
 STATIC mp_obj_t dhcp_release0(mp_obj_t self_in) {
     int8_t err;
     netif_obj_t *self = self_in;
-    err = dhcp_release(&xnetif[self->index]);
+    err = dhcp_release(self->piface);
     if (err != ERR_OK) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "NETIF(%d) DHCP release failed", self->index));
+        mp_raise_ValueError("NETIF DHCP release failed");
     }
     return mp_const_none;
 }
@@ -170,29 +168,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(dhcp_release_obj, dhcp_release0);
 
 STATIC mp_obj_t dhcp_inform0(mp_obj_t self_in) {
     netif_obj_t *self = self_in;
-    dhcp_inform(&xnetif[self->index]);
+    dhcp_inform(self->piface);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(dhcp_inform_obj, dhcp_inform0);
 
-STATIC mp_obj_t dhcp_state0(mp_obj_t self_in) {
-    int8_t state = 0;
-    netif_obj_t *self = self_in;
-    state = xnetif[self->index].dhcp->state;
-    return mp_obj_new_int(state);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(dhcp_state_obj, dhcp_state0);
-
 STATIC mp_obj_t dhcp_stop0(mp_obj_t self_in) {
     netif_obj_t *self = self_in;
-    dhcp_stop(&xnetif[self->index]);
+    dhcp_stop(self->piface);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(dhcp_stop_obj, dhcp_stop0);
 
 STATIC mp_obj_t netif_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
     STATIC const mp_arg_t netif_init_args[] = {
-        { MP_QSTR_index,       MP_ARG_REQUIRED | MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_index, MP_ARG_REQUIRED | MP_ARG_INT,  {.u_int = 0} },
     };
 
     mp_map_t kw_args;
@@ -202,29 +192,19 @@ STATIC mp_obj_t netif_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_u
 
     netif_obj_t *self;
 
-    switch(args[0].u_int) {
-        case 0:
-            self = &netif_obj_0;
-            break;
-        case 1:
-            self = &netif_obj_1;
-            break;
-        default:
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid NETIF index"));
-            break;
-    }
-
     return (mp_obj_t)self;
 }
 
 STATIC const mp_map_elem_t netif_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ip),           (mp_obj_t)&ip_get_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_request), (mp_obj_t)&dhcp_request_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_renew),   (mp_obj_t)&dhcp_renew_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_release), (mp_obj_t)&dhcp_release_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_inform),  (mp_obj_t)&dhcp_inform_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_state),   (mp_obj_t)&dhcp_state_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_stop),    (mp_obj_t)&dhcp_stop_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ip),           MP_OBJ_FROM_PTR(&ip_get_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_default),      MP_OBJ_FROM_PTR(&netif_set_default_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_linkup),       MP_OBJ_FROM_PTR(&netif_set_linkup_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_linkdown),     MP_OBJ_FROM_PTR(&netif_set_linkdown_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_request), MP_OBJ_FROM_PTR(&dhcp_request_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_renew),   MP_OBJ_FROM_PTR(&dhcp_renew_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_release), MP_OBJ_FROM_PTR(&dhcp_release_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_inform),  MP_OBJ_FROM_PTR(&dhcp_inform_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_stop),    MP_OBJ_FROM_PTR(&dhcp_stop_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(netif_locals_dict, netif_locals_dict_table);
 
@@ -233,5 +213,5 @@ const mp_obj_type_t netif_type = {
     .name        = MP_QSTR_NETIF,
     .print       = netif_print,
     .make_new    = netif_make_new,
-    .locals_dict = (mp_obj_t)&netif_locals_dict,
+    .locals_dict = (mp_obj_dict_t *)&netif_locals_dict,
 };

@@ -55,6 +55,7 @@
 #define MICROPY_PY_USELECT                      (1)
 #define MICROPY_PY_UTIMEQ                       (1)
 #define MICROPY_PY_LWIP                         (1)
+#define MICROPY_PY_URANDOM                      (1)
 #define MICROPY_PY_BUILTINS_FLOAT               (1)
 #define MICROPY_PY_UTIME_MP_HAL                 (1)
 #define MICROPY_MODULE_FROZEN_STR               (1)
@@ -115,10 +116,12 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_json),    MP_OBJ_FROM_PTR(&mp_module_ujson) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_errno),   MP_OBJ_FROM_PTR(&mp_module_uerrno) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_select),  MP_OBJ_FROM_PTR(&mp_module_uselect) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine), MP_OBJ_FROM_PTR(&mp_module_umachine) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wireless), MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
-#define MICROPY_HW_PORT_VERSION             "0.0.4"
+#define MICROPY_HW_PORT_VERSION             "0.0.5"
 
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
 #define MICROPY_HW_MCU_NAME                 "RTL8195A"
@@ -128,7 +131,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
-#define MICROPY_TASK_PRIORITY               (2)
+#define MICROPY_TASK_PRIORITY               (3)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (1 * 1024) + 0

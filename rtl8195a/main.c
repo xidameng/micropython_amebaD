@@ -73,7 +73,7 @@ void micropython_task(void const *arg) {
     modmachine_init();
     modwireless_init();
     modnetwork_init();
-
+    
     pyexec_frozen_module("_boot.py");
     pyexec_file("main.py");
     modterm_rx_loop();
@@ -112,8 +112,8 @@ void main (void) {
 
     if (xReturn != pdTRUE)
         mp_printf(&mp_plat_print, "Create %s task failed", MICROPY_TASK_NAME);
-    else
-        vTaskStartScheduler();
+
+    vTaskStartScheduler();
 
     for(;;);
     return;
