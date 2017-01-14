@@ -110,6 +110,35 @@ STATIC mp_obj_t netif_set_linkdown0(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(netif_set_linkdown_obj, netif_set_linkdown0);
 
+STATIC mp_obj_t netif_flags(mp_uint_t n_args, const mp_obj_t *args) {
+    netif_obj_t *self = args[0];
+    if (n_args == 1) {
+        // get the value
+        return mp_obj_new_int(self->piface->flags);
+    } else {
+        uint8_t flags = mp_obj_get_int(args[1]);
+        self->piface->flags = flags;
+        return mp_const_none;
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(netif_flags_obj, 1, 2, netif_flags);
+
+STATIC mp_obj_t netif_hostname(mp_uint_t n_args, const mp_obj_t *args) {
+    netif_obj_t *self = args[0];
+    char* hostname = NULL;
+    uint8_t len = 0;
+    if (n_args == 1) {
+        // get the value
+        hostname = self->piface->hostname;
+        return mp_obj_new_str(hostname, strlen(hostname), false);
+    } else {
+        hostname = mp_obj_str_get_data(args[1], &len);
+        self->piface->hostname = hostname;
+        return mp_const_none;
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(netif_hostname_obj, 1, 2, netif_hostname);
+
 STATIC mp_obj_t dhcp_request0(mp_obj_t self_in, mp_obj_t timeout_in) {
     netif_obj_t *self = self_in;
     self->piface->ip_addr.addr = 0;
@@ -200,11 +229,22 @@ STATIC const mp_map_elem_t netif_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_default),      MP_OBJ_FROM_PTR(&netif_set_default_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_linkup),       MP_OBJ_FROM_PTR(&netif_set_linkup_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_linkdown),     MP_OBJ_FROM_PTR(&netif_set_linkdown_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_hostname),     MP_OBJ_FROM_PTR(&netif_hostname_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_flags),        MP_OBJ_FROM_PTR(&netif_flags_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_request), MP_OBJ_FROM_PTR(&dhcp_request_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_renew),   MP_OBJ_FROM_PTR(&dhcp_renew_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_release), MP_OBJ_FROM_PTR(&dhcp_release_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_inform),  MP_OBJ_FROM_PTR(&dhcp_inform_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_dhcp_stop),    MP_OBJ_FROM_PTR(&dhcp_stop_obj) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_UP),            MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_UP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_BROADCAST),     MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_BROADCAST) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_POINTTOPOINT),  MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_POINTTOPOINT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_DHCP),          MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_DHCP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_LINK_UP),       MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_LINK_UP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_ETHARP),        MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_ETHARP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_ETHERNET),      MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_ETHERNET) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLAG_IGMP),          MP_OBJ_NEW_SMALL_INT(NETIF_FLAG_IGMP) },
 };
 STATIC MP_DEFINE_CONST_DICT(netif_locals_dict, netif_locals_dict_table);
 

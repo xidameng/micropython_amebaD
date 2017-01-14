@@ -1206,6 +1206,20 @@ STATIC mp_obj_t lwip_socket_setsockopt(mp_uint_t n_args, const mp_obj_t *args) {
                 ip_reset_option(socket->pcb.tcp, SOF_REUSEADDR);
             }
             break;
+        case SOF_KEEPALIVE:
+            if (val) {
+                ip_set_option(socket->pcb.tcp, SOF_KEEPALIVE);
+            } else {
+                ip_reset_option(socket->pcb.tcp, SOF_KEEPALIVE);
+            }
+            break;
+        case SOF_BROADCAST:
+            if (val) {
+                ip_set_option(socket->pcb.raw, SOF_BROADCAST);
+            } else {
+                ip_reset_option(socket->pcb.raw, SOF_BROADCAST);
+            }
+            break;
         default:
             printf("Warning: lwip.setsockopt() not implemented\n");
     }
@@ -1434,7 +1448,9 @@ STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
 #endif
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET) },
+#if 0 // IPV6 not support yet
     { MP_OBJ_NEW_QSTR(MP_QSTR_AF_INET6), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_AF_INET6) },
+#endif
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_STREAM), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_STREAM) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOCK_DGRAM), MP_OBJ_NEW_SMALL_INT(MOD_NETWORK_SOCK_DGRAM) },
@@ -1442,6 +1458,8 @@ STATIC const mp_map_elem_t mp_module_lwip_globals_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOL_SOCKET), MP_OBJ_NEW_SMALL_INT(1) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR), MP_OBJ_NEW_SMALL_INT(SOF_REUSEADDR) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SOF_KEEPALIVE), MP_OBJ_NEW_SMALL_INT(SOF_KEEPALIVE) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SO_BROADCAST), MP_OBJ_NEW_SMALL_INT(SOF_BROADCAST) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_lwip_globals, mp_module_lwip_globals_table);

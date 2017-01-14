@@ -1,23 +1,49 @@
 from uwireless import WLAN
-from network import NETIF
-import utime
+import utime, ujson
 
 SEC_WPA2 = WLAN.WPA2_AES_PSK
 SEC_OPEN = WLAN.OPEN
 
+def wlan_default_connect_callback():
+    print("wlan connected")
+
+def wlan_default_disconnect_callback():
+    print("wlan disconnected")
+
 class SimpleConnect:
-    def __init__(self, ssid, password, security=SEC_WPA2, disconnect=None, connect=None):
-        self.ssid = ssid
-        self.password = password
-        self.security = security
-        self.wlan = WLAN(mode=WLAN.STA)
+
+    CONFIG_SSID="ssid"
+    CONFIG_MODE="mode"
+    CONFIG_SECURITY="security"
+    CONFIG_PASS="password"
+
+    def __init__(self, config_file=".wlanconfig", disconnect=None, connect=None):
+        try:
+            f = open(config_file, "r")
+        except:
+            raise ValueError("Open .wlanconfig failed")
+
+        f.seek(0)
+        config_json = f.read()
+        config = ujson.loads(str(config_json))
+        f.close()
+
+        try:
+            self.ssid = config[self.CONFIG_SSID]
+            self.wlan_mode = config[self.CONFIG_MODE]
+            self.security = config[self.CONFIG_SECURITY]
+            self.password = config[self.CONFIG_PASS]
+        except KeyError as e:
+            raise KeyError(e)
+
+        self.wlan = WLAN(mode=self.wlan_mode)
         self.wlan.off()
         self.wlan.on()
         self.is_connected = False
         if connect is None:
-            connect = self.wlan_connect_callback
+            connect = wlan_default_connect_callback
         if disconnect is None:
-            disconnect = self.wlan_disconnect_callback
+            disconnect = wlan_default_disconnect_callback
         self.wlan.event_handler(WLAN.EVENT_CONNECT, connect)
         self.wlan.event_handler(WLAN.EVENT_DISCONNECT, disconnect)
 
@@ -29,11 +55,13 @@ class SimpleConnect:
     def is_connect_to_ap(self):
         return self.wlan.is_connect_to_ap()
 
-    def wlan_connect_callback():
-        print("wlan connected!")
+    @property
+    def netif_0(self):
+        return self.wlan.interface(0)
 
-    def wlan_disconnect_callback():
-        print("wlan disconnect")
+    @property
+    def netif_1(self):
+        return self.wlan.interface(1)
 
     def connect(self, timeout=2000):
         if self.wifi_is_running != True:
@@ -48,21 +76,7 @@ class SimpleConnect:
             if self.is_connect_to_ap is True:
                 netif = self.wlan.interface(0)
                 netif.dhcp_request(10)
-                print(netif)
                 return
             timeout -= 1
 
         raise OSError("STA has not connect to AP")
-
-def wifi_connect(ssid="VIP_WirelessAP", password="22238392abcd"):
-    ssid = ssid
-    password = password
-
-    def wlan_connected():
-        print("wlan connected")
-
-    def wlan_disconnected():
-        print("wlan disconnected")
-
-    wlan = SimpleConnect(ssid=ssid, password=password, connect=wlan_connected, disconnect=wlan_disconnected);
-    wlan.connect()
