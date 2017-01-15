@@ -37,15 +37,11 @@ class SimpleConnect:
             raise KeyError(e)
 
         self.wlan = WLAN(mode=self.wlan_mode)
-        self.wlan.off()
-        self.wlan.on()
-        self.is_connected = False
+
         if connect is None:
-            connect = wlan_default_connect_callback
+            self.connect_cb = wlan_default_connect_callback
         if disconnect is None:
-            disconnect = wlan_default_disconnect_callback
-        self.wlan.event_handler(WLAN.EVENT_CONNECT, connect)
-        self.wlan.event_handler(WLAN.EVENT_DISCONNECT, disconnect)
+            self.disconnect_cb = wlan_default_disconnect_callback
 
     @property
     def wifi_is_running(self):
@@ -64,6 +60,12 @@ class SimpleConnect:
         return self.wlan.interface(1)
 
     def connect(self, timeout=2000):
+        self.wlan.off()
+        self.wlan.on()
+        self.is_connected = False
+
+        self.wlan.event_handler(WLAN.EVENT_CONNECT, self.connect_cb)
+        self.wlan.event_handler(WLAN.EVENT_DISCONNECT, self.disconnect_cb)
         if self.wifi_is_running != True:
             raise OSError("wifi is not running")
         try:
