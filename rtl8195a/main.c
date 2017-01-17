@@ -80,11 +80,6 @@ void micropython_task(void const *arg) {
     vTaskDelete(NULL);
 }
 
-void ftpd_task(void const *arg) {
-    ftpd_init();
-    for(;;);
-}
-
 /*
  * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
  * so it's not quite easy to predict usage.
@@ -155,39 +150,3 @@ void nlr_jump_fail(void *val) {
         for (volatile uint delay = 0; delay < 10000000; delay++);
     }
 }
-
-SECTION(".sdram.bss") StackType_t mpFTPDStack[MICROPY_NETWORK_CORE_STACK_DEPTH];
-mp_obj_t mp_builtin_ftpd(mp_obj_t enable_in) {
-
-    // Create MicroPython main task
-    TaskHandle_t xReturn = xTaskGenericCreate(ftpd_task,
-            (signed char *)"FTPD", 
-            MICROPY_NETWORK_CORE_STACK_DEPTH, 
-            NULL,
-            MICROPY_TASK_PRIORITY,
-            NULL,           // No arguments to pass to mp thread
-            mpFTPDStack,    // Use user define stack memory to make it predictable.
-            NULL);
-#if 0
-    bool enable = mp_obj_is_true(enable_in);
-    if (enable) {
-        if (ftpd_tid != NULL) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread has been created"));
-        }
-        osThreadDef(ftpd_task, MICROPY_FTPD_TASK_PRIORITY, 1, MICROPY_FTPD_STACK_SIZE);
-        ftpd_tid = osThreadCreate (osThread (ftpd_task), NULL);
-    } else {
-        if (ftpd_tid == NULL) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread has not created"));
-        }
-        osStatus status = osThreadTerminate(ftpd_tid);
-        if (status == osOK) {
-            ftpd_tid = NULL;
-        } else {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "Thread terminate failed"));
-        }
-    }
-#endif
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(mp_builtin_ftpd_obj, mp_builtin_ftpd);

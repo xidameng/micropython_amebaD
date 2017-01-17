@@ -38,7 +38,7 @@
 #include "spi_ex_api.h"
 #include "PinNames.h"
 
-#define SPI_MIN_BAUD_RATE               (10000000)
+#define SPI_MIN_BAUD_RATE               (10000)
 #define SPI_DEFAULT_BAUD_RATE           (20000000)
 #define SPI_MAX_BAUD_RATE               (40000000)
 

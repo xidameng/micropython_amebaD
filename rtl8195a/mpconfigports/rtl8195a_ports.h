@@ -25,8 +25,8 @@
 #define MICROPY_PY_BUILTINS_BYTEARRAY           (1)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW          (1)
 #define MICROPY_PY_BUILTINS_ENUMERATE           (1)
-#define MICROPY_PY_BUILTINS_FROZENSET           (0)
-#define MICROPY_PY_BUILTINS_REVERSED            (0)
+#define MICROPY_PY_BUILTINS_FROZENSET           (1)
+#define MICROPY_PY_BUILTINS_REVERSED            (1)
 #define MICROPY_PY_BUILTINS_EXECFILE            (1)
 #define MICROPY_PY_BUILTINS_SET                 (1)
 #define MICROPY_PY_BUILTINS_SLICE               (1)
@@ -85,14 +85,11 @@
         nlr_raise(obj);                                     \
     }                                                       \
 
-extern const struct _mp_obj_fun_builtin_t mp_builtin_ftpd_obj;
-
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_help),  MP_OBJ_FROM_PTR(&mp_builtin_help_obj) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_input), MP_OBJ_FROM_PTR(&mp_builtin_input_obj) }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_open),  MP_OBJ_FROM_PTR(&mp_builtin_open_obj) },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),  MP_OBJ_FROM_PTR(&mp_builtin_ftpd_obj) },  \
 
 extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
