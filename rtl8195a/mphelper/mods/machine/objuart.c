@@ -100,13 +100,13 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     pin_obj_t *rx = pin_find(args[ARG_rx].u_obj);
 
     PinName pn_tx = (PinName)pinmap_peripheral(tx->id, PinMap_UART_TX);
-    PinName pn_rx = (PinName)pinmap_peripheral(tx->id, PinMap_UART_RX);
+    PinName pn_rx = (PinName)pinmap_peripheral(rx->id, PinMap_UART_RX);
 
     if (pn_tx == NC)
         mp_raise_ValueError("UART TX pin not match");
 
     if (pn_rx == NC)
-        mp_raise_ValueError("UART RX pin not mathc");
+        mp_raise_ValueError("UART RX pin not match");
 
     uart_obj_t *self    = &uart_obj[args[ARG_unit].u_int];
     self->baudrate      = MIN(MAX(args[ARG_baudrate].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
