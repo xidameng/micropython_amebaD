@@ -128,14 +128,13 @@ LIB_SRC_C = $(addprefix lib/,\
 	netutils/netutils.c \
 	timeutils/timeutils.c \
 	utils/pyexec.c \
-	utils/pyhelp.c \
 	utils/interrupt_char.c \
 	)
 
 ifeq ($(MICROPY_FATFS), 1)
 LIB_SRC_C += \
-	lib/fatfs/ff.c \
-	lib/fatfs/option/ccsbcs.c
+	lib/oofatfs/ff.c \
+	lib/oofatfs/option/unicode.c
 endif
 
 DRIVERS_SRC_C = $(addprefix drivers/,\

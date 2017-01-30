@@ -51,7 +51,7 @@ def convert_regex_escapes(line):
 
 
 def run_micropython(pyb, args, test_file):
-    special_tests = ('micropython/meminfo.py', 'basics/bytes_compare3.py', 'thread/thread_exc2.py')
+    special_tests = ('micropython/meminfo.py', 'basics/bytes_compare3.py', 'basics/builtin_help.py', 'thread/thread_exc2.py')
     is_special = False
     if pyb is None:
         # run on PC
@@ -144,6 +144,10 @@ def run_micropython(pyb, args, test_file):
 
     # canonical form for all ports/platforms is to use \n for end-of-line
     output_mupy = output_mupy.replace(b'\r\n', b'\n')
+
+    # don't try to convert the output if we should skip this test
+    if output_mupy == b'SKIP\n':
+        return output_mupy
 
     if is_special or test_file in special_tests:
         # convert parts of the output that are not stable across runs
@@ -281,7 +285,7 @@ def run_tests(pyb, tests, args):
     # Some tests are known to fail with native emitter
     # Remove them from the below when they work
     if args.emit == 'native':
-        skip_tests.update({'basics/%s.py' % t for t in 'gen_yield_from gen_yield_from_close gen_yield_from_ducktype gen_yield_from_exc gen_yield_from_iter gen_yield_from_send gen_yield_from_stopped gen_yield_from_throw gen_yield_from_throw2 generator1 generator2 generator_args generator_close generator_closure generator_exc generator_return generator_send'.split()}) # require yield
+        skip_tests.update({'basics/%s.py' % t for t in 'gen_yield_from gen_yield_from_close gen_yield_from_ducktype gen_yield_from_exc gen_yield_from_iter gen_yield_from_send gen_yield_from_stopped gen_yield_from_throw gen_yield_from_throw2 gen_yield_from_throw3 generator1 generator2 generator_args generator_close generator_closure generator_exc generator_return generator_send'.split()}) # require yield
         skip_tests.update({'basics/%s.py' % t for t in 'bytes_gen class_store_class globals_del string_join'.split()}) # require yield
         skip_tests.update({'basics/async_%s.py' % t for t in 'def await await2 for for2 with with2'.split()}) # require yield
         skip_tests.update({'basics/%s.py' % t for t in 'try_reraise try_reraise2'.split()}) # require raise_varargs

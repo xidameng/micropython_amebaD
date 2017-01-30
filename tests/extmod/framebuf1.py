@@ -50,6 +50,7 @@ print('rect', buf)
 
 #fill rect
 fbuf.fill(0)
+fbuf.fill_rect(0, 0, 0, 3, 1) # zero width, no-operation
 fbuf.fill_rect(1, 1, 3, 3, 1)
 print('fill_rect', buf)
 
@@ -88,11 +89,11 @@ print(buf)
 fbuf.text(str(chr(31)), 0, 0)
 print(buf)
 
-# test invalid constructor
+# test invalid constructor, and stride argument
 try:
-    fbuf = framebuf.FrameBuffer(buf, w, h, 2, framebuf.MVLSB)
+    fbuf = framebuf.FrameBuffer(buf, w, h, -1, w)
 except ValueError:
-	print("ValueError")
+    print("ValueError")
 
 # test legacy constructor
 fbuf = framebuf.FrameBuffer1(buf, w, h)

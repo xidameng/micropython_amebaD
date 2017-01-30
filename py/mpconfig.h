@@ -398,9 +398,9 @@
 #define MICROPY_READER_POSIX (0)
 #endif
 
-// Whether to use the FatFS reader for importing files
-#ifndef MICROPY_READER_FATFS
-#define MICROPY_READER_FATFS (0)
+// Whether to use the VFS reader for importing files
+#ifndef MICROPY_READER_VFS
+#define MICROPY_READER_VFS (0)
 #endif
 
 // Hook for the VM at the start of the opcode loop (can contain variable
@@ -616,9 +616,9 @@ typedef double mp_float_t;
 #define MICROPY_USE_INTERNAL_PRINTF (1)
 #endif
 
-// Support for user-space VFS mount (selected ports)
-#ifndef MICROPY_FSUSERMOUNT
-#define MICROPY_FSUSERMOUNT (0)
+// Support for generic VFS sub-system
+#ifndef MICROPY_VFS
+#define MICROPY_VFS (0)
 #endif
 
 /*****************************************************************************/
@@ -757,6 +757,22 @@ typedef double mp_float_t;
 // Whether to support min/max functions
 #ifndef MICROPY_PY_BUILTINS_MIN_MAX
 #define MICROPY_PY_BUILTINS_MIN_MAX (1)
+#endif
+
+// Whether to provide the help function
+#ifndef MICROPY_PY_BUILTINS_HELP
+#define MICROPY_PY_BUILTINS_HELP (0)
+#endif
+
+// Use this to configure the help text shown for help().  It should be a
+// variable with the type "const char*".  A sensible default is provided.
+#ifndef MICROPY_PY_BUILTINS_HELP_TEXT
+#define MICROPY_PY_BUILTINS_HELP_TEXT mp_help_default_text
+#endif
+
+// Add the ability to list the available modules when executing help('modules')
+#ifndef MICROPY_PY_BUILTINS_HELP_MODULES
+#define MICROPY_PY_BUILTINS_HELP_MODULES (0)
 #endif
 
 // Whether to set __file__ for imported modules

@@ -85,8 +85,8 @@ void mp_init(void) {
     // optimization disabled by default
     MP_STATE_VM(mp_optimise_value) = 0;
 
-    // init global module stuff
-    mp_module_init();
+    // init global module dict
+    mp_obj_dict_init(&MP_STATE_VM(mp_loaded_modules_dict), 3);
 
     // initialise the __main__ module
     mp_obj_dict_init(&MP_STATE_VM(dict_main), 1);
@@ -105,6 +105,12 @@ void mp_init(void) {
     memset(MP_STATE_VM(fs_user_mount), 0, sizeof(MP_STATE_VM(fs_user_mount)));
     #endif
 
+    #if MICROPY_VFS
+    // initialise the VFS sub-system
+    MP_STATE_VM(vfs_cur) = NULL;
+    MP_STATE_VM(vfs_mount_table) = NULL;
+    #endif
+
     #if MICROPY_PY_THREAD_GIL
     mp_thread_mutex_init(&MP_STATE_VM(gil_mutex));
     #endif
@@ -114,7 +120,7 @@ void mp_init(void) {
 
 void mp_deinit(void) {
     //mp_obj_dict_free(&dict_main);
-    mp_module_deinit();
+    //mp_map_deinit(&MP_STATE_VM(mp_loaded_modules_map));
 
     // call port specific deinitialization if any 
 #ifdef MICROPY_PORT_INIT_FUNC
@@ -220,11 +226,9 @@ mp_obj_t mp_unary_op(mp_uint_t op, mp_obj_t arg) {
                 } else {
                     return MP_OBJ_NEW_SMALL_INT(-val);
                 }
-            case MP_UNARY_OP_INVERT:
-                return MP_OBJ_NEW_SMALL_INT(~val);
             default:
-                assert(0);
-                return arg;
+                assert(op == MP_UNARY_OP_INVERT);
+                return MP_OBJ_NEW_SMALL_INT(~val);
         }
     } else if (op == MP_UNARY_OP_HASH && MP_OBJ_IS_STR_OR_BYTES(arg)) {
         // fast path for hashing str/bytes
@@ -1234,7 +1238,8 @@ mp_vm_return_kind_t mp_resume(mp_obj_t self_in, mp_obj_t send_value, mp_obj_t th
         return MP_VM_RETURN_YIELD;
     }
 
-    if (throw_value != MP_OBJ_NULL) {
+    assert(throw_value != MP_OBJ_NULL);
+    {
         if (mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(mp_obj_get_type(throw_value)), MP_OBJ_FROM_PTR(&mp_type_GeneratorExit))) {
             mp_load_method_maybe(self_in, MP_QSTR_close, dest);
             if (dest[0] != MP_OBJ_NULL) {
@@ -1244,13 +1249,15 @@ mp_vm_return_kind_t mp_resume(mp_obj_t self_in, mp_obj_t send_value, mp_obj_t th
                 // We assume one can't "yield" from close()
                 return MP_VM_RETURN_NORMAL;
             }
-        }
-        mp_load_method_maybe(self_in, MP_QSTR_throw, dest);
-        if (dest[0] != MP_OBJ_NULL) {
-            *ret_val = mp_call_method_n_kw(1, 0, &throw_value);
-            // If .throw() method returned, we assume it's value to yield
-            // - any exception would be thrown with nlr_raise().
-            return MP_VM_RETURN_YIELD;
+        } else {
+            mp_load_method_maybe(self_in, MP_QSTR_throw, dest);
+            if (dest[0] != MP_OBJ_NULL) {
+                dest[2] = throw_value;
+                *ret_val = mp_call_method_n_kw(1, 0, dest);
+                // If .throw() method returned, we assume it's value to yield
+                // - any exception would be thrown with nlr_raise().
+                return MP_VM_RETURN_YIELD;
+            }
         }
         // If there's nowhere to throw exception into, then we assume that object
         // is just incapable to handle it, so any exception thrown into it
@@ -1260,9 +1267,6 @@ mp_vm_return_kind_t mp_resume(mp_obj_t self_in, mp_obj_t send_value, mp_obj_t th
         *ret_val = throw_value;
         return MP_VM_RETURN_EXCEPTION;
     }
-
-    assert(0);
-    return MP_VM_RETURN_NORMAL; // Should be unreachable
 }
 
 mp_obj_t mp_make_raise_obj(mp_obj_t o) {

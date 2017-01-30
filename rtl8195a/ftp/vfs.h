@@ -27,7 +27,7 @@
 #ifndef INCLUDE_VFS_H
 #define INCLUDE_VFS_H
 
-#include <lib/fatfs/ff.h>
+#include <lib/oofatfs/ff.h>
 
 #include "rtc_api.h"
 #define vfs_load_plugin(x)
@@ -37,7 +37,7 @@ typedef struct {
 	short time;
 } ftime_t;
 
-typedef DIR vfs_dir_t;
+typedef FF_DIR vfs_dir_t;
 typedef FIL vfs_file_t;
 typedef struct {
 	long st_size;

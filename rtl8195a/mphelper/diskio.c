@@ -1,7 +1,7 @@
 #include "py/mpconfig.h"
 #include "py/runtime.h"
 #include "py/obj.h"
-#include "lib/fatfs/ff.h"
+#include "lib/oofatfs/ff.h"
 
 #include "timeutils.h"
 #include "rtc_api.h"

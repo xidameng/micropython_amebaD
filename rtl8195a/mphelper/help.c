@@ -25,8 +25,7 @@
  */
 
 #include <stdio.h>
-
-#include "lib/utils/pyhelp.h"
+#include "py/builtin.h"
 
 STATIC const char *help_text =
 "Welcome to MicroPython@"
@@ -34,17 +33,3 @@ MICROPY_HW_MCU_NAME
 "\n"
 "Please visit http://cwyark.github.io/mpiot for more information\n"
 ;
-
-STATIC mp_obj_t pyb_help(uint n_args, const mp_obj_t *args) {
-    if (n_args == 0) {
-        // print a general help message
-        DiagPrintf("%s", help_text);
-
-    } else {
-        // try to print something sensible about the given object
-        pyhelp_print_obj(args[0]);
-    }
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_builtin_help_obj, 0, 1, pyb_help);

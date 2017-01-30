@@ -28,8 +28,7 @@
  *                              Header includes
  * ***************************************************************************/
 #include "objsdio_host.h"
-#include "lib/fatfs/ff.h"
-#include "extmod/fsusermount.h"
+#include "lib/oofatfs/ff.h"
 
 STATIC sdio_host_obj_t sdio_host_obj = {
     .base.type = &sdio_host_type,
@@ -106,6 +105,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(sdio_host_writeblocks_obj, sdio_host_writeblock
 
 STATIC mp_obj_t sdio_host_ioctl(mp_obj_t self, mp_obj_t cmd_in, mp_obj_t arg_in) {
     mp_int_t cmd = mp_obj_get_int(cmd_in);
+#if 0
     switch (cmd) {
         case BP_IOCTL_INIT: return MP_OBJ_NEW_SMALL_INT(sdio_host_init());
         case BP_IOCTL_DEINIT: return MP_OBJ_NEW_SMALL_INT(sdio_host_deinit());
@@ -116,6 +116,7 @@ STATIC mp_obj_t sdio_host_ioctl(mp_obj_t self, mp_obj_t cmd_in, mp_obj_t arg_in)
 
         default: return mp_const_none;
     }
+#endif
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(sdio_host_ioctl_obj, sdio_host_ioctl);
 

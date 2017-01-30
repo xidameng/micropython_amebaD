@@ -90,8 +90,9 @@ int mp_term_rx_chr() {
 }
 
 void modterm_rx_loop(void) {
-
+#if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
+#endif
 
     struct terminal_msg *msg;
 

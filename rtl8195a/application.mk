@@ -364,11 +364,10 @@ DRAM_C += mphelper/mods/network/objpacket.c
 
 DRAM_C += \
 		lib/utils/pyexec.c \
-		lib/utils/pyhelp.c \
 		lib/mp-readline/readline.c \
 		lib/utils/interrupt_char.c \
-		lib/fatfs/ff.c \
-		lib/fatfs/option/ccsbcs.c \
+		lib/oofatfs/ff.c \
+		lib/oofatfs/option/unicode.c \
 		lib/timeutils/timeutils.c \
-		ftp/vfs.c \
-		ftp/ftpd.c \
+		#ftp/vfs.c \
+		#ftp/ftpd.c \

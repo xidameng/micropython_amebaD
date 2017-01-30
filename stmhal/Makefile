@@ -15,6 +15,9 @@ include boards/$(BOARD)/mpconfigboard.mk
 # qstr definitions (must come before including py.mk)
 QSTR_DEFS = qstrdefsport.h $(BUILD)/pins_qstr.h $(BUILD)/modstm_qstr.h
 
+# directory containing scripts to be frozen as bytecode
+FROZEN_MPY_DIR ?= modules
+
 # include py core make definitions
 include ../py/py.mk
 
@@ -23,7 +26,7 @@ CMSIS_DIR=cmsis
 HAL_DIR=hal/$(MCU_SERIES)
 USBDEV_DIR=usbdev
 #USBHOST_DIR=usbhost
-FATFS_DIR=lib/fatfs
+FATFS_DIR=lib/oofatfs
 DFU=../tools/dfu.py
 # may need to prefix dfu-util with sudo
 USE_PYDFU ?= 1
@@ -106,13 +109,16 @@ SRC_LIB = $(addprefix lib/,\
 	libm/sf_erf.c \
 	libm/wf_lgamma.c \
 	libm/wf_tgamma.c \
-	fatfs/ff.c \
-	fatfs/option/ccsbcs.c \
+	oofatfs/ff.c \
+	oofatfs/option/unicode.c \
 	mp-readline/readline.c \
 	netutils/netutils.c \
 	timeutils/timeutils.c \
 	utils/pyexec.c \
-	utils/pyhelp.c \
+	)
+
+DRIVERS_SRC_C = $(addprefix drivers/,\
+	memory/spiflash.c \
 	)
 
 SRC_C = \
@@ -153,14 +159,12 @@ SRC_C = \
 	modutime.c \
 	modusocket.c \
 	modnetwork.c \
-	import.c \
 	extint.c \
 	usrsw.c \
 	rng.c \
 	rtc.c \
 	flash.c \
 	storage.c \
-	builtin_open.c \
 	sdcard.c \
 	fatfs_port.c \
 	lcd.c \
@@ -254,6 +258,7 @@ endif
 OBJ =
 OBJ += $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_LIB:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(DRIVERS_SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_O))
 OBJ += $(addprefix $(BUILD)/, $(SRC_HAL:.c=.o))

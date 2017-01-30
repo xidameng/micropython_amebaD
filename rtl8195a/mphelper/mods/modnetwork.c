@@ -167,7 +167,9 @@ MP_DEFINE_CONST_FUN_OBJ_1(modnetwork_ftpd_obj, modnetwork_ftpd);
 
 STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
+#if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),         MP_OBJ_FROM_PTR(&modnetwork_ftpd_obj) },
+#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_iflist),       MP_OBJ_FROM_PTR(&netif_iflist_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),        MP_OBJ_FROM_PTR(&netif_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PKT),          MP_OBJ_FROM_PTR(&packet_type) },

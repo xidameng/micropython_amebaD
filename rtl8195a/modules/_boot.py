@@ -18,10 +18,13 @@ print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
 _flash = umachine.FLASH()
 
 try:
-    _flash_vfs = uos.VfsFat(_flash, "/flash")
+    _flash_vfs = uos.VfsFat(_flash)
+    uos.mount(_flash_vfs, '/flash')
 except OSError:
     print("mount flash to file system failed, formating flash ...")
     uos.VfsFat.mkfs(_flash)
-    _flash_vfs = uos.VfsFat(_flash, "/flash")
+    _flash_vfs = uos.VfsFat(_flash)
+    uos.mount(_flash_vfs, '/flash')
+
 
 print("mount flash to file system done")

@@ -25,7 +25,7 @@
  */
 
 #include "vfs.h"
-#include <lib/fatfs/ff.h>
+#include <lib/oofatfs/ff.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -45,7 +45,9 @@ int vfs_read (void* buffer, int dummy, int len, vfs_file_t* file) {
 
 vfs_dirent_t* vfs_readdir(vfs_dir_t* dir) {
 	FILINFO fi;
+#if 0
 	fi.lfname = NULL;
+#endif
 	FRESULT r = f_readdir(dir, &fi);
 	if (r != FR_OK) return NULL;
 	if (fi.fname[0] == 0) return NULL;
@@ -55,10 +57,13 @@ vfs_dirent_t* vfs_readdir(vfs_dir_t* dir) {
 
 int vfs_stat(vfs_t* vfs, const char* filename, vfs_stat_t* st) {
 	FILINFO f;
+#if 0
 	f.lfname = NULL;
+
 	if (FR_OK != f_stat(filename, &f)) {
 		return 1;
 	}
+#endif
 	st->st_size = f.fsize;
 	st->st_mode = f.fattrib;
 	st->st_mtime.date = f.fdate;
@@ -93,31 +98,37 @@ vfs_file_t* vfs_open(vfs_t* vfs, const char* filename, const char* mode) {
 		if (*mode == 'w') flags |= FA_WRITE | FA_CREATE_ALWAYS;
 		mode++;
 	}
+#if 0
 	FRESULT r = f_open(f, filename, flags);
 	if (FR_OK != r) {
 		free(f);
 		return NULL;
 	}
+#endif
 	return f;
 }
 
 char* vfs_getcwd(vfs_t* vfs, void* dummy1, int dummy2) {
 	char* cwd = malloc(255);
+#if 0
 	FRESULT r = f_getcwd(cwd, 255);
 	if (r != FR_OK) {
 		free(cwd);
 		return NULL;
 	}
+#endif
 	return cwd;
 }
 
 vfs_dir_t* vfs_opendir(vfs_t* vfs, const char* path) {
 	vfs_dir_t* dir = malloc(sizeof *dir);
+#if 0
 	FRESULT r = f_opendir(dir, path);
 	if (FR_OK != r) {
 		free(dir);
 		return NULL;
 	}
+#endif
 	return dir;
 }
 

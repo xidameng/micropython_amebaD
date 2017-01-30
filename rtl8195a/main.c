@@ -63,9 +63,6 @@ void micropython_task(void const *arg) {
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
-#if MICROPY_VFS_FAT
-    memset(MP_STATE_PORT(fs_user_mount), 0, sizeof(MP_STATE_PORT(fs_user_mount)));
-#endif
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     MP_STATE_PORT(dupterm_arr_obj) = MP_OBJ_NULL;
 
@@ -119,30 +116,23 @@ void main (void) {
     return;
 }
 
-mp_import_stat_t mp_import_stat(const char *path) {
-#if MICROPY_VFS_FAT
-    return fat_vfs_import_stat(path);
-#else
-    (void)path;
-    return MP_IMPORT_STAT_NO_EXIST;
-#endif
-}
-
-#if !MICROPY_VFS_FAT
+#if !MICROPY_VFS
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return NULL;
 }
-#endif
+
+mp_import_stat_t mp_import_stat(const char *path) {
+    (void)path;
+    return MP_IMPORT_STAT_NO_EXIST;
+}
 
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-#if MICROPY_VFS_FAT
-    // TODO: Handle kwargs!
-    return vfs_proxy_call(MP_QSTR_open, n_args, args);
-#else
     return mp_const_none;
-#endif
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
+#endif
+
 
 void nlr_jump_fail(void *val) {
     mp_printf(&mp_plat_print, "FATAL: uncaught exception %p\r\n", val);

@@ -30,8 +30,8 @@
 // Micropython headers
 #include "py/obj.h"
 #include "py/runtime.h"
-#include "lib/fatfs/ff.h"
-#include "extmod/fsusermount.h"
+#include "extmod/vfs_fat.h"
+#include "lib/oofatfs/ff.h"
 
 // mbed headers
 #include "device_lock.h"

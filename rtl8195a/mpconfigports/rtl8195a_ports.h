@@ -66,17 +66,24 @@
 
 #define MICROPY_PY_TERM_NUM                     (3)
 
+#define MICROPY_READER_VFS                      (MICROPY_VFS)
+#define MICROPY_VFS                             (1)
 #define MICROPY_VFS_FAT                         (1)
-#define MICROPY_READER_FATFS                    (MICROPY_VFS_FAT)
+#define MICROPY_READER_FATFS                    (MICROPY_VFS)
 #define MICROPY_FATFS_ENABLE_LFN                (1)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
-#define MICROPY_FSUSERMOUNT                     (1)
 #define MICROPY_FATFS_VOLUMES                   (4)
 #define MICROPY_FATFS_RPATH                     (2)
 #define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
 
 #include "rtl8195a.h"
+
+// use vfs's functions for import stat and builtin open
+#define mp_import_stat mp_vfs_import_stat
+#define mp_builtin_open mp_vfs_open
+#define mp_builtin_open_obj mp_vfs_open_obj
+
 #define MICROPY_EVENT_POLL_HOOK                             \
     mp_hal_delay_ms(1);                                     \
     if (MP_STATE_VM(mp_pending_exception) != NULL) {        \
@@ -87,7 +94,6 @@
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_help),  MP_OBJ_FROM_PTR(&mp_builtin_help_obj) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_input), MP_OBJ_FROM_PTR(&mp_builtin_input_obj) }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_open),  MP_OBJ_FROM_PTR(&mp_builtin_open_obj) },  \
 
