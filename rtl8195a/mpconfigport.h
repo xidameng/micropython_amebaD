@@ -19,10 +19,12 @@
 
 #define BYTES_PER_WORD (4)
 
-#define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p)))
+#define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
 
 #define UINT_FMT "%lu"
 #define INT_FMT "%ld"
+
+#define MP_HAL_PIN_FMT "%u"
 
 typedef int32_t mp_int_t; // must be pointer size
 typedef uint32_t mp_uint_t; // must be pointer size

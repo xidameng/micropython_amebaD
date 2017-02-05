@@ -6,7 +6,6 @@ INCLUDE "export-rom_v02.txt"
 
 MEMORY
 {
-  FLASH (rwx) : ORIGIN = 0x00000000, LENGTH = 0x200000
   ROM_USED_RAM (rwx)  : ORIGIN = 0x10000bc8, LENGTH = 0x5438
   RAM (rwx)  : ORIGIN = 0x10006000, LENGTH = 0x6A000
   TCM (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 0x10000
@@ -184,25 +183,4 @@ SECTIONS
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 
-	.flash : 
-    {
-      __image1_flash_size__ = 0xB000;
-      . = . + __image1_flash_size__;
-      __image1_flash_end__ = .;
-
-      __image2_flash_start__ = .;
-      . = . + SIZEOF(.ram.start.table) + SIZEOF(.ram.text) + +SIZEOF(.ram.rodata) + SIZEOF(.ram.data);
-      __image2_flash_end__ = .;
-
-      __sdram_text_flash_start__ = .;
-      . = . + SIZEOF(.sdrm_text) + SIZEOF(.sdrm_rodata) + SIZEOF(.sdrm_data);
-      __sdram_text_flash_end__ = .;
-
-      /* ALIGN flash address to 4K address because of the Ameba flash driver's restriction */
-      . = ALIGN(0x1000);
-      __fatfs_start_address__ = .;
-      . = ORIGIN(FLASH) + LENGTH(FLASH) - 1;
-      __fatfs_end_address__ = .;
-      __fatfs_num_blocks__ = (__fatfs_end_address__ - __fatfs_start_address__ + 1) / 4096;
-    } > FLASH
 }

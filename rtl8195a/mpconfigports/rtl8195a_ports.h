@@ -1,6 +1,8 @@
 // options to control how Micro Python is built
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
+#define MICROPY_EMIT_THUMB                      (1)
+#define MICROPY_EMIT_INLINE_THUMB               (1)
 #define MICROPY_PERSISTENT_CODE_LOAD            (1)
 #define MICROPY_COMP_MODULE_CONST               (1)
 #define MICROPY_COMP_CONST                      (1)
@@ -52,6 +54,7 @@
 #define MICROPY_PY_SYS                          (1)
 #define MICROPY_PY_SYS_STDFILES                 (1)
 #define MICROPY_PY_MACHINE                      (1)
+#define MICROPY_PY_MACHINE_SPI                  (1)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_USELECT                      (1)
@@ -108,6 +111,8 @@ extern const struct _mp_obj_module_t mp_network_module;
 
 extern const struct _mp_obj_module_t mp_module_lwip;
 
+extern const struct _mp_obj_module_t mp_module_ameba;
+
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
@@ -117,6 +122,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ameba),        MP_OBJ_FROM_PTR(&mp_module_ameba) },    \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),    MP_OBJ_FROM_PTR(&mp_module_utime) },       \

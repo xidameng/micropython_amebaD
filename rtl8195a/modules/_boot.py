@@ -2,6 +2,8 @@ try:
     import uos
     import umachine
     import uterminal
+    from flashbdev import FlashBdev
+    from ramfs import RAMFS
 except ImportError as e:
     print(e)
 
@@ -15,16 +17,15 @@ uterminal.dump().append(_log_uart)
 
 print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
 
-_flash = umachine.FLASH()
+_flash = FlashBdev()
 
 try:
-    _flash_vfs = uos.VfsFat(_flash)
-    uos.mount(_flash_vfs, '/flash')
-except OSError:
-    print("mount flash to file system failed, formating flash ...")
+    flash_vfs = uos.VfsFat(_flash)
+    print("mounting flash to vfs ...")
+    uos.mount(flash_vfs, '/flash')
+except:
+    print("mount flash to vfs failed, formating flash ... ")
     uos.VfsFat.mkfs(_flash)
-    _flash_vfs = uos.VfsFat(_flash)
-    uos.mount(_flash_vfs, '/flash')
-
-
-print("mount flash to file system done")
+    flash_vfs = uos.VfsFat(_flash)
+    print("mounting flash to vfs ...")
+    uos.mount(flash_vfs, '/flash')

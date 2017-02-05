@@ -3,6 +3,7 @@
  *
  * The MIT License (MIT)
  *
+ * Copyright (c) 2013, 2014 Damien P. George
  * Copyright (c) 2016 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,30 +25,26 @@
  * THE SOFTWARE.
  */
 
-#ifndef _OBJFLASH_H_
-#define _OBJFLASH_H_
+#include <stdio.h>
+#include <stdint.h>
 
-// Micropython headers
+#include "py/nlr.h"
 #include "py/obj.h"
-#include "py/runtime.h"
-#include "extmod/vfs_fat.h"
-#include "lib/oofatfs/ff.h"
+#include "extmod/machine_mem.h"
 
-// mbed headers
-#include "device_lock.h"
-#include "flash_api.h"
+#include "py/objint.h"
 
-extern const struct _mp_obj_type_t flash_type;
+STATIC const mp_map_elem_t ameba_module_globals_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_ameba) },
 
-extern uint32_t __fatfs_start_address__;
-extern uint32_t __fatfs_end_address__;
-extern uint32_t __fatfs_num_blocks__;
+    { MP_ROM_QSTR(MP_QSTR_mem8),        (mp_obj_t)&machine_mem8_obj },
+    { MP_ROM_QSTR(MP_QSTR_mem16),       (mp_obj_t)&machine_mem16_obj },
+    { MP_ROM_QSTR(MP_QSTR_mem32),       (mp_obj_t)&machine_mem32_obj },
+};
 
-typedef struct {
-    mp_obj_base_t base;
-    flash_t       obj;
-} flash_obj_t;
+STATIC MP_DEFINE_CONST_DICT(ameba_module_globals, ameba_module_globals_table);
 
-void flash_init0(fs_user_mount_t *vfs);
-
-#endif /* _OBJFLASH_H_ */
+const mp_obj_module_t mp_module_ameba = {
+    .base = { &mp_type_module },
+    .globals = (mp_obj_dict_t*)&ameba_module_globals,
+};

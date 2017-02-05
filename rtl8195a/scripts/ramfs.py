@@ -18,14 +18,14 @@ class RAMFS:
         self.data = bytearray(blocks * self.SEC_SIZE)
 
     def readblocks(self, n, buf):
-        #print("readblocks(%s, %x(%d))" % (n, id(buf), len(buf)))
+        mv = memoryview(buf)
         for i in range(len(buf)):
-            buf[i] = self.data[n * self.SEC_SIZE + i]
+            mv[i] = self.data[n * self.SEC_SIZE + i]
 
     def writeblocks(self, n, buf):
-        #print("writeblocks(%s, %x)" % (n, id(buf)))
+        mv = memoryview(buf)
         for i in range(len(buf)):
-            self.data[n * self.SEC_SIZE + i] = buf[i]
+            self.data[n * self.SEC_SIZE + i] = mv[i]
 
     def ioctl(self, op, arg):
         #print("ioctl(%d, %r)" % (op, arg))
