@@ -1,9 +1,9 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2016 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef __MICROPY_INCLUDED_STMHAL_MPTHREADPORT_H__
+#define __MICROPY_INCLUDED_STMHAL_MPTHREADPORT_H__
 
-// this is a fixed size and should not be changed
-#define SDCARD_BLOCK_SIZE (512)
+#include "py/mpthread.h"
+#include "pybthread.h"
 
-void sdcard_init(void);
-bool sdcard_is_present(void);
-bool sdcard_power_on(void);
-void sdcard_power_off(void);
-uint64_t sdcard_get_capacity_in_bytes(void);
+typedef uint32_t mp_thread_mutex_t;
 
-// these return 0 on success, non-zero on error
-mp_uint_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks);
-mp_uint_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks);
+void mp_thread_init(void);
+void mp_thread_gc_others(void);
 
-extern const struct _mp_obj_type_t pyb_sdcard_type;
-extern const struct _mp_obj_base_t pyb_sdcard_obj;
+static inline void mp_thread_set_state(void *state) {
+    pyb_thread_set_local(state);
+}
 
-struct _fs_user_mount_t;
-void sdcard_init_vfs(struct _fs_user_mount_t *vfs, int part);
+static inline struct _mp_state_thread_t *mp_thread_get_state(void) {
+    return pyb_thread_get_local();
+}
+
+#endif // __MICROPY_INCLUDED_STMHAL_MPTHREADPORT_H__
