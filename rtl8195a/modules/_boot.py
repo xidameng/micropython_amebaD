@@ -2,8 +2,8 @@ try:
     import uos
     import umachine
     import uterminal
-    from flashbdev import FlashBdev
-    from ramfs import RAMFS
+    import flashbdev
+    import uctypes
 except ImportError as e:
     print(e)
 
@@ -17,7 +17,7 @@ uterminal.dump().append(_log_uart)
 
 print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
 
-_flash = FlashBdev()
+_flash = flashbdev.FlashBdev()
 
 try:
     flash_vfs = uos.VfsFat(_flash)
@@ -29,3 +29,15 @@ except:
     flash_vfs = uos.VfsFat(_flash)
     print("mounting flash to vfs ...")
     uos.mount(flash_vfs, '/flash')
+
+try:
+    import rambdev
+    print("found ramfs.py, try to mount ram to vfs")
+    ram = rambdev.RamBdev(200)
+    uos.VfsFat.mkfs(ram)
+    ramvfs = uos.VfsFat(ram)
+    uos.mount(ramvfs, '/ram')
+except:
+    pass
+
+

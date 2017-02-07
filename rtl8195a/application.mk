@@ -332,7 +332,6 @@ DRAM_C += mphelper/diskio.c
 DRAM_C += mphelper/exception.c
 DRAM_C += mphelper/help.c
 DRAM_C += mphelper/mphal.c
-DRAM_C += mphelper/pybstdio.c
 DRAM_C += mphelper/input.c
 DRAM_C += mphelper/mpthreadport.c
 DRAM_C += mphelper/gccollect/gccollect.c
@@ -369,5 +368,6 @@ DRAM_C += \
 		lib/oofatfs/ff.c \
 		lib/oofatfs/option/unicode.c \
 		lib/timeutils/timeutils.c \
+		stmhal/pybstdio.c \
 		#ftp/vfs.c \
 		#ftp/ftpd.c \

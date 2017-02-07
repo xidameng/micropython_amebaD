@@ -86,51 +86,50 @@ void mp_term_tx_strn(char *str, size_t len) {
 }
 
 int mp_term_rx_chr() {
-    mp_not_implemented("mp_term_rx_chr and mp_hal_stdin_rx_chr not implement");
+    struct terminal_msg *msg;
+
+    if (xQueueReceive(xRXCharQueue, (void *)&msg, (TickType_t) portMAX_DELAY)) {
+        switch (msg->type) {
+            case TERM_RX_CHR:
+                /*
+                 * Check if term_list_obj is none or not
+                 */
+                if (&MP_STATE_PORT(term_list_obj) == MP_OBJ_NULL) {
+                    mp_raise_msg(&mp_type_OSError, "Terminal list object missing, assert");
+                    return -1;
+                }
+                for (mp_uint_t i = 0; i < MP_STATE_PORT(term_list_obj).len; i++) {
+                    if (msg->msg.chr.obj_from == MP_STATE_PORT(term_list_obj).items[i]) {
+
+                        mp_buffer_info_t bufinfo;
+                        mp_get_buffer_raise(msg->msg.chr.obj_array, &bufinfo, MP_BUFFER_READ);
+                        char c = *(byte*)bufinfo.buf;
+
+                        return c;
+                    } else {
+                        // TODO what to do when obj_from is not in the list
+                    }
+                }
+            break;
+        }
+        // Should delete object at final or mpHeap would leak
+    }
 }
 
 void modterm_rx_loop(void) {
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
 #endif
-
-    struct terminal_msg *msg;
-
-    for (;;) {
-        /* 
-         *  Queue is blocking forever until queue is incoming
-         *  Blocking state will save CPU resource 
-         */
-        if (xQueueReceive(xRXCharQueue, (void *)&msg, (TickType_t) portMAX_DELAY)) {
-            switch (msg->type) {
-                case TERM_RX_CHR:
-                    /*
-                     * Check if term_list_obj is none or not
-                     */
-                    if (&MP_STATE_PORT(term_list_obj) == MP_OBJ_NULL) {
-                        mp_raise_msg(&mp_type_OSError, "Terminal list object missing, assert");
-                        return;
-                    }
-                    for (mp_uint_t i = 0; i < MP_STATE_PORT(term_list_obj).len; i++) {
-                        if (msg->msg.chr.obj_from == MP_STATE_PORT(term_list_obj).items[i]) {
-
-                            mp_buffer_info_t bufinfo;
-                            mp_get_buffer_raise(msg->msg.chr.obj_array, &bufinfo, MP_BUFFER_READ);
-                            char c = *(byte*)bufinfo.buf;
-
-                            int ret = pyexec_event_repl_process_char(c);
-
-                            if (ret & PYEXEC_FORCED_EXIT)
-                                sys_reset();
-
-                        } else {
-                            // TODO what to do when obj_from is not in the list
-                        }
-                    }
-                break;
+    for ( ; ; ) {
+        if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
+            if (pyexec_raw_repl() != 0) {
+                sys_reset();
             }
-            // Should delete object at final or mpHeap would leak
-        }   
+        } else {
+            if (pyexec_friendly_repl() != 0) {
+                sys_reset();
+            }
+        }
     }
     vTaskDelete(NULL);
 }

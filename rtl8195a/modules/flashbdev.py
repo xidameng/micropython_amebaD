@@ -3,6 +3,8 @@ try:
     import time
     import uio as io
     import array
+    import uctypes
+    from utils import fast_copy
 except:
     raise ImportError("ameba module import failed")
 
@@ -116,22 +118,12 @@ class FlashBdev:
         self.cmd(b'\x60')
 
     def readblocks(self, n, buf):
-        address_base = SPI_FLASH_BASE + (n + self.START_SEC) * self.SEC_SIZE
-        spi_status_address = SPI_FLASH_CTRL_BASE + REG_SPIC_SR
         flash_cpu_ctrl_address = PERI_ON_BASE + REG_CPU_PERIPHERAL_CTRL
-        mv = memoryview(self.cache_buffer)
-        stream = io.BytesIO(mv, "rw")
-        stream.seek(0)
-        count = self.SEC_SIZE // 4
-
-        for i in range(count):
-            ameba.mem32[flash_cpu_ctrl_address] |= 0x01
-            stream.write(ameba.mem32[address_base + 4*i].to_bytes(4, 'little'))
-
-        stream.seek(0)
-        stream.readinto(buf)
-
-        ameba.mem32[PERI_ON_BASE + REG_CPU_PERIPHERAL_CTRL] &= ~(1<<0)
+        ameba.mem32[flash_cpu_ctrl_address] |= (1<<0)
+        dst_addr = uctypes.addressof(buf)
+        src_addr = SPI_FLASH_BASE + (n + self.START_SEC) * self.SEC_SIZE
+        fast_copy(dst_addr, src_addr, self.SEC_SIZE)
+        ameba.mem32[flash_cpu_ctrl_address] &= ~(1<<0)
 
     def writeblocks(self, n, buf):
         address_base = SPI_FLASH_BASE + (n + self.START_SEC) * self.SEC_SIZE
