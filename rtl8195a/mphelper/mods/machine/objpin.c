@@ -34,8 +34,6 @@
 
 /********************** Local functions ***************************************/
 void pin_init0(void);
-void pin_validate_dir (uint dir);
-void pin_validate_pull (uint pull);
 
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args);
@@ -45,18 +43,6 @@ STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_
 
 void pin_init0(void) {
     // TODO: Ameba board pin hardware init 
-}
-
-void pin_validate_dir (uint dir) {
-    if (dir != PIN_INPUT && dir != PIN_OUTPUT) {
-        mp_raise_ValueError("Invalid GPIO direction type");
-    }
-}
-
-void pin_validate_pull (uint pull) {
-    if (pull != PullNone && pull != PullUp && pull != PullDown && pull != OpenDrain) {
-        mp_raise_ValueError("Invalid GPIO pull type");
-    }
 }
 
 STATIC pin_obj_t *pin_find_named_pin(const mp_obj_dict_t *named_pins, mp_obj_t name) {
@@ -111,27 +97,23 @@ STATIC uint8_t pin_get_value (const pin_obj_t* self) {
 }
 
 STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    enum { ARG_mode, ARG_pull, ARG_value };
     STATIC const mp_arg_t pin_init_args[] = {
-        { MP_QSTR_dir,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_pull,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_value,    MP_ARG_KW_ONLY  |  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_mode, MP_ARG_REQUIRED | MP_ARG_INT },
+        { MP_QSTR_pull, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_value, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     // parse args
     mp_arg_val_t args[MP_ARRAY_SIZE(pin_init_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(pin_init_args), pin_init_args, args);
 
     // get the io mode, default is input
-    uint dir = PIN_INPUT;
-    if (args[0].u_obj != MP_OBJ_NULL) {
-        dir = mp_obj_get_int(args[0].u_obj);
-        pin_validate_dir(dir);
-    }
+    uint dir = args[ARG_mode].u_int;
 
     // get the pull type, default is pull none
     uint pull = PullNone;
-    if (args[1].u_obj != MP_OBJ_NULL) {
-        pull = mp_obj_get_int(args[1].u_obj);
-        pin_validate_pull(pull);
+    if (args[ARG_pull].u_obj != mp_const_none) {
+        pull = mp_obj_get_int(args[ARG_pull].u_obj);
     }
 
     // get the value, default is 0
@@ -148,14 +130,16 @@ STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_
     self->dir  = dir;
     self->pull = pull;
 
-    if (value != -1)
-        self->value = value;
-
     // config pin hardware
     gpio_init((gpio_t *)&(self->obj), self->id);
     gpio_dir((gpio_t *)&(self->obj), self->dir);
     gpio_mode((gpio_t *)&(self->obj), self->pull);
-    //
+
+    if (value != -1) {
+        self->value = value;
+        gpio_write(&(self->obj), self->value);
+    }
+
     return mp_const_none;
 }
 
@@ -219,43 +203,22 @@ STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, con
     return pin_value (n_args + 1, _args);
 }
 
-STATIC mp_obj_t pin_dir(mp_uint_t n_args, const mp_obj_t *args) {
-    pin_obj_t *self = args[0];
-    if (n_args == 1) {
-        return mp_obj_new_int(self->dir);
-    } else {
-        uint dir = mp_obj_get_int(args[1]);
-        pin_validate_dir(dir);
-        self->dir = dir;
-        return mp_const_none;
-    }
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pin_dir_obj, 1, 2, pin_dir);
-
-STATIC mp_obj_t pin_pull(mp_uint_t n_args, const mp_obj_t *args) {
-    pin_obj_t *self = args[0];
-    if (n_args == 1) {
-        return mp_obj_new_int(self->pull);
-    } else {
-        mp_uint_t pull = mp_obj_get_int(args[1]);
-        pin_validate_pull (pull);
-        self->pull = pull;
-        return mp_const_none;
-    }
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pin_pull_obj, 1, 2, pin_pull);
-
 STATIC mp_obj_t pin_id(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
     return MP_OBJ_NEW_QSTR(self->name);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_id_obj, pin_id);
 
+STATIC mp_obj_t pin_init(mp_uint_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
+    return pin_obj_init_helper(args[0], n_args - 1, args + 1, kw_args);
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(pin_init_obj, 1, pin_init);
+
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args) {
     pin_obj_t *self = args[0];
     if (n_args == 1) {
         // get the value
-        return pin_get_value(self) ? mp_const_true: mp_const_false;
+        return MP_OBJ_NEW_SMALL_INT(pin_get_value(self));
     } else {
         // set the pin value
         if (mp_obj_is_true(args[1])) {
@@ -269,6 +232,20 @@ STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args) {
     }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pin_value_obj, 1, 2, pin_value);
+
+STATIC mp_obj_t pin_low(mp_obj_t self_in) {
+    pin_obj_t *self = self_in;
+    gpio_write(&(self->obj), 0);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_low_obj, pin_low);
+
+STATIC mp_obj_t pin_high(mp_obj_t self_in) {
+    pin_obj_t *self = self_in;
+    gpio_write(&(self->obj), 1);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_high_obj, pin_high);
 
 STATIC mp_obj_t pin_toggle(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
@@ -292,9 +269,10 @@ const mp_obj_type_t pin_board_pins_obj_type = {
 STATIC const mp_map_elem_t pin_locals_dict_table[] = {
     // instance methods
     { MP_OBJ_NEW_QSTR(MP_QSTR_id),         MP_OBJ_FROM_PTR(&pin_id_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dir),        MP_OBJ_FROM_PTR(&pin_dir_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pull),       MP_OBJ_FROM_PTR(&pin_pull_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_init),       MP_OBJ_FROM_PTR(&pin_init_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_value),      MP_OBJ_FROM_PTR(&pin_value_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_low),        MP_OBJ_FROM_PTR(&pin_low_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_high),       MP_OBJ_FROM_PTR(&pin_high_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_toggle),     MP_OBJ_FROM_PTR(&pin_toggle_obj) },
 
     // class attributes

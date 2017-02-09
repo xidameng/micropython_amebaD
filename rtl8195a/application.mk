@@ -366,7 +366,7 @@ DRAM_C += \
 		lib/mp-readline/readline.c \
 		lib/utils/interrupt_char.c \
 		lib/oofatfs/ff.c \
-		lib/oofatfs/option/unicode.c \
+		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		stmhal/pybstdio.c \
 		#ftp/vfs.c \
