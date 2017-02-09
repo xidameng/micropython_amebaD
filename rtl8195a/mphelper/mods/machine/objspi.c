@@ -72,44 +72,56 @@ STATIC void objspi_deinit(mp_obj_base_t *self_in) {
 STATIC void objspi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *src, uint8_t *dest) {
     spi_obj_t *self = (spi_obj_t*)self_in;
     if (dest == NULL) {
-#if 0
-        spi_master_write_stream(&(self->obj), src, len);
-#else   
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(0));
+        // tmod == 0 when send ??? weird 
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(1));
         for (uint i = 0; i < len; i++) {
-            spi_t *obj = &(self->obj);
-            PHAL_SSI_ADAPTOR pHalSsiAdaptor;
-            PHAL_SSI_OP pHalSsiOp;
-
-            pHalSsiAdaptor = &obj->spi_adp;
-            pHalSsiOp = &obj->spi_op;
-
-            while (!pHalSsiOp->HalSsiWriteable(pHalSsiAdaptor));
-            pHalSsiOp->HalSsiWrite((VOID*)pHalSsiAdaptor, src[i]);
+            // Wait until SSI is not busy
+            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_BUSY);
+            // Wait until SSI TX's FIFO is not empty
+            while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFNF));
+            HAL_SSI_WRITE8(self->unit ,REG_DW_SSI_DR ,src[i]);
         }
-#endif
+        // Wait until TX's FIFO is zero
+        while (HAL_SSI_READ32(self->unit, REG_DW_SSI_TXFLR));
+
+        // Wait until TX's FIFO is zero
+        while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFE));
     } else {
-#if 0
-        spi_master_write_read_stream_dma(&(self->obj), src, dest, len);
-#else
-        spi_t *obj = &(self->obj);
-        PHAL_SSI_ADAPTOR pHalSsiAdaptor;
-        PHAL_SSI_OP pHalSsiOp;
-
-        pHalSsiAdaptor = &obj->spi_adp;
-        pHalSsiOp = &obj->spi_op;
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(0));
+        // tmod == 0 when send ??? weird 
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(1));
+        uint rx_fifo_count = 0;
+        uint timeout_count = 1000000;
         for (uint i = 0; i < len; i++) {
-            while (!pHalSsiOp->HalSsiWriteable(pHalSsiAdaptor));
-            pHalSsiOp->HalSsiWrite((VOID*)pHalSsiAdaptor, src[i]);
-            while (!pHalSsiOp->HalSsiReadable(pHalSsiAdaptor));
-            dest[i] = (char)pHalSsiOp->HalSsiRead(pHalSsiAdaptor);
+            // Wait until SSI is not busy
+            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_BUSY);
+            // Wait until SSI TX's FIFO is not empty
+            while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFNF));
+            HAL_SSI_WRITE8(self->unit ,REG_DW_SSI_DR ,src[i]);
+
+            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_RXFLR)) {
+                dest[rx_fifo_count++] = HAL_SSI_READ8(self->unit, REG_DW_SSI_DR);
+            }
         }
-#endif
+
+        if (rx_fifo_count < len) {
+            while((timeout_count != 0) && (rx_fifo_count < len)) {
+                while (HAL_SSI_READ32(self->unit, REG_DW_SSI_RXFLR)) {
+                    dest[rx_fifo_count++] = HAL_SSI_READ8(self->unit, REG_DW_SSI_DR);
+                }
+                timeout_count--;
+            }
+        }
     }
 }
 
 STATIC void spi_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     spi_obj_t *self = self_in;
-    mp_printf(print, "SPI(%d, baudrate=%u, bits=%d, MISO=%q, MOSI=%q, SCK=%q)", self->unit, self->baudrate, self->bits, self->miso->name, self->mosi->name, self->sck->name);
+    mp_printf(print, "SPI(%d, baudrate=%u, bits=%d, MISO=%q, MOSI=%q, SCK=%q)", self->unit,
+            self->baudrate, self->bits, self->miso->name, self->mosi->name, self->sck->name);
 }
 
 STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw,
@@ -133,6 +145,9 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     mp_arg_val_t args[MP_ARRAY_SIZE(spi_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), spi_init_args, args);
 
+    if (args[ARG_unit].u_int > 2)
+        mp_raise_ValueError("Invalid SPI unit");
+
     pin_obj_t *miso = pin_find(args[ARG_miso].u_obj);
     pin_obj_t *mosi = pin_find(args[ARG_mosi].u_obj);
     pin_obj_t *sck  = pin_find(args[ARG_sck].u_obj);
@@ -145,6 +160,19 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 
     if (pn_mosi == NC) 
         mp_raise_ValueError("SPI MOSI pin not match");
+
+    uint32_t ssi_peri = pinmap_merge(pn_mosi, pn_miso);
+
+    if (unlikely(ssi_peri == NC)) 
+        mp_raise_ValueError("Invalid SPI pin");
+
+    uint8_t ssi_idx = RTL_GET_PERI_IDX(ssi_peri);
+    uint8_t ssi_pinmux = RTL_GET_PERI_SEL(ssi_peri);
+
+    /* Pinmux workaround */
+    if ((ssi_idx == 0) && (ssi_pinmux == SSI0_MUX_TO_GPIOC)) {
+        EEPROM_PIN_CTRL(OFF);
+    }
 
     spi_obj_t *self  = &spi_obj[args[ARG_unit].u_int];
     self->baudrate = args[ARG_baudrate].u_int;
