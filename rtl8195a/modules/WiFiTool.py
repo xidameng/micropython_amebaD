@@ -45,7 +45,7 @@ class WlanConfig(object):
             raise OSError("Load config: %s failed" % self.config_path)
 
 
-_config = WlanConfig()
+_config = WlanConfig(config_path='/flash/.wlanconfig')
 _wlan = WLAN(mode=_config.mode)
 _wlan.on()
 

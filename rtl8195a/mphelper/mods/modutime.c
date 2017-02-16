@@ -42,26 +42,21 @@
  * ***************************************************************************/
 
 STATIC mp_obj_t time_time(void) {
-    time_t time_sec;
-    time_sec = rtc_read();
-    return mp_obj_new_int_from_uint(time_sec - SECS_IN_30YEARS);
+    time_t time_sec = rtc_read();
+    return mp_obj_new_int_from_uint(time_sec);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(time_time_obj, time_time);
 
 STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
-    clock_t secs =0;
-    if (n_args == 0) {
-        // Get time
-        secs = rtc_read();
-        // (Since RTL8195A use 1970 for it's start yaer, so I need to add the seconds of 30 years)
-        secs -= SECS_IN_30YEARS;
-    } else {
-        secs = mp_obj_new_int_from_uint(args[0]);
-    }
-
     timeutils_struct_time_t tm;
-    timeutils_seconds_since_2000_to_struct_time(secs, &tm);
+    mp_int_t seconds = 0;
 
+    if (n_args == 0 || args[0] == mp_const_none) {
+        seconds = rtc_read();
+    } else {
+        seconds = mp_obj_get_int(args[0]);
+    }
+    timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
     mp_obj_t tuple[8] = {
         tuple[0] = mp_obj_new_int(tm.tm_year),
         tuple[1] = mp_obj_new_int(tm.tm_mon),
@@ -95,21 +90,11 @@ STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(time_mktime_obj, time_mktime);
 
-STATIC mp_obj_t time_ctime(void) {
-    time_t seconds;
-    int8_t *ctime_val;
-    seconds = rtc_read();
-    ctime_val = ctime(&seconds);
-    return mp_obj_new_str(ctime_val, strlen(ctime_val), false);;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(time_ctime_obj, time_ctime);
-
 STATIC const mp_map_elem_t time_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),   MP_OBJ_NEW_QSTR(MP_QSTR_utime) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),       MP_OBJ_FROM_PTR(&time_time_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_localtime),  MP_OBJ_FROM_PTR(&time_localtime_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mktime),     MP_OBJ_FROM_PTR(&time_mktime_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ctime),      MP_OBJ_FROM_PTR(&time_ctime_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep),      MP_OBJ_FROM_PTR(&mp_utime_sleep_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_ms),   MP_OBJ_FROM_PTR(&mp_utime_sleep_ms_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_sleep_us),   MP_OBJ_FROM_PTR(&mp_utime_sleep_us_obj) },

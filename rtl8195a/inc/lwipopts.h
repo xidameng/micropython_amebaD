@@ -156,6 +156,8 @@ a lot of data that needs to be copied, this should be set high. */
 #define IP_SOF_BROADCAST        (1)
 #define IP_SOF_BROADCAST_RECV   (1)
 
+#define SO_REUSE                (1)
+
 /*
    --------------------------------------
    ---------- Checksum options ----------

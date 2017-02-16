@@ -43,7 +43,6 @@ STATIC uint16_t offset = 0;
 STATIC uint16_t gain = 0;
 
 void adc_init0(void) {
-	sys_adc_calibration(0, &offset, &gain);
 }
 
 STATIC void adc_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {

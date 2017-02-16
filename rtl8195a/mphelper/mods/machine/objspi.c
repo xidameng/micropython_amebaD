@@ -57,25 +57,97 @@ STATIC void objspi_init(mp_obj_base_t *self_in, size_t n_args, const mp_obj_t *p
     if (args[ARG_bits].u_int != -1)
         self->bits = args[ARG_bits].u_int;
 
-    spi_init(&(self->obj), self->mosi->id, self->miso->id, self->sck->id, 0);
+    //spi_init(&(self->obj), self->mosi->id, self->miso->id, self->sck->id, 0);
+    switch(self->unit) {
+        case 0:
+            ACTCK_SPI0_CCTRL(ON);
+            SLPCK_SPI0_CCTRL(ON);
+            PinCtrl(SPI0, self->ssi_pinmux, ON);
+            SPI0_FCTRL(ON);
+            break;
+        case 1:
+            ACTCK_SPI1_CCTRL(ON);
+            SLPCK_SPI1_CCTRL(ON);
+            PinCtrl(SPI1, self->ssi_pinmux, ON);
+            SPI1_FCTRL(ON);
+            break;
+        case 2:
+            ACTCK_SPI2_CCTRL(ON);
+            SLPCK_SPI2_CCTRL(ON);
+            PinCtrl(SPI2, self->ssi_pinmux, ON);
+            SPI2_FCTRL(ON);
+            break;
+        default:
+            break;
+    }
 
-    spi_format(&(self->obj), self->bits, ((self->pol << 1) + self->pha), SPI_MASTER);
+    HalSsiSetDeviceRoleRtl8195a(NULL, 1);
 
-    spi_frequency(&(self->obj), self->baudrate);
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
+
+    SPI0_MULTI_CS_CTRL(ON);
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SER, BIT_SER_SER(2));
+
+    uint32_t ctrlr0_val = 0;
+    
+    ctrlr0_val |= BIT_CTRLR0_SCPH(self->pha);
+    ctrlr0_val |= BIT_CTRLR0_SCPOL(self->pol);
+    ctrlr0_val |= BIT_CTRLR0_DFS((self->bits - 1));
+    ctrlr0_val |= BIT_CTRLR0_SLV_OE(0);
+
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, ctrlr0_val);
+
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_MWCR, 2);
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_TXFTLR, 8);
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_RXFTLR, 7);
+    
+    uint div = 0;
+    if (self->baudrate > 20000000) {
+        div = 2;
+    }
+    else {
+        div = 20000000 / self->baudrate;
+    }
+
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_BAUDR, div);
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 1);
 }
 
 STATIC void objspi_deinit(mp_obj_base_t *self_in) {
     spi_obj_t *self = (spi_obj_t*)self_in;
-    spi_free(&(self->obj));
+    SPI0_MULTI_CS_CTRL(OFF);
+    switch(self->unit) {
+        case 0:
+            ACTCK_SPI0_CCTRL(OFF);
+            SLPCK_SPI0_CCTRL(OFF);
+            PinCtrl(SPI0, self->ssi_pinmux, OFF);
+            SPI0_FCTRL(OFF);
+            break;
+        case 1:
+            ACTCK_SPI1_CCTRL(OFF);
+            SLPCK_SPI1_CCTRL(OFF);
+            PinCtrl(SPI1, self->ssi_pinmux, OFF);
+            SPI1_FCTRL(OFF);
+            break;
+        case 2:
+            ACTCK_SPI2_CCTRL(OFF);
+            SLPCK_SPI2_CCTRL(OFF);
+            PinCtrl(SPI2, self->ssi_pinmux, OFF);
+            SPI2_FCTRL(OFF);
+            break;
+        default:
+            break;
+    }
+    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
 }
 
 STATIC void objspi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *src, uint8_t *dest) {
     spi_obj_t *self = (spi_obj_t*)self_in;
     if (dest == NULL) {
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(0));
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
         // tmod == 0 when send ??? weird 
         HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(1));
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 1);
         for (uint i = 0; i < len; i++) {
             // Wait until SSI is not busy
             while (HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_BUSY);
@@ -89,10 +161,10 @@ STATIC void objspi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *s
         // Wait until TX's FIFO is zero
         while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFE));
     } else {
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(0));
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
         // tmod == 0 when send ??? weird 
         HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, BIT_SSIENR_SSI_EN(1));
+        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 1);
         uint rx_fifo_count = 0;
         uint timeout_count = 1000000;
         for (uint i = 0; i < len; i++) {
@@ -182,6 +254,8 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     self->miso     = miso;
     self->mosi     = mosi;
     self->sck      = sck;
+    self->ssi_idx  = ssi_idx;
+    self->ssi_pinmux = ssi_pinmux;
 
     return (mp_obj_t)self;
 }

@@ -430,8 +430,8 @@ STATIC mp_uint_t lwip_raw_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_
 
     if (socket->incoming.pbuf == NULL) {
         if (socket->timeout != -1) {
-            for (mp_uint_t retries = socket->timeout / 100; retries--;) {
-                mp_hal_delay_ms(100);
+            for (mp_uint_t retries = socket->timeout; retries--;) {
+                mp_hal_delay_ms(1);
                 if (socket->incoming.pbuf != NULL) break;
             }
             if (socket->incoming.pbuf == NULL) {
@@ -502,8 +502,8 @@ STATIC mp_uint_t lwip_udp_receive(lwip_socket_obj_t *socket, byte *buf, mp_uint_
 
     if (socket->incoming.pbuf == NULL) {
         if (socket->timeout != -1) {
-            for (mp_uint_t retries = socket->timeout / 100; retries--;) {
-                mp_hal_delay_ms(100);
+            for (mp_uint_t retries = socket->timeout; retries--;) {
+                mp_hal_delay_ms(1);
                 if (socket->incoming.pbuf != NULL) break;
             }
             if (socket->incoming.pbuf == NULL) {
@@ -828,8 +828,8 @@ STATIC mp_obj_t lwip_socket_accept(mp_obj_t self_in) {
     // accept incoming connection
     if (socket->incoming.connection == NULL) {
         if (socket->timeout != -1) {
-            for (mp_uint_t retries = socket->timeout / 100; retries--;) {
-                mp_hal_delay_ms(100);
+            for (mp_uint_t retries = socket->timeout; retries--;) {
+                mp_hal_delay_ms(1);
                 if (socket->incoming.connection != NULL) break;
             }
             if (socket->incoming.connection == NULL) {
@@ -912,8 +912,15 @@ STATIC mp_obj_t lwip_socket_connect(mp_obj_t self_in, mp_obj_t addr_in) {
             memcpy(socket->peer, &dest, sizeof(socket->peer));
             // And now we wait...
             if (socket->timeout != -1) {
-                for (mp_uint_t retries = socket->timeout / 100; retries--;) {
-                    mp_hal_delay_ms(100);
+                mp_uint_t timeout = 0;
+                // A workaround for zero timeout in connect, it will always timeout. So keep a minumin timeout when timeout
+                if (socket->timeout < 100)
+                    timeout = 100;
+                else
+                    timeout = socket-timeout;
+
+                for (mp_uint_t retries = timeout; retries--;) {
+                    mp_hal_delay_ms(1);
                     if (socket->state != STATE_CONNECTING) break;
                 }
                 if (socket->state == STATE_CONNECTING) {
@@ -1158,11 +1165,7 @@ STATIC mp_obj_t lwip_socket_settimeout(mp_obj_t self_in, mp_obj_t timeout_in) {
     if (timeout_in == mp_const_none) {
         timeout = -1;
     } else {
-        #if MICROPY_PY_BUILTINS_FLOAT
-        timeout = 1000 * mp_obj_get_float(timeout_in);
-        #else
-        timeout = 1000 * mp_obj_get_int(timeout_in);
-        #endif
+        timeout = mp_obj_get_int(timeout_in);
     }
     socket->timeout = timeout;
     return mp_const_none;
@@ -1270,8 +1273,9 @@ STATIC mp_uint_t lwip_socket_ioctl(mp_obj_t self_in, mp_uint_t request, uintptr_
     if (request == MP_STREAM_POLL) {
         uintptr_t flags = arg;
         ret = 0;
-
-        if (flags & MP_STREAM_POLL_RD && socket->incoming.pbuf != NULL) {
+        
+//FIXME: Chester added: force poll object when socket is close, or it will hang forever when there's no data in RX
+        if ((flags & MP_STREAM_POLL_RD) && (socket->incoming.pbuf != NULL) || (socket->state == STATE_PEER_CLOSED)) {
             ret |= MP_STREAM_POLL_RD;
         }
 

@@ -78,9 +78,9 @@ SRC_QSTR_AUTO_DEPS +=
 # Compile options
 # -------------------------------------------------------------------
 
-CFLAGS =
+CFLAGS = -O2
 CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -DARDUINO_SDK -D$(CHIP)
-CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -O2 -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
+CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(CFLAGS_MOD)
 CFLAGS += $(INC)
 

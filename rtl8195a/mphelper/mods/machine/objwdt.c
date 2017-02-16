@@ -46,24 +46,33 @@ STATIC void wdt_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
 
 STATIC mp_obj_t wdt_start(mp_obj_t self_in, mp_obj_t msec_in) {
     mp_int_t msec = mp_obj_get_int(msec_in);
-    if (msec > 0) {
-        watchdog_init(msec);
-    } else {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "millisecond must > 0"));
+    uint8_t CountId;
+    uint16_t DivFactor;
+    uint32_t CountTemp; 
+    uint32_t CountProcess = 0;
+    uint32_t DivFacProcess = 0;
+    uint32_t PeriodProcess = (100 * msec);
+    uint32_t MinPeriodTemp = 0xFFFFFFFF;
+    uint32_t PeriodTemp = 0;
+    uint32_t reg_val = 0;
+
+    if (msec <= 0) {
+        mp_raise_ValueError("millisecond must > 0");
     }
-    watchdog_start();
+    WDGInitial(msec);
+    WDGStart();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(wdt_start_obj, wdt_start);
 
 STATIC mp_obj_t wdt_stop(mp_obj_t self_in) {
-    watchdog_stop();
+    WDGStop();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_stop_obj, wdt_stop);
 
 STATIC mp_obj_t wdt_feed(mp_obj_t self_in) {
-    watchdog_refresh();
+    WDGRefresh();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wdt_feed_obj, wdt_feed);

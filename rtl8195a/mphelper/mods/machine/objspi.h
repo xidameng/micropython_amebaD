@@ -30,19 +30,13 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#include "exception.h"
-
 #include "objpin.h"
 
-#include "spi_api.h"
-#include "spi_ex_api.h"
 #include "PinNames.h"
 
 #include "extmod/machine_spi.h"
 
-#define SPI_MIN_BAUD_RATE               (10000)
-#define SPI_DEFAULT_BAUD_RATE           (20000000)
-#define SPI_MAX_BAUD_RATE               (40000000)
+#define SPI_DEFAULT_BAUD_RATE           (10000000)
 
 #ifndef MICROPY_PY_MACHINE_SPI_MSB
 #define MICROPY_PY_MACHINE_SPI_MSB      (0)
@@ -50,7 +44,6 @@
 #endif
 
 #define SPI_MASTER                      (0)
-#define SPI_SLAVE                       (1)
 
 extern const mp_obj_type_t spi_type;
 extern const PinMap PinMap_SPI_MOSI[];
@@ -58,7 +51,6 @@ extern const PinMap PinMap_SPI_MISO[];
 
 typedef struct {
     mp_obj_base_t base;
-    spi_t     obj;
     uint8_t   unit;
     uint8_t   bits;
     uint32_t  baudrate;
@@ -67,6 +59,8 @@ typedef struct {
     pin_obj_t *sck;
     pin_obj_t *miso;
     pin_obj_t *mosi;
+    uint8_t   ssi_idx;
+    uint8_t   ssi_pinmux;
 } spi_obj_t;
 
 #endif  // OBJSPI_H_

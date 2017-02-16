@@ -23,12 +23,14 @@ try:
     flash_vfs = uos.VfsFat(_flash)
     print("mounting flash to vfs ...")
     uos.mount(flash_vfs, '/flash')
+    uos.chdir('/flash')
 except:
     print("mount flash to vfs failed, formating flash ... ")
     uos.VfsFat.mkfs(_flash)
     flash_vfs = uos.VfsFat(_flash)
     print("mounting flash to vfs ...")
     uos.mount(flash_vfs, '/flash')
+    uos.chdir('/flash')
 
 try:
     import rambdev

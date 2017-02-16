@@ -195,12 +195,12 @@ SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/pwmout_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/rtc_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/sleep.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/spdio_api.c
-SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/spi_api.c
+#SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/spi_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/sys_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/timer_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/us_ticker.c
 SRC_C += $(VENDOR)/component/common/mbed/common/us_ticker_api.c
-SRC_C += $(VENDOR)/component/common/mbed/common/wait_api.c
+#SRC_C += $(VENDOR)/component/common/mbed/common/wait_api.c
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/wdt_api.c
 
 #peripheral - hal
@@ -220,7 +220,7 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_nfc.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_pcm.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_pwm.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_sdr_controller.c
-SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_ssi.c
+#SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_ssi.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_timer.c
 
 
@@ -241,7 +241,7 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_i2s.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_mii.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_nfc.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_pwm.c
-SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_ssi.c
+#SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_ssi.c
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_timer.c
 
 
@@ -369,5 +369,4 @@ DRAM_C += \
 		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		stmhal/pybstdio.c \
-		#ftp/vfs.c \
-		#ftp/ftpd.c \
+		
