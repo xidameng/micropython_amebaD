@@ -73,7 +73,20 @@ void micropython_task(void const *arg) {
     
     pyexec_frozen_module("_boot.py");
     pyexec_file("main.py");
-    modterm_rx_loop();
+#if MICROPY_REPL_EVENT_DRIVEN
+    pyexec_event_repl_init();
+#endif
+    for (;;) {
+        if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
+            if (pyexec_raw_repl() != 0) {
+                sys_reset();
+            }
+        } else {
+            if (pyexec_friendly_repl() != 0) {
+                sys_reset();
+            }
+        }
+    }
     vTaskDelete(NULL);
 }
 

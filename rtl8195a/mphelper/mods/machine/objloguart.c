@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Chester Tseng
+ * Copyright (c) 2017 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -160,7 +160,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(log_uart_init_obj, 1, log_uart_init0);
 
 STATIC mp_obj_t log_uart_deinit(mp_obj_t *self_in) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    log_uart_free(&(self->obj));
+    //log_uart_free(&(self->obj));
+    LOC_UART_FCTRL(OFF);
+    ACTCK_LOG_UART_CCTRL(OFF);
+    SLPCK_LOG_UART_CCTRL(OFF);
+    // unregister log uart interrupt here
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(log_uart_deinit_obj, log_uart_deinit);
@@ -210,13 +214,18 @@ STATIC MP_DEFINE_CONST_DICT(log_uart_locals_dict, log_uart_locals_dict_table);
 
 STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_uint_t i = 0;
 
     // Direct return 0 when size = 0, to save the time
     if (size == 0) 
         return 0;
 
-    // Here we use the blocking mode with timeout to receive the RX bytes
-    int32_t ret = log_uart_recv(&(self->obj), buf_in, size, self->rx.timeout_ms);
+    for (i = 0; i < size; i++) {
+        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_DR));
+        buf_in[i] = (char)HAL_UART_READ32(UART_REV_BUF_OFF);
+    }
+
+    int32_t ret = size;
 
     if (ret < 0) {
         *errcode = MP_EAGAIN;
@@ -228,9 +237,17 @@ STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, i
 
 STATIC mp_uint_t log_uart_write(mp_obj_t self_in, const char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_uint_t i = 0;
 
-    // Here we use the blocking mode with timeout to receive the RX bytes
-    int32_t ret = log_uart_send(&(self->obj), buf_in, size, self->tx.timeout_ms);
+    for (i = 0; i < size; i++) {
+        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_THRE));
+        HAL_UART_WRITE8(UART_TRAN_HOLD_OFF, buf_in[i]);
+
+        // A workaround, it seems log uart's FIFO is not working ...
+        mp_hal_delay_ms(1);
+    }
+
+    int32_t ret = size;
 
     if (ret < 0) {
         *errcode = MP_EAGAIN;
@@ -240,9 +257,35 @@ STATIC mp_uint_t log_uart_write(mp_obj_t self_in, const char *buf_in, mp_uint_t 
     }
 }
 
+STATIC mp_uint_t log_uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, int *errcode) {
+    log_uart_obj_t *self = self_in;
+    mp_uint_t ret;
+    if (request == MP_STREAM_POLL) {
+        mp_uint_t flags = arg;
+        ret = 0;
+        mp_uint_t status = 0;
+        // Only return none zero when RX FIFO is not empty
+        status = HAL_UART_READ32(UART_LINE_STATUS_REG_OFF);
+        if ((flags & MP_STREAM_POLL_RD) && (status & LSR_DR)) {
+            ret |= MP_STREAM_POLL_RD;
+        }
+
+        // Only return none zero when TX FIFO is not full
+        status = HAL_UART_READ32(UART_LINE_STATUS_REG_OFF);
+        if ((flags & MP_STREAM_POLL_WR) && (status & LSR_THRE)) {
+            ret |= MP_STREAM_POLL_WR;
+        }
+    } else {
+        *errcode = MP_EINVAL;
+        ret = MP_STREAM_ERROR;
+    }
+    return ret;
+}
+
 STATIC const mp_stream_p_t log_uart_stream_p = {
     .read    = log_uart_read,
     .write   = log_uart_write,
+    .ioctl   = log_uart_ioctl,
     .is_text = false,
 };
 
