@@ -46,7 +46,7 @@
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-#define MODTERM_RX_STACK_DEPTH  128
+#define MODTERM_RX_STACK_DEPTH  512
 mp_map_t mp_terminal_map;
 QueueHandle_t xRxQueue;
 

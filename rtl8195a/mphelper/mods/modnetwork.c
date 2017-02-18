@@ -55,7 +55,7 @@ STATIC void
 modnetwork_thread (void *arg) {
     struct network_msg *msg;
     sys_mutex_lock(&network_core_lock);
-    while (1) {
+    for(;;) {
         sys_mutex_unlock(&network_core_lock);
         // Fetch mailbox
         sys_timeouts_mbox_fetch(&mbox, (void **)&msg);
@@ -135,41 +135,8 @@ STATIC mp_obj_t netif_iflist(void) {
 }
 MP_DEFINE_CONST_FUN_OBJ_0(netif_iflist_obj, netif_iflist);
 
-
-void ftpd_task(void const *arg) {
-    ftpd_init();
-    for(;;);
-}
-
-mp_obj_t modnetwork_ftpd(mp_obj_t enable_in) {
-
-    bool enable = mp_obj_is_true(enable_in);
-
-    if (enable) {
-    
-        // Create MicroPython ftpd task
-        xFTPDHandle = xTaskGenericCreate(ftpd_task,
-                (signed char *)"FTPD", 
-                MICROPY_NETWORK_CORE_STACK_DEPTH, 
-                NULL,
-                MICROPY_TASK_PRIORITY,
-                NULL,           // No arguments to pass to mp thread
-                mpFTPDStack,    // Use user define stack memory to make it predictable.
-                NULL);
-
-    } else {
-        vTaskDelete(xFTPDHandle);
-    }
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(modnetwork_ftpd_obj, modnetwork_ftpd);
-
 STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ftpd),         MP_OBJ_FROM_PTR(&modnetwork_ftpd_obj) },
-#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_iflist),       MP_OBJ_FROM_PTR(&netif_iflist_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),        MP_OBJ_FROM_PTR(&netif_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PKT),          MP_OBJ_FROM_PTR(&packet_type) },
