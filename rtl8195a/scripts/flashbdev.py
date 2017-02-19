@@ -44,8 +44,8 @@ class FlashBdev:
       ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_CTRLR1] = len(rxbuf)
     if data is not None:
       ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_ADDR_LENGTH] = 0 if data is None else len(data)
-    ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_AUTO_LENGTH] &= 0xFFFF0000
-    ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_BAUDR] = 2
+    #ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_AUTO_LENGTH] &= 0xFFFF0000
+    #ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_BAUDR] = 2
     ctrlr0 = ameba.mem32[SPI_FLASH_CTRL_BASE + REG_SPIC_CTRLR0]
     ctrlr0 &= 0xFFC0FCFF
     ctrlr0 |= (tmod << 8)
