@@ -60,6 +60,15 @@ void modmachine_init(void) {
     loguart_init0();
     adc_init0();
     pin_init0();
+#if 1
+    SPI_FLASH_PIN_FCTRL(ON);  
+    SpicWaitBusyDoneRtl8195A();
+    if (!SpicFlashInitRtl8195A(SpicOneBitMode)){
+
+		DBG_8195A("SPI Init Fail!!!!!!\n");
+		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_SYS_DSTBY_INFO3, HAL_READ32(SYSTEM_CTRL_BASE, REG_SYS_DSTBY_INFO3)|0xf);
+	}
+#endif
 }
 
 STATIC mp_obj_t machine_reset(void) {

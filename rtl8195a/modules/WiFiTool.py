@@ -76,3 +76,45 @@ def simple_connect(timeout=2000, dhcp=True, load_config=True):
                 return
             timeout -= 1
         raise OSError("STA did not connect to AP")
+
+def bootstrap():
+    mode_choice = {"sta": _wlan.STA, "ap": _wlan.AP, "sta_ap": _wlan.STA_AP, "promisc": _wlan.PROMISC}
+    sta_security = {"open": _wlan.OPEN, "wpa_psk": _wlan.WEP_PSK, "wep_shared": _wlan.WEP_SHARED, 
+            "wpa_tkip_psk": _wlan.WPA_TKIP_PSK, "wpa2_aes_psk": _wlan.WPA2_AES_PSK, "wpa2_mixed_psk": _wlan.WPA2_MIXED_PSK,
+            "wpa_wpa2_mixed": _wlan.WPA_WPA2_MIXED, "wpa_open": _wlan.WPS_OPEN, "wpa_secure": _wlan.WPS_SECURE}
+    prompt = "===>"
+    print("== This is WiFiTool bootstraping ==")
+    print("Now please follow the guide to generate WiFi config file")
+    print("Reseting WLAN ...")
+
+    _wlan.off()
+
+    print("Please choose WLAN mode: ")
+    for key, item in enumerate(mode_choice):
+        print("%s" % key)
+
+    mode = input(prompt)
+
+    try:
+        choosed_mode = mode_choice[mode.lower()]
+    except:
+        raise ValueError("Invalid mode selection")
+
+    config = dict()
+
+    if choosed_mode == _wlan.STA or choosed_mode == _wlan.STA_AP:
+        print("Please the AP's SSID you want to connect to")
+        ssid = input(prompt)
+        print("Please select AP's security type you want to connect to")
+        print("Avaliable choices:")
+        for key, item in enumerate(sta_security):
+            print(key)
+        security = input(prompt)
+        print("Please the AP's password you want to connect to")
+        password = input(prompt)
+    elif choosed_mode == _wlan.AP or choosed_mode == _wlan.STA_AP:
+        pass
+    elif choosed_mode == _wlan.PROMISC:
+        pass
+    else:
+        pass
