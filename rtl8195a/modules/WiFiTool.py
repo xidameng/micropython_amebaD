@@ -8,7 +8,7 @@ def _wlan_default_disconnect_callback():
     print("wlan disconnected")
 
 class WlanConfig:
-    def __init__(self, json=None, config_path="/flash/.wlanconfig", read_from_file=False):
+    def __init__(self, json=None, config_path=".wlanconfig", read_from_file=False):
         self.config_path = config_path
         self.mode = WLAN.STA
         self.sta = dict(ssid = None, security=WLAN.OPEN, password=None)
@@ -45,7 +45,7 @@ class WlanConfig:
             raise OSError("Load config: %s failed" % self.config_path)
 
 
-_config = WlanConfig(config_path='/flash/.wlanconfig')
+_config = WlanConfig(config_path='.wlanconfig')
 _wlan = WLAN(mode=_config.mode)
 _wlan.on()
 

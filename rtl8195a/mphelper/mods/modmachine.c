@@ -55,17 +55,14 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-
-// A workaround with WLAN driver..........It's really weird, you can not call spicinitrtl8195a
 flash_t flash;
-
 void modmachine_init(void) {
     crypto_init0();
     rtc_init0();
     loguart_init0();
     adc_init0();
     pin_init0();
-    flash_get_status(&flash);
+    //flash_get_status(&flash);
 }
 
 STATIC mp_obj_t machine_reset(void) {

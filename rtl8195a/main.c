@@ -76,7 +76,7 @@ void micropython_task(void const *arg) {
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
 #endif
-    for (;;) {
+    for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
             if (pyexec_raw_repl() != 0) {
                 sys_reset();
