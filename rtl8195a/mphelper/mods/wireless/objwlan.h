@@ -33,6 +33,8 @@
 #include "modnetwork.h"
 #include "objnetif.h"
 
+#include "wifi_conf.h"
+
 #define WLAN_MIN_SSID_LEN       3
 #define WLAN_MAX_SSID_LEN       32
 
@@ -57,6 +59,7 @@ typedef struct {
     uint8_t       channel;                    // WLAN channel 0 ~ 11
     int8_t        ssid[WLAN_MAX_SSID_LEN];    // WLAN STA mode ssid
     int8_t        ap_ssid[WLAN_MAX_SSID_LEN]; // WLAN AP mode ssid
+    uint8_t       promisc_level;
     netif_obj_t   netif[];
 } wlan_obj_t;
 

@@ -49,6 +49,9 @@ _config = WlanConfig(config_path='.wlanconfig')
 _wlan = WLAN(mode=_config.mode)
 _wlan.on()
 
+def get_wlan_drv():
+    return _wlan
+
 def simple_connect(timeout=2000, dhcp=True, load_config=True):
     global _config
     global _wlan

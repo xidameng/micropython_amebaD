@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Chester Tseng
+ * Copyright (c) 2017 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,21 @@
 /*****************************************************************************
  *                              Local variables
  * ***************************************************************************/
+struct eth_frame {
+	struct eth_frame *prev;
+	struct eth_frame *next;
+	char *buf_in;;
+    unsigned int len;
+};
+
+struct eth_buffer {
+	struct eth_frame *head;
+	struct eth_frame *tail;
+};
+
 STATIC xSemaphoreHandle xSTAConnectAPSema;
+
+static struct eth_buffer eth_buffer;
 
 extern struct netif xnetif[NET_IF_NUM];
 
@@ -40,6 +54,7 @@ STATIC wlan_obj_t wlan_obj = {
     .mode           = RTW_MODE_STA,
     .security_type  = RTW_SECURITY_OPEN,
     .channel        = 6,
+    .promisc_level  = RTW_PROMISC_DISABLE,
     .netif          = {
         { .base.type = &netif_type, .piface = &xnetif[0], .index = 0 },
         { .base.type = &netif_type, .piface = &xnetif[1], .index = 1 },
@@ -167,6 +182,8 @@ void wlan_init0(void) {
     netif_set_up(netif_obj_1.piface);
 
     netif_set_default(netif_obj_0.piface);
+
+    wifi_init_packet_filter();
 }
 
 STATIC const qstr wlan_scan_info_fields[] = {
@@ -384,7 +401,7 @@ STATIC mp_obj_t wlan_connect(mp_uint_t n_args, const mp_obj_t *pos_args,
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args),
             allowed_args, args);
 
-    if ((self->mode != RTW_MODE_STA) && (self->mode != RTW_MODE_STA_AP)) {
+    if ((self->mode != RTW_MODE_STA) && (self->mode != RTW_MODE_STA_AP) && (self->mode != RTW_MODE_PROMISC)) {
         mp_raise_ValueError("Only STA / STA_AP mode support wlan connect");
     }
 
@@ -480,13 +497,20 @@ STATIC mp_obj_t wlan_disconnect(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_disconnect_obj, wlan_disconnect);
 
-STATIC mp_obj_t wlan_on(mp_obj_t self_in) {
+STATIC mp_obj_t wlan_on(mp_uint_t n_args, const mp_obj_t *args) {
     int16_t ret = RTW_ERROR;
 
-    wlan_obj_t *self = self_in;
+    wlan_obj_t *self = args[0];
 
     if (rltk_wlan_running(WLAN0_IDX)) {
-        mp_raise_msg(&mp_type_OSError, "WLAN has already running");
+        mp_raise_msg(&mp_type_OSError, "WLAN has already running, please turn it off first.");
+    }
+
+    int mode = self->mode;
+
+    if (n_args > 1) {
+        mode = mp_obj_get_int(args[1]);
+        self->mode = mode;
     }
 
     // Init WLAN0 first
@@ -509,7 +533,7 @@ STATIC mp_obj_t wlan_on(mp_obj_t self_in) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_on_obj, wlan_on);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(wlan_on_obj, 1, 2, wlan_on);
 
 STATIC mp_obj_t wlan_off(mp_obj_t self_in) {
 
@@ -564,6 +588,52 @@ STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
     return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_is_connect_to_ap_obj, wlan_is_connect_to_ap);
+
+static void promisc_callback_all(unsigned char *buf, unsigned int len, void* userdata) {
+
+    struct eth_frame *frame = (struct eth_frame *) pvPortMalloc(sizeof(struct eth_frame));
+    frame->buf_in = (char *)pvPortMalloc(sizeof(char) * len);
+	
+	if(frame) {
+		frame->prev = NULL;
+		frame->next = NULL;
+		memcpy(frame->buf_in, buf, len);
+		frame->len = len;
+		taskENTER_CRITICAL();
+
+		if(eth_buffer.tail) {
+			eth_buffer.tail->next = frame;
+			frame->prev = eth_buffer.tail;
+			eth_buffer.tail = frame;
+		}
+		else {
+			eth_buffer.head = frame;
+			eth_buffer.tail = frame;
+		}
+
+		taskEXIT_CRITICAL();
+	}
+}
+
+STATIC mp_obj_t wlan_promisc_level(mp_uint_t n_args, const mp_obj_t *args) {
+    wlan_obj_t *self = args[0];
+    int16_t ret = RTW_ERROR;
+    uint8_t promisc_level = 0;
+
+    if (n_args == 1) {
+        return mp_obj_new_int(self->promisc_level);
+    }
+    else {
+        self->promisc_level = mp_obj_get_int(args[1]);
+        if (self->promisc_level == RTW_PROMISC_DISABLE) {
+            wifi_set_promisc(RTW_PROMISC_DISABLE, NULL, 0);
+        } else {
+            wifi_set_promisc(self->promisc_level, promisc_callback_all, 1);
+        }
+        return mp_const_none;
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(wlan_promisc_level_obj, 1, 3, wlan_promisc_level);
 
 void wifi_event_scan_result_report_hdl (char *buf, int buf_len, int flags,
         void *userfunc) {
@@ -965,6 +1035,7 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_mac),              MP_OBJ_FROM_PTR(&wlan_mac_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_rf),               MP_OBJ_FROM_PTR(&wlan_rf_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_channel),          MP_OBJ_FROM_PTR(&wlan_channel_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_promisc_level),    MP_OBJ_FROM_PTR(&wlan_promisc_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),          MP_OBJ_FROM_PTR(&wlan_connect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),       MP_OBJ_FROM_PTR(&wlan_disconnect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
@@ -974,6 +1045,10 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap), MP_OBJ_FROM_PTR(&wlan_is_connect_to_ap_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_event_handler),    MP_OBJ_FROM_PTR(&wlan_event_handler_obj) },
 
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read),             (mp_obj_t)&mp_stream_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),         (mp_obj_t)&mp_stream_readinto_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_readline),         (mp_obj_t)&mp_stream_unbuffered_readline_obj},
+
     // class constants
     
     // WLAN mode 
@@ -981,7 +1056,9 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_AP),               MP_OBJ_NEW_SMALL_INT(RTW_MODE_AP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_STA_AP),           MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA_AP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC),          MP_OBJ_NEW_SMALL_INT(RTW_MODE_PROMISC) },
+#if 0 // Not support yet
     { MP_OBJ_NEW_QSTR(MP_QSTR_P2P),              MP_OBJ_NEW_SMALL_INT(RTW_MODE_P2P) },
+#endif
 
     // SECURITY MODE
     { MP_OBJ_NEW_QSTR(MP_QSTR_OPEN),             MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_OPEN) },
@@ -993,8 +1070,10 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA2_AES_PSK),     MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA2_AES_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA2_MIXED_PSK),   MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA2_MIXED_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA_WPA2_MIXED),   MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA_WPA2_MIXED) },
+#if 0 // Not support yet
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPS_OPEN),         MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPS_OPEN) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPS_SECURE),       MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPS_SECURE) },
+#endif
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_EVENT_CONNECT),                 MP_OBJ_NEW_SMALL_INT(WIFI_EVENT_CONNECT) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EVENT_DISCONNECT),              MP_OBJ_NEW_SMALL_INT(WIFI_EVENT_DISCONNECT) },
@@ -1018,14 +1097,108 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_INFRASTRUCTURE),       MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_INFRASTRUCTURE) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_ADHOC),                MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_ADHOC) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_ANY),                  MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_ANY) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_DISABLE),               MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_DISABLE) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE),                MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE_1),              MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE_1) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE_2),              MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE_2) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE_3),              MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE_3) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_FILTER_MATCHING),       MP_OBJ_NEW_SMALL_INT(RTW_POSITIVE_MATCHING) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_FILTER_NOT_MATCHING),   MP_OBJ_NEW_SMALL_INT(RTW_NEGATIVE_MATCHING) },
 };
 STATIC MP_DEFINE_CONST_DICT(wlan_locals_dict, wlan_locals_dict_table);
+
+STATIC mp_uint_t wlan_raw_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
+    wlan_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_uint_t i = 0;
+
+    // Direct return 0 when size = 0, to save the time
+    if (size == 0) 
+        return 0;
+
+    if (self->mode != RTW_MODE_PROMISC) {
+        *errcode = MP_EIO;
+        return -1;
+    }
+
+	struct eth_frame *frame = NULL;
+
+	taskENTER_CRITICAL();
+
+    if(eth_buffer.head) {
+		frame = eth_buffer.head;
+
+		if(eth_buffer.head->next) {
+			eth_buffer.head = eth_buffer.head->next;
+			eth_buffer.head->prev = NULL;
+		}
+		else {
+			eth_buffer.head = NULL;
+			eth_buffer.tail = NULL;
+		}
+	}
+
+	taskEXIT_CRITICAL();
+
+    if (frame == NULL) {
+        *errcode = MP_EAGAIN;
+        return 0;
+    }
+
+    unsigned int ret = 0;
+
+    for (i = 0; i < frame->len; i++) {
+        buf_in[i] = frame->buf_in[i];
+        ret = i;
+        if (i > size)
+            break;
+    }
+
+    vPortFree((void *) frame);
+
+    if (ret < 0) {
+        *errcode = MP_EAGAIN;
+        return MP_STREAM_ERROR;
+    } else {
+        return ret;
+    }
+}
+
+STATIC mp_uint_t wlan_raw_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, int *errcode) {
+    wlan_obj_t *self = self_in;
+    mp_uint_t ret;
+    if (request == MP_STREAM_POLL) {
+        mp_uint_t flags = arg;
+        ret = 0;
+        mp_uint_t status = 0;
+        if ((flags & MP_STREAM_POLL_RD) && (status & LSR_DR)) {
+            ret |= MP_STREAM_POLL_RD;
+        }
+
+        if ((flags & MP_STREAM_POLL_WR) && (status & LSR_THRE)) {
+            ret |= MP_STREAM_POLL_WR;
+        }
+    } else {
+        *errcode = MP_EINVAL;
+        ret = MP_STREAM_ERROR;
+    }
+    return ret;
+}
+
+STATIC const mp_stream_p_t wlan_raw_stream_p = {
+    .read    = wlan_raw_read,
+    .ioctl   = wlan_raw_ioctl,
+    .is_text = false,
+};
 
 const mp_obj_type_t wlan_type = {
     { &mp_type_type },
     .name        = MP_QSTR_WLAN,
     .print       = wlan_print,
     .make_new    = wlan_make_new,
+    .getiter     = mp_identity,
+    .iternext    = mp_stream_unbuffered_iter,
+    .protocol    = &wlan_raw_stream_p,
     .locals_dict = (mp_obj_t)&wlan_locals_dict,
 };
-
