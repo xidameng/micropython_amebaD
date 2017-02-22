@@ -16,7 +16,7 @@
 //---------------------------------------------------------------------------------------------------
 extern HAL_TIMER_OP HalTimerOp;
 
-#define I2C_STATIC_ALLOC      1
+#define I2C_STATIC_ALLOC      0
 /* I2C SAL global variables declaration when kernel disabled */
 #ifdef I2C_STATIC_ALLOC
     HAL_I2C_OP HalI2COpSAL;

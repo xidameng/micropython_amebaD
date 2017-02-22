@@ -110,7 +110,7 @@ manipulate_images:
 	$(Q)echo ===========================================================
 	$(Q)$(NM) $(BUILD)/$(TARGET).axf | sort > $(BUILD)/$(TARGET).nmap
 	$(Q)$(OBJCOPY) -j .ram.start.table -j .ram.text -j .ram.rodata -j .ram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/ram_2.bin
-	$(Q)$(OBJCOPY) -j .sdrm_text -j .sdrm_rodata -j .sdrm_data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
+	$(Q)$(OBJCOPY) -j .sdram.text -j .sdram.rodata -j .sdram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
 	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.p.bin $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rw $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rx $(PICK) $(CHKSUM) $(PAD)
@@ -166,13 +166,11 @@ prerequirement:
 $(SRC_O): $(BUILD)/%.o : %.c
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
-	$(Q)$(CC) $(CFLAGS) -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 $(DRAM_O): $(BUILD)/%.o : %.c 
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(CC) $(CFLAGS)  -c $< -o $@
 	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
-	$(Q)$(CC) $(CFLAGS)  -c $< -MM -MT $@ -MF $(BUILD)/$(notdir $(patsubst %.o,%.d,$@))
 
 .PHONY: setup
 setup:

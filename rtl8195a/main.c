@@ -48,6 +48,17 @@
  *                              Internal variables
  * ***************************************************************************/
 SECTION(".sdram.bss") uint8_t mpHeap[1024 * 1024];      // MicroPython core' heap 
+/*
+ * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
+ * so it's not quite easy to predict usage.
+ */
+SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
+
+/* MicroPython Task's stack memory
+ * Put this memory to on-board sram to accerlate speed
+ * ".bdsram.data" section
+ */
+SECTION(".sdram.bss") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
 
 void micropython_task(void const *arg) {
 
@@ -89,18 +100,6 @@ void micropython_task(void const *arg) {
     }
     vTaskDelete(NULL);
 }
-
-/*
- * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
- * so it's not quite easy to predict usage.
- */
-SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
-
-/* MicroPython Task's stack memory
- * Put this memory to on-board sram to accerlate speed
- * ".bdsram.data" section
- */
-SECTION(".sdram.bss") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
 
 void main (void) {
     /* 

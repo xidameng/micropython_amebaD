@@ -89,7 +89,6 @@
 #define mp_builtin_open_obj mp_vfs_open_obj
 
 #define MICROPY_EVENT_POLL_HOOK                             \
-    mp_hal_delay_ms(1);                                     \
     if (MP_STATE_VM(mp_pending_exception) != NULL) {        \
         mp_obj_t obj = MP_STATE_VM(mp_pending_exception);   \
         MP_STATE_VM(mp_pending_exception) = MP_OBJ_NULL;    \

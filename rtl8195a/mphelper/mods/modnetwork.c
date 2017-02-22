@@ -41,12 +41,6 @@
 STATIC sys_mbox_t mbox;
 STATIC sys_mutex_t network_core_lock;
 extern StackType_t mpNetworkCoreStack[];
-#if 0
-SECTION(".sdram.bss") 
-#endif
-StackType_t mpFTPDStack[MICROPY_NETWORK_CORE_STACK_DEPTH];
-TaskHandle_t xFTPDHandle;
-
 /*****************************************************************************
  *                              Local functions
  * ***************************************************************************/
@@ -139,7 +133,6 @@ STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_network) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_iflist),       MP_OBJ_FROM_PTR(&netif_iflist_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NETIF),        MP_OBJ_FROM_PTR(&netif_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PKT),          MP_OBJ_FROM_PTR(&packet_type) },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_network_globals, mp_module_network_globals_table);
 

@@ -26,8 +26,6 @@ SECTIONS
     {
     	.valid
     	{ 
-          /**mem.o (.bss*)*/
-          /**memp.o (.bss*)*/
           *(.tcm.heap)
     	}
     	.dummy 
@@ -54,7 +52,7 @@ SECTIONS
     	}
     } > TCM
 
-    .sdrm_text :
+    .sdram.text :
     {
       __sdram_data_start__ = .;
       *(.sdram.text*)
@@ -66,7 +64,7 @@ SECTIONS
       */extmod/*.o(.text*)
     } > SDRAM_RAM
 
-    .sdrm_rodata :
+    .sdram.rodata :
     {
       *(.sdram.rodata*)
       *(.p2p.rodata*)
@@ -77,7 +75,7 @@ SECTIONS
       */extmod/*.o(.rodata*)
     } > SDRAM_RAM
 
-    .sdrm_data : 
+    .sdram.data : 
     {
       *(.sdram.data*)
       *(.p2p.data*)
@@ -89,7 +87,7 @@ SECTIONS
       __sdram_data_end__ = .;
     } > SDRAM_RAM
 
-    .sdrm_bss :
+    .sdram.bss :
     {
       __sdram_bss_start__ = .;
       *(.sdram.bss*)
