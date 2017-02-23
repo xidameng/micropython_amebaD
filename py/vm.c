@@ -63,8 +63,8 @@ typedef enum {
     do { \
         unum = (unum << 7) + (*ip & 0x7f); \
     } while ((*ip++ & 0x80) != 0)
-#define DECODE_ULABEL mp_uint_t ulab = (ip[0] | (ip[1] << 8)); ip += 2
-#define DECODE_SLABEL mp_uint_t slab = (ip[0] | (ip[1] << 8)) - 0x8000; ip += 2
+#define DECODE_ULABEL size_t ulab = (ip[0] | (ip[1] << 8)); ip += 2
+#define DECODE_SLABEL size_t slab = (ip[0] | (ip[1] << 8)) - 0x8000; ip += 2
 
 #if MICROPY_PERSISTENT_CODE
 
@@ -681,7 +681,9 @@ unwind_jump:;
                     }
                     ip = (const byte*)MP_OBJ_TO_PTR(POP()); // pop destination ip for jump
                     if (unum != 0) {
+                        // pop iter and iter_buf
                         sp--;
+                        sp -= sizeof(mp_obj_iter_buf_t) / sizeof(mp_obj_t);
                     }
                     DISPATCH_WITH_PEND_EXC_CHECK();
                 }
@@ -723,17 +725,39 @@ unwind_jump:;
 
                 ENTRY(MP_BC_GET_ITER):
                     MARK_EXC_IP_SELECTIVE();
-                    SET_TOP(mp_getiter(TOP()));
+                    SET_TOP(mp_getiter(TOP(), NULL));
                     DISPATCH();
+
+                // An iterator for a for-loop takes 4 slots on the stack.  They are either
+                // used to store the iterator object itself, or the first slot is NULL and
+                // the second slot holds a reference to the iterator object.
+                ENTRY(MP_BC_GET_ITER_STACK): {
+                    MARK_EXC_IP_SELECTIVE();
+                    mp_obj_t obj = TOP();
+                    mp_obj_iter_buf_t *iter_buf = (mp_obj_iter_buf_t*)sp;
+                    sp += sizeof(mp_obj_iter_buf_t) / sizeof(mp_obj_t) - 1;
+                    obj = mp_getiter(obj, iter_buf);
+                    if (obj != MP_OBJ_FROM_PTR(iter_buf)) {
+                        // Iterator didn't use the stack so indicate that with MP_OBJ_NULL.
+                        sp[-3] = MP_OBJ_NULL;
+                        sp[-2] = obj;
+                    }
+                    DISPATCH();
+                }
 
                 ENTRY(MP_BC_FOR_ITER): {
                     MARK_EXC_IP_SELECTIVE();
                     DECODE_ULABEL; // the jump offset if iteration finishes; for labels are always forward
                     code_state->sp = sp;
-                    assert(TOP());
-                    mp_obj_t value = mp_iternext_allow_raise(TOP());
+                    mp_obj_t obj;
+                    if (sp[-3] == MP_OBJ_NULL) {
+                        obj = sp[-2];
+                    } else {
+                        obj = MP_OBJ_FROM_PTR(&sp[-3]);
+                    }
+                    mp_obj_t value = mp_iternext_allow_raise(obj);
                     if (value == MP_OBJ_STOP_ITERATION) {
-                        --sp; // pop the exhausted iterator
+                        sp -= 4; // pop the exhausted iterator
                         ip += ulab; // jump to after for-block
                     } else {
                         PUSH(value); // push the next iteration value
@@ -863,7 +887,7 @@ unwind_jump:;
 
                 ENTRY(MP_BC_MAKE_CLOSURE): {
                     DECODE_PTR;
-                    mp_uint_t n_closed_over = *ip++;
+                    size_t n_closed_over = *ip++;
                     // Stack layout: closed_overs <- TOS
                     sp -= n_closed_over - 1;
                     SET_TOP(mp_make_closure_from_raw_code(ptr, n_closed_over, sp));
@@ -872,7 +896,7 @@ unwind_jump:;
 
                 ENTRY(MP_BC_MAKE_CLOSURE_DEFARGS): {
                     DECODE_PTR;
-                    mp_uint_t n_closed_over = *ip++;
+                    size_t n_closed_over = *ip++;
                     // Stack layout: def_tuple def_dict closed_overs <- TOS
                     sp -= 2 + n_closed_over - 1;
                     SET_TOP(mp_make_closure_from_raw_code(ptr, 0x100 | n_closed_over, sp));
@@ -958,8 +982,8 @@ unwind_jump:;
                         code_state->sp = sp;
                         code_state->exc_sp = MP_TAGPTR_MAKE(exc_sp, currently_in_except_block);
 
-                        mp_uint_t n_args = unum & 0xff;
-                        mp_uint_t n_kw = (unum >> 8) & 0xff;
+                        size_t n_args = unum & 0xff;
+                        size_t n_kw = (unum >> 8) & 0xff;
                         int adjust = (sp[1] == MP_OBJ_NULL) ? 0 : 1;
 
                         mp_code_state_t *new_state = mp_obj_fun_bc_prepare_codestate(*sp, n_args + adjust, n_kw, sp + 2 - adjust);
@@ -1283,7 +1307,7 @@ exception_handler:
                         const byte *ip = code_state->ip + 1;
                         DECODE_ULABEL; // the jump offset if iteration finishes; for labels are always forward
                         code_state->ip = ip + ulab; // jump to after for-block
-                        code_state->sp -= 1; // pop the exhausted iterator
+                        code_state->sp -= 4; // pop the exhausted iterator
                         goto outer_dispatch_loop; // continue with dispatch loop
                     } else if (*code_state->ip == MP_BC_YIELD_FROM) {
                         // StopIteration inside yield from call means return a value of
@@ -1304,7 +1328,7 @@ unwind_loop:
             // TODO need a better way of not adding traceback to constant objects (right now, just GeneratorExit_obj and MemoryError_obj)
             if (nlr.ret_val != &mp_const_GeneratorExit_obj && nlr.ret_val != &mp_const_MemoryError_obj) {
                 const byte *ip = code_state->code_info;
-                mp_uint_t code_info_size = mp_decode_uint(&ip);
+                size_t code_info_size = mp_decode_uint(&ip);
                 #if MICROPY_PERSISTENT_CODE
                 qstr block_name = ip[0] | (ip[1] << 8);
                 qstr source_file = ip[2] | (ip[3] << 8);
@@ -1317,7 +1341,7 @@ unwind_loop:
                 size_t source_line = 1;
                 size_t c;
                 while ((c = *ip)) {
-                    mp_uint_t b, l;
+                    size_t b, l;
                     if ((c & 0x80) == 0) {
                         // 0b0LLBBBBB encoding
                         b = c & 0x1f;
