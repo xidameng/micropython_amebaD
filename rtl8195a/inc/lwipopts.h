@@ -76,7 +76,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_TCP_PCB_LISTEN 5
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
-#define MEMP_NUM_TCP_SEG        20
+#define MEMP_NUM_TCP_SEG        500
 /* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
    timeouts. */
 #define MEMP_NUM_SYS_TIMEOUT    10
@@ -105,15 +105,15 @@ a lot of data that needs to be copied, this should be set high. */
 #define TCP_MSS                 (1500 - 40)	  /* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
 
 /* TCP sender buffer space (bytes). */
-#define TCP_SND_BUF             (5*TCP_MSS)
+#define TCP_SND_BUF             (5 * TCP_MSS)
 
 /*  TCP_SND_QUEUELEN: TCP sender buffer space (pbufs). This must be at least
   as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work. */
 
-#define TCP_SND_QUEUELEN        (4* TCP_SND_BUF/TCP_MSS)
+#define TCP_SND_QUEUELEN        (100 * TCP_SND_BUF/TCP_MSS)
 
 /* TCP receive window. */
-#define TCP_WND                 (2*TCP_MSS)
+#define TCP_WND                 (2 * TCP_MSS)
 
 
 /* ---------- ICMP options ---------- */
