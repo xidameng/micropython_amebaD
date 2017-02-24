@@ -259,7 +259,6 @@ typedef struct _lwip_socket_obj_t {
 static inline void poll_sockets(void) {
 #ifdef MICROPY_EVENT_POLL_HOOK
     MICROPY_EVENT_POLL_HOOK;
-#else
     mp_hal_delay_ms(1);
 #endif
 }

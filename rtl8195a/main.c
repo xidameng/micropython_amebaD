@@ -43,22 +43,16 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-SECTION(".sdram.bss") uint8_t mpHeap[1024 * 1024];      // MicroPython core' heap 
-/*
- * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
- * so it's not quite easy to predict usage.
- */
-SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 
-/* MicroPython Task's stack memory
- * Put this memory to on-board sram to accerlate speed
- * ".bdsram.data" section
- */
-SECTION(".sdram.bss") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
+/*****************************************************************************
+ *                              External variables
+ * ***************************************************************************/
+extern uint8_t mpHeap[MP_HEAP_SIZE];
+extern uint8_t ucHeap[configTOTAL_HEAP_SIZE];
+extern StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
 
 void micropython_task(void const *arg) {
 
@@ -77,11 +71,12 @@ void micropython_task(void const *arg) {
     MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     MP_STATE_PORT(dupterm_arr_obj) = MP_OBJ_NULL;
 
-    modterm_init();
+
     modmachine_init();
     modwireless_init();
     modnetwork_init();
-    
+    mp_hal_delay_ms(20);
+    modterm_init();
     pyexec_frozen_module("_boot.py");
     pyexec_file("main.py");
 #if MICROPY_REPL_EVENT_DRIVEN

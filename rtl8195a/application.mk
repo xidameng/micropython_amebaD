@@ -357,7 +357,7 @@ DRAM_C += mphelper/mods/machine/objcrypto.c
 DRAM_C += mphelper/mods/wireless/objwlan.c
 DRAM_C += mphelper/mods/network/objnetif.c
 
-SRC_C += main.c
+DRAM_C += main.c
 SRC_C += dummy.c
 
 DRAM_C += \

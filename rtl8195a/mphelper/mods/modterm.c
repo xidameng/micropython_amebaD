@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Chester Tseng
+ * Copyright (c) 2017 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,137 +35,150 @@
 #include "py/objarray.h"
 #include "py/stream.h"
 #include "py/objstr.h"
+#include "py/ringbuf.h"
 #include "lib/utils/interrupt_char.h"
 #include "pyexec.h"
 
 #include "modterm.h"
-
-#include "objloguart.h"
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-STATIC xQueueHandle xRXCharQueue;
-STATIC struct terminal_msg xmsg;
+extern StackType_t mpTermRxStack[MICROPY_TERM_RX_STACK_DEPTH];
+QueueHandle_t xRxQueue;
+TaskHandle_t xTermRxHandler;
+
+/*****************************************************************************
+ *                              Internal variables
+ * ***************************************************************************/
+typedef struct _poll_obj_t {
+    mp_obj_t obj;
+    mp_uint_t (*ioctl)(mp_obj_t obj, mp_uint_t request, mp_uint_t arg, int *errcode);
+    mp_uint_t (*read)(mp_obj_t obj, void *buf_in, mp_uint_t size, int *errcode);
+    mp_uint_t (*write)(mp_obj_t obj, const void *buf_in, mp_uint_t size, int *errcode);
+    mp_uint_t flags;
+} poll_obj_t;
 
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-void modterm_init (void) {
-    // Init terminal here   
-    mp_obj_list_init(&MP_STATE_PORT(term_list_obj), 0);
-    MP_STATE_PORT(dupterm_arr_obj) = mp_obj_new_bytearray(1, "");
-
-    xRXCharQueue = xQueueCreate(64, sizeof(struct terminal_msg *));
+STATIC void modterm_map_add(mp_map_t *poll_map, const mp_obj_t *obj, mp_uint_t obj_len, mp_uint_t flags) {
+    for (mp_uint_t i = 0; i < obj_len; i++) {
+        mp_map_elem_t *elem = mp_map_lookup(poll_map, mp_obj_id(obj[i]), MP_MAP_LOOKUP_ADD_IF_NOT_FOUND);
+        if (elem->value == NULL) {
+            // object not found; get its ioctl, write, read and add it to the poll list
+            const mp_stream_p_t *stream_p = mp_get_stream_raise(obj[i], MP_STREAM_OP_IOCTL);
+            poll_obj_t *poll_obj = m_new_obj(poll_obj_t);
+            poll_obj->obj = obj[i];
+            poll_obj->ioctl = stream_p->ioctl;
+            poll_obj->read  = stream_p->read;
+            poll_obj->write = stream_p->write;
+            poll_obj->flags = flags;
+            elem->value = poll_obj;
+        } else {
+            // object exists; override its' flag
+            ((poll_obj_t*)elem->value)->flags = flags;
+        }
+    }
 }
 
 void mp_term_tx_strn(char *str, size_t len) {
-    if (&MP_STATE_PORT(term_list_obj) != MP_OBJ_NULL) {
-        // Send character to every element in term_list_obj
-        for (mp_uint_t i = 0; i < MP_STATE_PORT(term_list_obj).len; i++) {
-            nlr_buf_t nlr;
-            if (nlr_push(&nlr) == 0) {
-                mp_obj_t write_m[3];
-                mp_load_method(MP_STATE_PORT(term_list_obj).items[i], MP_QSTR_write, write_m);
-                mp_obj_array_t *arr = MP_OBJ_TO_PTR(MP_STATE_PORT(dupterm_arr_obj));
-                arr->items = (void *)str;
-                arr->len = len;
-                write_m[2] = MP_STATE_PORT(dupterm_arr_obj);
-                mp_call_method_n_kw(1, 0, write_m);
-                nlr_pop();
-            } else {
-                // When exception raised, remove the target object from term_list_obj
-                mp_printf(&mp_plat_print, "term: Exception in write() method, deactivating: ");
-                if (nlr.ret_val != MP_OBJ_NULL) {
-                    mp_obj_print_exception(&mp_plat_print, nlr.ret_val);
-                }
-                mp_stream_close(MP_STATE_PORT(term_list_obj).items[i]);
-                mp_obj_list_remove(&MP_STATE_PORT(term_list_obj), i);
-            }
+    for (mp_uint_t i = 0; i < MP_STATE_PORT(mp_terminal_map).alloc; ++i) {
+        if (!MP_MAP_SLOT_IS_FILLED(&MP_STATE_PORT(mp_terminal_map), i)) {
+            continue;
+        }
+        poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
+        int errcode;
+        mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
+
+        if (ret & MP_STREAM_POLL_WR) {
+            mp_int_t ret = poll_obj->write(poll_obj->obj, str, len, &errcode);
+            // Do something with ret
         }
     }
 }
 
 int mp_term_rx_chr() {
-    struct terminal_msg *msg;
+	char chr = 0;
 
-    if (xQueueReceive(xRXCharQueue, (void *)&msg, (TickType_t) portMAX_DELAY)) {
-        switch (msg->type) {
-            case TERM_RX_CHR:
-                /*
-                 * Check if term_list_obj is none or not
-                 */
-                if (&MP_STATE_PORT(term_list_obj) == MP_OBJ_NULL) {
-                    mp_raise_msg(&mp_type_OSError, "Terminal list object missing, assert");
-                    return -1;
+    if (xQueueReceive(xRxQueue, &chr, portMAX_DELAY) != pdPASS) {
+		// Do something here...
+    } else {
+        return chr;
+    }
+  
+}
+
+void modterm_rx_thread(void *arg) {
+    for(;;) {
+        int chr = 0;
+        for (mp_uint_t i = 0; i < MP_STATE_PORT(mp_terminal_map).alloc; ++i) {
+
+            if (!MP_MAP_SLOT_IS_FILLED(&MP_STATE_PORT(mp_terminal_map), i)) {
+                continue;
+            }
+
+            poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
+            int errcode;
+
+			taskENTER_CRITICAL();
+			mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
+			taskEXIT_CRITICAL();
+
+            if (ret & MP_STREAM_POLL_RD) {
+				taskENTER_CRITICAL();
+                mp_int_t ret = poll_obj->read(poll_obj->obj, &chr, 1, &errcode);
+				taskEXIT_CRITICAL();
+                // Do something with ret
+                if (chr == mp_interrupt_char)
+                    mp_keyboard_interrupt();
+                else {
+                    xQueueSendToBack(xRxQueue, (void *)&chr, portMAX_DELAY);
                 }
-                for (mp_uint_t i = 0; i < MP_STATE_PORT(term_list_obj).len; i++) {
-                    if (msg->msg.chr.obj_from == MP_STATE_PORT(term_list_obj).items[i]) {
+            }
 
-                        mp_buffer_info_t bufinfo;
-                        mp_get_buffer_raise(msg->msg.chr.obj_array, &bufinfo, MP_BUFFER_READ);
-                        char c = *(byte*)bufinfo.buf;
 
-                        return c;
-                    } else {
-                        // TODO what to do when obj_from is not in the list
-                    }
-                }
-            break;
         }
-        // Should delete object at final or mpHeap would leak
+        // Should use queue instead of delay to save cpu resource
+        mp_hal_delay_ms(1);
     }
+    vTaskDelete(NULL);
 }
 
-STATIC mp_obj_t term_dump(void) {
-    return &MP_STATE_PORT(term_list_obj);
+void modterm_init (void) {
+    mp_map_init(&MP_STATE_PORT(mp_terminal_map), 0);
+
+    // Create MicroPython main task
+    xTermRxHandler = xTaskGenericCreate(modterm_rx_thread,
+            (signed char *)MICROPY_TERM_RX_STACK_NAME, 
+            MICROPY_TERM_RX_STACK_DEPTH, 
+            NULL,
+            MICROPY_TERM_RX_STACK_PRIORITY,
+            NULL,           // No arguments to pass to mp thread
+            mpTermRxStack,  // Use user define stack memory to make it predictable.
+            NULL);
+
+    if (xTermRxHandler != pdTRUE)
+        mp_printf(&mp_plat_print, "Create %s task failed", MICROPY_TASK_NAME);
+	
+    xRxQueue = xQueueCreate(64, sizeof(char));
 }
-MP_DEFINE_CONST_FUN_OBJ_0(term_dump_obj, term_dump);
 
-STATIC mp_obj_t term_rx_post(mp_obj_t obj_in, mp_obj_t array_in) {
-
-    /*
-     *  Check if keyboard interrupt is raised
-     */
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(array_in, &bufinfo, MP_BUFFER_READ);
-    char c = *(byte*)bufinfo.buf;
-    if (c == mp_interrupt_char) {
-        mp_keyboard_interrupt();
-        return mp_const_none;
-    }
-
-    struct terminal_msg *msg = &xmsg;
-
-    msg->type = TERM_RX_CHR;
-    msg->msg.chr.obj_from = obj_in;
-    msg->msg.chr.obj_array = array_in;
-
-    // Check if object have attribute 'irq_handler'
-    mp_obj_t dest[2];
-    mp_load_method_maybe(obj_in, MP_QSTR_irq_handler, dest);
-    
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    if (dest[0] != MP_OBJ_NULL) {
-        /*
-         * If you are in an ISR, you need to call **FromISR API in RTOS
-         */
-        xQueueSendFromISR(xRXCharQueue, (void *)&msg, &xHigherPriorityTaskWoken);
-        if (xHigherPriorityTaskWoken)
-            taskYIELD();
-    }
-    else {
-        // block for a long time if queue is full ...
-        xQueueSend(xRXCharQueue, (void *)&msg, (TickType_t) portMAX_DELAY);
-    }
+STATIC mp_obj_t term_register(mp_obj_t obj_in) {
+    modterm_map_add(&MP_STATE_PORT(mp_terminal_map), &obj_in, 1, MP_STREAM_POLL_RD | MP_STREAM_POLL_WR);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(term_rx_post_obj, term_rx_post);
+MP_DEFINE_CONST_FUN_OBJ_1(term_register_obj, term_register);
+
+STATIC mp_obj_t term_unregister(mp_obj_t obj_in) {
+    mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(obj_in), MP_MAP_LOOKUP_REMOVE_IF_FOUND);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(term_unregister_obj, term_unregister);
 
 STATIC const mp_map_elem_t uterminal_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),   MP_OBJ_NEW_QSTR(MP_QSTR_uterm) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_dump),       MP_OBJ_FROM_PTR(&term_dump_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_rx_post),    MP_OBJ_FROM_PTR(&term_rx_post_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_register),   MP_OBJ_FROM_PTR(&term_register_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_unregister), MP_OBJ_FROM_PTR(&term_unregister_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(uterminal_module_globals, uterminal_module_globals_table);
 

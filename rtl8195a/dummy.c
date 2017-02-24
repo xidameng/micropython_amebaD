@@ -31,6 +31,8 @@
 #include "section_config.h"
 #include "FreeRTOS.h"
 #include  "task.h"
+#include "lwipopts.h"
+#include "lwip/mem.h"
 
 /*****************************************************************************
  *                              Internal variables
@@ -39,7 +41,47 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
+/*
+ * MicroPython heap size
+ */
+SECTION(".sdram.bss") uint8_t mpHeap[MP_HEAP_SIZE];      // MicroPython core' heap 
+
+/*
+ * In FreeRTOS v8.1.2 , TCB is still malloc from ucHeap, instead of independent memory,
+ * so it's not quite easy to predict usage.
+ */
+SECTION(".sdram.bss") uint8_t ucHeap[configTOTAL_HEAP_SIZE];
+
+/* MicroPython Task's stack memory
+ * Put this memory to on-board sram to accerlate speed
+ * ".sdram.data" section
+ */
+SECTION(".sdram.bss") StackType_t mpTaskStack[MICROPY_TASK_STACK_DEPTH];
+
+/*
+ * MicroPython networking core stack
+ */
 SECTION(".sdram.bss") StackType_t mpNetworkCoreStack[MICROPY_NETWORK_CORE_STACK_DEPTH];
+
+/*
+ * MicroPython terminal RX task
+ */
+SECTION(".sdram.bss") StackType_t mpTermRxStack[MICROPY_TERM_RX_STACK_DEPTH];
+
+struct mem {
+  /** index (-> ram[next]) of the next struct */
+  mem_size_t next;
+  /** index (-> ram[prev]) of the previous struct */
+  mem_size_t prev;
+  /** 1: this area is used; 0: this area is unused */
+  u8_t used;
+};
+
+#define MIN_SIZE_ALIGNED     LWIP_MEM_ALIGN_SIZE(MIN_SIZE)
+#define SIZEOF_STRUCT_MEM    LWIP_MEM_ALIGN_SIZE(sizeof(struct mem))
+#define MEM_SIZE_ALIGNED     LWIP_MEM_ALIGN_SIZE(MEM_SIZE)
+
+SECTION(".sdram.bss") unsigned char lwip_ram_heap[MEM_SIZE_ALIGNED + (2*SIZEOF_STRUCT_MEM) + MEM_ALIGNMENT];
 
 /*****************************************************************************
  *                              Local functions

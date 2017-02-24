@@ -11,7 +11,7 @@
 
 #define ROUND_UP2(x, pad) (((x) + ((pad) - 1)) & ~((pad) - 1))
 
-#define TCM_HEAP_SIZE	(40*1024)
+#define TCM_HEAP_SIZE	(20*1024)
 
 static struct Heap g_tcm_heap;
 
