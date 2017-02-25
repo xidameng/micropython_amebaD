@@ -89,8 +89,20 @@ void mp_term_tx_strn(char *str, size_t len) {
         poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
         int errcode;
         mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
+#if 1
+        if (ret & MP_STREAM_POLL_HUP) {
+            mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
+                    MP_MAP_LOOKUP_REMOVE_IF_FOUND);
+            mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
+                        MP_MAP_LOOKUP_REMOVE_IF_FOUND);
+            mp_obj_t close_m[3];
+            mp_load_method(poll_obj->obj, MP_QSTR_close, close_m);
+            mp_call_method_n_kw(0, 0, close_m);
+            continue;
+        }
+#endif
 
-        if (ret & MP_STREAM_POLL_WR) {
+        if (ret & MP_STREAM_POLL_WR && !(ret & MP_STREAM_POLL_HUP)) {
             mp_int_t ret = poll_obj->write(poll_obj->obj, str, len, &errcode);
             // Do something with ret
         }
@@ -123,8 +135,19 @@ void modterm_rx_thread(void *arg) {
 			taskENTER_CRITICAL();
 			mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
 			taskEXIT_CRITICAL();
+            
+            if (ret & MP_STREAM_POLL_HUP) {
+                taskENTER_CRITICAL();
+                mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
+                        MP_MAP_LOOKUP_REMOVE_IF_FOUND);
+                mp_obj_t close_m[3];
+                mp_load_method(poll_obj->obj, MP_QSTR_close, close_m);
+                mp_call_method_n_kw(0, 0, close_m);
+                taskEXIT_CRITICAL();
+                continue;
+            }
 
-            if (ret & MP_STREAM_POLL_RD) {
+            if (ret & MP_STREAM_POLL_RD && !(ret & MP_STREAM_POLL_HUP)) {
 				taskENTER_CRITICAL();
                 mp_int_t ret = poll_obj->read(poll_obj->obj, &chr, 1, &errcode);
 				taskEXIT_CRITICAL();
@@ -164,7 +187,7 @@ void modterm_init (void) {
 }
 
 STATIC mp_obj_t term_register(mp_obj_t obj_in) {
-    modterm_map_add(&MP_STATE_PORT(mp_terminal_map), &obj_in, 1, MP_STREAM_POLL_RD | MP_STREAM_POLL_WR);
+    modterm_map_add(&MP_STATE_PORT(mp_terminal_map), &obj_in, 1, MP_STREAM_POLL_RD | MP_STREAM_POLL_WR | MP_STREAM_POLL_HUP);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(term_register_obj, term_register);

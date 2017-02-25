@@ -146,7 +146,7 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MP_HEAP_SIZE                        (1024 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
-#define MICROPY_TASK_STACK_DEPTH            (23 * 1024) + 512    // Referenced from cc3200 port
+#define MICROPY_TASK_STACK_DEPTH            (80 * 1024) + 512    // Referenced from cc3200 port
 #define MICROPY_TASK_PRIORITY               (3)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
