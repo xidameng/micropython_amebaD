@@ -184,7 +184,7 @@ STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_ParityEven),    MP_OBJ_NEW_SMALL_INT(ParityEven) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced1), MP_OBJ_NEW_SMALL_INT(ParityForced1) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ParityForced0), MP_OBJ_NEW_SMALL_INT(ParityForced0) },
-#if 0 // Not support yes
+#if 0 // Not support yet
     { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlNone),   MP_OBJ_NEW_SMALL_INT(FlowControlNone) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlRTS),    MP_OBJ_NEW_SMALL_INT(FlowControlRTS) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FlowControlCTS),    MP_OBJ_NEW_SMALL_INT(FlowControlCTS) },
@@ -195,14 +195,20 @@ STATIC MP_DEFINE_CONST_DICT(uart_locals_dict, uart_locals_dict_table);
 
 STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
     uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_uint_t i = 0;
+    
+    byte *buf = (byte *)buf_in;
 
     // Direct return 0 when size = 0, to save the time
-    if (size == 0) {
+    if (size == 0) 
         return 0;
+
+    for (i = 0; i < size; i++) {
+        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_DR));
+        buf[i] = (byte)HAL_RUART_READ32(self->unit, RUART_REV_BUF_REG_OFF);
     }
 
-    // Here we use the blocking mode with timeout to receive the RX bytes
-    int32_t ret = serial_recv_blocked(&(self->obj), buf_in, size, self->timeout);
+    int32_t ret = size;
 
     if (ret < 0) {
         *errcode = MP_EAGAIN;
@@ -214,8 +220,19 @@ STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *e
 
 STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
     uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_uint_t i = 0;
 
-    int32_t ret = serial_send_blocked(&(self->obj), buf_in, size, self->timeout);
+    byte *buf = (byte *)buf_in;
+
+    for (i = 0; i < size; i++) {
+        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_THRE));
+        HAL_RUART_WRITE32(self->unit, RUART_TRAN_HOLD_REG_OFF, buf[i]);
+
+        // A workaround, it seems log uart's FIFO is not working ...
+        mp_hal_delay_ms(1);
+    }
+
+    int32_t ret = size;
 
     if (ret < 0) {
         *errcode = MP_EAGAIN;
@@ -225,9 +242,35 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, 
     }
 }
 
+STATIC mp_uint_t uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, int *errcode) {
+    uart_obj_t *self = self_in;
+    mp_uint_t ret;
+    if (request == MP_STREAM_POLL) {
+        mp_uint_t flags = arg;
+        ret = 0;
+        mp_uint_t status = 0;
+        // Only return none zero when RX FIFO is not empty
+        status = HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF);
+        if ((flags & MP_STREAM_POLL_RD) && (status & RUART_LINE_STATUS_REG_DR)) {
+            ret |= MP_STREAM_POLL_RD;
+        }
+
+        // Only return none zero when TX FIFO is not full
+        status = HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF);
+        if ((flags & MP_STREAM_POLL_WR) && (status & RUART_LINE_STATUS_REG_THRE)) {
+            ret |= MP_STREAM_POLL_WR;
+        }
+    } else {
+        *errcode = MP_EINVAL;
+        ret = MP_STREAM_ERROR;
+    }
+    return ret;
+}
+
 STATIC const mp_stream_p_t uart_stream_p = {
     .read    = uart_recv,
     .write   = uart_send,
+    .ioctl   = uart_ioctl,
     .is_text = false,
 };
 

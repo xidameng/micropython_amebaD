@@ -155,15 +155,19 @@ def fatal(msg):
     sys.exit(1)
 
 def install_pkg(pkg_spec, install_path):
+    pkg_parse = pkg_spec.split('==')
+    pkg_spec = pkg_parse[0]
     data = get_pkg_metadata(pkg_spec)
-
-    latest_ver = data["info"]["version"]
-    packages = data["releases"][latest_ver]
+    try:
+        version = pkg_parse[1]
+    except IndexError:
+        version = data["info"]["version"]
+    packages = data["releases"][version]
     del data
     gc.collect()
     assert len(packages) == 1
     package_url = packages[0]["url"]
-    print("Installing %s %s from %s" % (pkg_spec, latest_ver, package_url))
+    print("Installing %s %s from %s" % (pkg_spec, version, package_url))
     package_fname = op_basename(package_url)
     f1 = url_open(package_url)
     f2 = uzlib.DecompIO(f1, gzdict_sz)

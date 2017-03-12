@@ -85,11 +85,11 @@ void micropython_task(void const *arg) {
     for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
             if (pyexec_raw_repl() != 0) {
-                sys_reset();
+                mp_printf(&mp_plat_print, "soft reboot\n");
             }
         } else {
             if (pyexec_friendly_repl() != 0) {
-                sys_reset();
+                mp_printf(&mp_plat_print, "soft reboot\n");
             }
         }
     }
