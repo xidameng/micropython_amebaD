@@ -261,7 +261,7 @@ def run_tests(pyb, tests, args):
     if pyb is not None:
         skip_tests.add('basics/exception_chain.py') # warning is not printed
         skip_tests.add('float/float_divmod.py') # tested by float/float_divmod_relaxed.py instead
-        skip_tests.add('float/float2int_doubleprec.py') # requires double precision floating point to work
+        skip_tests.add('float/float2int_doubleprec_intbig.py') # requires double precision floating point to work
         skip_tests.add('micropython/meminfo.py') # output is very different to PC output
         skip_tests.add('extmod/machine_mem.py') # raw memory access not supported
 
@@ -319,6 +319,7 @@ def run_tests(pyb, tests, args):
         skip_tests.add('misc/sys_exc_info.py') # sys.exc_info() is not supported for native
         skip_tests.add('micropython/heapalloc_traceback.py') # because native doesn't have proper traceback info
         skip_tests.add('micropython/heapalloc_iter.py') # requires generators
+        skip_tests.add('micropython/schedule.py') # native code doesn't check pending events
 
     for test_file in tests:
         test_file = test_file.replace('\\', '/')

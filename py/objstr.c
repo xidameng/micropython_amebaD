@@ -354,7 +354,7 @@ mp_obj_t mp_obj_str_binary_op(mp_uint_t op, mp_obj_t lhs_in, mp_obj_t rhs_in) {
     switch (op) {
         case MP_BINARY_OP_ADD:
         case MP_BINARY_OP_INPLACE_ADD: {
-            if (lhs_len == 0) {
+            if (lhs_len == 0 && mp_obj_get_type(rhs_in) == lhs_type) {
                 return rhs_in;
             }
             if (rhs_len == 0) {
@@ -388,7 +388,7 @@ mp_obj_t mp_obj_str_binary_op(mp_uint_t op, mp_obj_t lhs_in, mp_obj_t rhs_in) {
 // objstrunicode defines own version
 const byte *str_index_to_ptr(const mp_obj_type_t *type, const byte *self_data, size_t self_len,
                              mp_obj_t index, bool is_slice) {
-    mp_uint_t index_val = mp_get_index(type, self_len, index, is_slice);
+    size_t index_val = mp_get_index(type, self_len, index, is_slice);
     return self_data + index_val;
 }
 #endif
@@ -408,7 +408,7 @@ STATIC mp_obj_t bytes_subscr(mp_obj_t self_in, mp_obj_t index, mp_obj_t value) {
             return mp_obj_new_str_of_type(type, self_data + slice.start, slice.stop - slice.start);
         }
 #endif
-        mp_uint_t index_val = mp_get_index(type, self_len, index, false);
+        size_t index_val = mp_get_index(type, self_len, index, false);
         // If we have unicode enabled the type will always be bytes, so take the short cut.
         if (MICROPY_PY_BUILTINS_STR_UNICODE || type == &mp_type_bytes) {
             return MP_OBJ_NEW_SMALL_INT(self_data[index_val]);
@@ -2065,9 +2065,10 @@ STATIC void bad_implicit_conversion(mp_obj_t self_in) {
     if (MICROPY_ERROR_REPORTING == MICROPY_ERROR_REPORTING_TERSE) {
         mp_raise_TypeError("can't convert to str implicitly");
     } else {
+        const qstr src_name = mp_obj_get_type(self_in)->name;
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TypeError,
-            "can't convert '%s' object to str implicitly",
-            mp_obj_get_type_str(self_in)));
+            "can't convert '%q' object to %q implicitly",
+            src_name, src_name == MP_QSTR_str ? MP_QSTR_bytes : MP_QSTR_str));
     }
 }
 
