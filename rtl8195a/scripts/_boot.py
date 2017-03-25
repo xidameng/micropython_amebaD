@@ -6,8 +6,6 @@ try:
     import uctypes
 except ImportError as e:
     print(e)
-
-
 _baudrate = 38400
 _log_uart = umachine.LOGUART()
 _log_uart.init(baudrate=_baudrate)
@@ -16,8 +14,11 @@ _log_uart.init(baudrate=_baudrate)
 #uterminal.dump().append(_log_uart)
 uterminal.register(_log_uart)
 
-print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
+#uart = umachine.UART(0, tx="PA_7", rx="PA_6", baudrate=9600)
+#uart.init()
+#uterminal.register(uart)
 
+print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
 try:
     import rambdev
     print("found ramfs.py, try to mount ram to vfs")
@@ -27,9 +28,7 @@ try:
     uos.mount(ramvfs, '/ram')
 except:
     pass
-
 _flash = flashbdev.FlashBdev()
-
 try:
     flash_vfs = uos.VfsFat(_flash)
     print("mounting flash to vfs ...")
