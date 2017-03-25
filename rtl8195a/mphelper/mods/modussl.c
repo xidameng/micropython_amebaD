@@ -38,6 +38,8 @@
 #include "polarssl/error.h"
 #include "polarssl/memory.h"
 
+#include "tcm_heap.h"
+
 STATIC const mp_obj_type_t ussl_socket_type;
 
 typedef struct _mp_obj_ussl_socket_t {
@@ -71,6 +73,15 @@ int ussl_write_wrapper(mp_obj_t *ctx, const unsigned char *buf, size_t len) {
     ret = stream->write(obj, buf, len, &errcode);
     return ret;
 }
+
+void *ussl_mem_malloc_wrapper(size_t size) {
+    return gc_alloc(size, true);
+}
+
+void ussl_mem_free_wrapper(void *ptr) {
+    gc_free(ptr);
+}
+
 
 static unsigned int arc4random(void) {
     unsigned int res = xTaskGetTickCount();
@@ -116,6 +127,7 @@ STATIC mp_obj_t ussl_socket_make_new(const mp_obj_type_t *type, mp_uint_t n_args
         { MP_QSTR_socket, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_mode,   MP_ARG_KW_ONLY | MP_ARG_INT,  {.u_int = SSL_IS_CLIENT} },
     };
+    int ret = 0;
     mp_map_t kw_args;
     mp_map_init_fixed_table(&kw_args, n_kw, all_args + n_args);
     mp_arg_val_t args[MP_ARRAY_SIZE(ussl_init_args)];
@@ -125,16 +137,15 @@ STATIC mp_obj_t ussl_socket_make_new(const mp_obj_type_t *type, mp_uint_t n_args
     o->base.type = &ussl_socket_type;
     o->sock = args[ARG_socket].u_obj;
     o->ssl = m_new_obj(ssl_context);
-    memory_set_own(malloc, free);
-    if (ssl_init(o->ssl) != 0)
-        mp_raise_msg(&mp_type_OSError, "ssl context init error");
+    memory_set_own(ussl_mem_malloc_wrapper, ussl_mem_free_wrapper);
+    if (ret = ssl_init(o->ssl) != 0)
+        mp_raise_OSError(ret);
     ssl_set_endpoint(o->ssl, args[ARG_mode].u_int);
     ssl_set_authmode(o->ssl, SSL_VERIFY_NONE);
     ssl_set_rng(o->ssl, my_random, NULL);
     ssl_set_bio(o->ssl, ussl_read_wrapper, &o->sock, ussl_write_wrapper, &o->sock);
-    int32_t ret = 0;
     if ((ret = ssl_handshake(o->ssl)) != 0) 
-        mp_raise_msg(&mp_type_OSError, "SSL handshake error");
+        mp_raise_OSError(ret);
     return o;
 }
 

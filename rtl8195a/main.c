@@ -78,7 +78,7 @@ void micropython_task(void const *arg) {
     mp_hal_delay_ms(20);
     modterm_init();
     pyexec_frozen_module("_boot.py");
-    pyexec_file("main.py");
+    //pyexec_file("main.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
 #endif
