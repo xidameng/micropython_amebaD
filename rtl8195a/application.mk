@@ -145,7 +145,7 @@ SRC_C += $(addprefix $(LWIP_DIR)/,\
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/ethernetif.c
 SRC_C += $(VENDOR)/component/common/drivers/wlan/realtek/src/osdep/lwip_intf.c
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/sys_arch.c
-#SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
+SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
 #SRC_C += $(VENDOR)/component/common/network/sntp/sntp.c
 
 #network - mdns

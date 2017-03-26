@@ -1,6 +1,4 @@
-
 #include "dhcps.h"
-#include "tcpip.h"
 
 //static struct dhcp_server_state dhcp_server_state_machine;
 static uint8_t dhcp_server_state_machine = DHCP_SERVER_STATE_IDLE;
@@ -578,15 +576,17 @@ void dhcps_init(struct netif * pnetif)
 		dhcps_pcb = NULL;	
 	}
 
-        dhcps_pcb = udp_new(); 
+    dhcps_pcb = udp_new(); 
+
 	if (dhcps_pcb == NULL) {
 		printf("\n\r Error!!!upd_new error \n\r");
 		return;
 	}
-        IP4_ADDR(&dhcps_send_broadcast_address, 255, 255, 255, 255);
+
+    IP4_ADDR(&dhcps_send_broadcast_address, 255, 255, 255, 255);
 	/* get net info from net interface */
 	
-        memcpy(&dhcps_local_address, &pnetif->ip_addr,
+    memcpy(&dhcps_local_address, &pnetif->ip_addr,
         						sizeof(struct ip_addr));
 	memcpy(&dhcps_local_mask, &pnetif->netmask,
 							sizeof(struct ip_addr));
@@ -630,8 +630,9 @@ void dhcps_init(struct netif * pnetif)
 	}
 #endif	
 #endif
-        udp_bind(dhcps_pcb, IP_ADDR_ANY, DHCP_SERVER_PORT);
-        udp_recv(dhcps_pcb, dhcps_receive_udp_packet_handler, NULL);
+    dhcps_pcb->so_options |= SOF_BROADCAST;
+    udp_bind(dhcps_pcb, IP_ADDR_ANY, DHCP_SERVER_PORT);
+    udp_recv(dhcps_pcb, dhcps_receive_udp_packet_handler, NULL);
 }
 
 void dhcps_deinit(void)

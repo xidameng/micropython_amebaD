@@ -286,6 +286,13 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     if (ret != RTW_SUCCESS) {
         mp_raise_msg(&mp_type_OSError, "set ssid error");
     }
+    if (self->mode == RTW_MODE_AP) {
+        dhcps_init(&xnetif[0]);
+    } else if(self->mode == RTW_MODE_STA_AP) {
+        dhcps_init(&xnetif[1]);
+    } else {
+    }
+
     return mp_const_none;
 
 }
