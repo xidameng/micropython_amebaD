@@ -477,7 +477,7 @@ STATIC mp_obj_t wlan_connect(mp_uint_t n_args, const mp_obj_t *pos_args,
     if (ret == RTW_SUCCESS)
         ret = wext_set_ssid(WLAN0_NAME, ssid, ssid_len);
     
-    if (xSemaphoreTake(xSTAConnectAPSema, 15000) != pdTRUE) {
+    if (xSemaphoreTake(xSTAConnectAPSema, 30000) != pdTRUE) {
         mp_raise_msg(&mp_type_OSError, "Connect to AP timeout");
     }
 

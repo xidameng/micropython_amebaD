@@ -368,3 +368,4 @@ DRAM_C += \
 		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		stmhal/pybstdio.c \
+		stmhal/bufhelper.c \

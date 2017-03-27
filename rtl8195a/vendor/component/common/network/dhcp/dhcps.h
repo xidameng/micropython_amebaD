@@ -12,7 +12,7 @@
 
 
 #define IS_USE_FIXED_IP	0
-#define debug_dhcps 1
+#define debug_dhcps 0
 #define DHCPS_IP_RANGE_FROM_1_to_255 1
 
 /* dhcp server states */
