@@ -330,6 +330,7 @@ DRAM_C += mphelper/exception.c
 DRAM_C += mphelper/help.c
 DRAM_C += mphelper/mphal.c
 DRAM_C += mphelper/input.c
+DRAM_C += mphelper/bufhelper.c
 DRAM_C += mphelper/mpthreadport.c
 DRAM_C += mphelper/gccollect/gccollect.c
 DRAM_C += mphelper/mods/modameba.c
@@ -368,4 +369,3 @@ DRAM_C += \
 		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		stmhal/pybstdio.c \
-		stmhal/bufhelper.c \

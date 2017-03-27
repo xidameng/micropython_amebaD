@@ -91,18 +91,19 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(i2c_reset_obj, mp_i2c_reset);
 STATIC mp_obj_t i2c_recv(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum {ARG_nbytes, ARG_addr, ARG_stop };
     STATIC const mp_arg_t i2c_recv_args[] = {
-        { MP_QSTR_recv,    MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_nbytes,  MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_addr,    MP_ARG_REQUIRED | MP_ARG_INT, },
         { MP_QSTR_stop,    MP_ARG_KW_ONLY  | MP_ARG_BOOL, {.u_bool = true} },
     };
 
-    // parse args
     i2c_obj_t *self = pos_args[0];
+
+    // parse args
     mp_arg_val_t args[MP_ARRAY_SIZE(i2c_recv_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(args), i2c_recv_args, args);
 
     vstr_t vstr;
-    mp_obj_t o_ret = pyb_buf_get_for_recv(args[0].u_obj, &vstr);
+    mp_obj_t o_ret = pyb_buf_get_for_recv(args[ARG_nbytes].u_obj, &vstr);
     
     uint8_t ret = 0;
 
@@ -119,20 +120,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(i2c_recv_obj, 3, i2c_recv);
 STATIC mp_obj_t i2c_send(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_buf, ARG_addr, ARG_stop };
     STATIC const mp_arg_t i2c_send_args[] = {
-        { MP_QSTR_send, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_buf,  MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT,  },
         { MP_QSTR_stop, MP_ARG_KW_ONLY  | MP_ARG_BOOL, {.u_bool = true} },
     };
 
-    // parse args
     i2c_obj_t *self = pos_args[0];
+
+    // parse args
     mp_arg_val_t args[MP_ARRAY_SIZE(i2c_send_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(args), i2c_send_args, args);
 
     // get the buffer to send from
     mp_buffer_info_t bufinfo;
-    uint8_t data[1];
-    pyb_buf_get_for_send(args[0].u_obj, &bufinfo, data);
+    uint8_t data;
+    pyb_buf_get_for_send(args[ARG_buf].u_obj, &bufinfo, &data);
 
     if (i2c_write(&(self->obj), args[ARG_addr].u_int, bufinfo.buf, bufinfo.len, args[ARG_stop].u_bool) <= 0) {
         mp_raise_msg(&mp_type_OSError, "I2C send error");
