@@ -425,9 +425,6 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
     mp_init();
 
-    // create keyboard interrupt object
-    MP_STATE_VM(keyboard_interrupt_obj) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
-
     char *home = getenv("HOME");
     char *path = getenv("MICROPYPATH");
     if (path == NULL) {
@@ -437,7 +434,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
         path = "~/.micropython/lib:/usr/lib/micropython";
         #endif
     }
-    mp_uint_t path_num = 1; // [0] is for current dir (or base dir of the script)
+    size_t path_num = 1; // [0] is for current dir (or base dir of the script)
     if (*path == ':') {
         path_num++;
     }

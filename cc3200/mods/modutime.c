@@ -33,8 +33,8 @@
 #include "py/obj.h"
 #include "py/smallint.h"
 #include "py/mphal.h"
+#include "lib/timeutils/timeutils.h"
 #include "extmod/utime_mphal.h"
-#include "timeutils.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
@@ -102,7 +102,7 @@ STATIC mp_obj_t time_localtime(mp_uint_t n_args, const mp_obj_t *args) {
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(time_localtime_obj, 0, 1, time_localtime);
 
 STATIC mp_obj_t time_mktime(mp_obj_t tuple) {
-    mp_uint_t len;
+    size_t len;
     mp_obj_t *elem;
 
     mp_obj_get_array(tuple, &len, &elem);
