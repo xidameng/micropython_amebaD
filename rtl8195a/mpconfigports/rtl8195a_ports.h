@@ -143,14 +143,14 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MP_HEAP_SIZE                        (1024 * 1024)
+#define MP_HEAP_SIZE                        (1124 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
-#define MICROPY_TASK_STACK_DEPTH            (80 * 1024) + 512    // Referenced from cc3200 port
+#define MICROPY_TASK_STACK_DEPTH            (50 * 1024) + 512    // Referenced from cc3200 port
 #define MICROPY_TASK_PRIORITY               (3)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
-#define MICROPY_NETWORK_CORE_STACK_DEPTH    (1 * 1024) + 0
+#define MICROPY_NETWORK_CORE_STACK_DEPTH    (10 * 1024) + 0
 #define MICROPY_NETWORK_CORE_STACK_PRIORITY (configMAX_PRIORITIES - 1)
 
 #define MICROPY_TERM_RX_STACK_NAME     "TERMRX"
