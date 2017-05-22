@@ -8,7 +8,8 @@ except ImportError as e:
     print(e)
 _baudrate = 38400
 _log_uart = umachine.LOGUART()
-_log_uart.init(baudrate=_baudrate)
+# init log_uart might sometimes hang
+#_log_uart.init(baudrate=_baudrate)
 uterminal.register(_log_uart)
 print("Init LOGUART %d finished and install it to uterminal list" % _baudrate)
 try:
