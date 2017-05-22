@@ -135,7 +135,7 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
-#define MICROPY_HW_PORT_VERSION             "1.0.0"
+#define MICROPY_HW_PORT_VERSION             "1.0.1"
 
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
 #define MICROPY_HW_MCU_NAME                 "RTL8195A"

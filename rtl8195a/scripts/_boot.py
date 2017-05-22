@@ -6,7 +6,7 @@ try:
     import uctypes
 except ImportError as e:
     print(e)
-_baudrate = 115200
+_baudrate = 38400
 _log_uart = umachine.LOGUART()
 _log_uart.init(baudrate=_baudrate)
 uterminal.register(_log_uart)
