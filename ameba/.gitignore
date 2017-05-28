@@ -4,3 +4,4 @@
 fwsize.gdb
 vendor/tools/arm-none-eabi-gcc/4.8.3-2014q1/
 inc/build_info.h
+vendor/
