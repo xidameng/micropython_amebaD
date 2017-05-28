@@ -11,7 +11,3 @@
 [submodule "lib/berkeley-db-1.xx"]
 	path = lib/berkeley-db-1.xx
 	url = https://github.com/pfalcon/berkeley-db-1.xx
-[submodule "ameba/vendor"]
-	path = ameba/vendor
-	url = git@bitbucket.org:cwyark/sdk-ameba-v4.0a_without_nda.git
-	branch = master

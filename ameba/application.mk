@@ -9,6 +9,7 @@ INC += -I$(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/include
 INC += -I$(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/GCC/ARM_CM3
 INC += -I$(VENDOR)/component/os/os_dep/include
 INC += -I$(VENDOR)/component/soc/realtek/8195a/misc/driver
+INC += -I$(VENDOR)/component/soc/realtek/8195a/misc/os
 INC += -I$(VENDOR)/component/common/api/network/include
 INC += -I$(VENDOR)/component/common/api
 INC += -I$(VENDOR)/component/common/api/platform
@@ -93,7 +94,7 @@ SRC_C += $(VENDOR)/component/common/api/wifi/wifi_ind.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_promisc.c
 #SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
-SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
+#SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
 
 #network - lwip
 SRC_C += $(SRC_MOD)
@@ -166,8 +167,8 @@ SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/timers.c
 #os - osdep
 SRC_C += $(VENDOR)/component/os/os_dep/device_lock.c
 SRC_C += $(VENDOR)/component/os/freertos/freertos_service.c
-SRC_C += $(VENDOR)/component/os/os_dep/mailbox.c
-SRC_C += $(VENDOR)/component/os/os_dep/osdep_api.c
+#SRC_C += $(VENDOR)/component/os/os_dep/mailbox.c
+#SRC_C += $(VENDOR)/component/os/os_dep/osdep_api.c
 SRC_C += $(VENDOR)/component/os/os_dep/osdep_service.c
 SRC_C += $(VENDOR)/component/os/os_dep/tcm_heap.c
 
@@ -214,7 +215,7 @@ SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/src/hal_timer.c
 
 
 #peripheral - osdep
-SRC_C += $(VENDOR)/component/os/freertos/freertos_pmu.c
+#SRC_C += $(VENDOR)/component/os/freertos/freertos_pmu.c
 
 #peripheral - rtl8195a
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/fwlib/rtl8195a/src/rtl8195a_gdma.c
