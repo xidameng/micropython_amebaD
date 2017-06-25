@@ -68,7 +68,6 @@ void micropython_task(void const *arg) {
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
-    MP_STATE_PORT(mp_kbd_exception) = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
     MP_STATE_PORT(dupterm_arr_obj) = MP_OBJ_NULL;
 
 

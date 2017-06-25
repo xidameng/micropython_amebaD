@@ -356,4 +356,4 @@ DRAM_C += \
 		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		lib/netutils/netutils.c \
-		stmhal/pybstdio.c \
+		lib//utils/sys_stdio_mphal.c \
