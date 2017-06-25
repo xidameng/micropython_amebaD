@@ -42,8 +42,7 @@
 #include "osdep_api.h"
 
 int mp_hal_stdin_rx_chr(void) {
-    return  mp_term_rx_chr();
-
+  return mp_term_rx_chr();
 }
 
 void mp_hal_stdout_tx_chr(char c) {
@@ -51,15 +50,11 @@ void mp_hal_stdout_tx_chr(char c) {
 }
 
 void mp_hal_stdout_tx_str(const char *str) {
-    while (*str) {
-        mp_hal_stdout_tx_chr(*str++);
-    }
+    mp_term_tx_strn(str, strlen(str));
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-    while (len--) {
-        mp_hal_stdout_tx_chr(*str++);
-    }
+    mp_term_tx_strn(str, len);
 }
 
 void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
@@ -80,5 +75,5 @@ void mp_hal_delay_us(uint32_t us) {
 }
 
 uint32_t mp_hal_ticks_ms(void) {
-    return xTaskGetTickCount();
+    return rtw_get_current_time();
 }

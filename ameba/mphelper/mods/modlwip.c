@@ -1276,11 +1276,11 @@ STATIC mp_uint_t lwip_socket_ioctl(mp_obj_t self_in, mp_uint_t request, uintptr_
         ret = 0;
         
 //FIXME: Chester added: force poll object when socket is close, or it will hang forever when there's no data in RX
-        if ((flags & MP_STREAM_POLL_RD) && (socket->incoming.pbuf != NULL) || (socket->state == STATE_PEER_CLOSED)) {
+        if ((flags & MP_STREAM_POLL_RD) && (socket->incoming.pbuf != NULL)) {
             ret |= MP_STREAM_POLL_RD;
         }
 
-        if (flags & MP_STREAM_POLL_WR && tcp_sndbuf(socket->pcb.tcp) > 0) {
+        if ((flags & MP_STREAM_POLL_WR) && (tcp_sndbuf(socket->pcb.tcp) > 0)) {
             ret |= MP_STREAM_POLL_WR;
         }
 
@@ -1288,7 +1288,7 @@ STATIC mp_uint_t lwip_socket_ioctl(mp_obj_t self_in, mp_uint_t request, uintptr_
             // Peer-closed socket is both readable and writable: read will
             // return EOF, write - error. Without this poll will hang on a
             // socket which was closed by peer.
-            ret |= flags & (MP_STREAM_POLL_RD | MP_STREAM_POLL_WR);
+            ret |= flags & (MP_STREAM_POLL_RD | MP_STREAM_POLL_WR | MP_STREAM_POLL_HUP);
         }
 
     } else {

@@ -146,16 +146,16 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MP_HEAP_SIZE                        (1124 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
-#define MICROPY_TASK_STACK_DEPTH            (50 * 1024) + 512    // Referenced from cc3200 port
-#define MICROPY_TASK_PRIORITY               (3)
+#define MICROPY_TASK_STACK_DEPTH            (((20 * 1024) + 512) / sizeof(StackType_t))
+#define MICROPY_TASK_PRIORITY               (1)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (10 * 1024) + 0
 #define MICROPY_NETWORK_CORE_STACK_PRIORITY (configMAX_PRIORITIES - 1)
 
-#define MICROPY_TERM_RX_STACK_NAME     "TERMRX"
-#define MICROPY_TERM_RX_STACK_DEPTH    (1 * 1024) + 0
-#define MICROPY_TERM_RX_STACK_PRIORITY (MICROPY_TASK_PRIORITY + 1)
+#define MICROPY_TERM_RX_STACK_NAME          "TERMRX"
+#define MICROPY_TERM_RX_STACK_DEPTH         (((10 * 1024) + 0) / sizeof(StackType_t))
+#define MICROPY_TERM_RX_STACK_PRIORITY      (MICROPY_TASK_PRIORITY)
 
 #define MICROPY_PORT_ROOT_POINTERS          \
     const char *readline_hist[8];           \

@@ -38,14 +38,12 @@
 #include "py/ringbuf.h"
 #include "lib/utils/interrupt_char.h"
 #include "pyexec.h"
-
 #include "modterm.h"
+
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
-extern StackType_t mpTermRxStack[MICROPY_TERM_RX_STACK_DEPTH];
-QueueHandle_t xRxQueue;
-TaskHandle_t xTermRxHandler;
+void *xRxQueue;
 
 /*****************************************************************************
  *                              Internal variables
@@ -87,24 +85,20 @@ void mp_term_tx_strn(char *str, size_t len) {
             continue;
         }
         poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
-        int errcode;
+        int errcode = 0;
         mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
-#if 1
         if (ret & MP_STREAM_POLL_HUP) {
             mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
                     MP_MAP_LOOKUP_REMOVE_IF_FOUND);
-            mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
-                        MP_MAP_LOOKUP_REMOVE_IF_FOUND);
             mp_obj_t close_m[3];
             mp_load_method(poll_obj->obj, MP_QSTR_close, close_m);
             mp_call_method_n_kw(0, 0, close_m);
             continue;
         }
-#endif
-
         if (ret & MP_STREAM_POLL_WR && !(ret & MP_STREAM_POLL_HUP)) {
             mp_int_t ret = poll_obj->write(poll_obj->obj, str, len, &errcode);
-            // Do something with ret
+            if (ret == MP_STREAM_ERROR)
+                continue;
         }
     }
 }
@@ -112,7 +106,7 @@ void mp_term_tx_strn(char *str, size_t len) {
 int mp_term_rx_chr() {
 	char chr = 0;
 
-    if (xQueueReceive(xRxQueue, &chr, portMAX_DELAY) != pdPASS) {
+    if (rtw_pop_from_xqueue(&xRxQueue, (void *)&chr, RTW_WAIT_FOREVER) < 0) {
 		// Do something here...
     } else {
         return chr;
@@ -120,9 +114,10 @@ int mp_term_rx_chr() {
   
 }
 
-void modterm_rx_thread(void *arg) {
+void modterm_rx_thread(void const *arg) {
+    char array[TERM_RX_CHUNK_SIZE];
     for(;;) {
-        int chr = 0;
+        char chr = 0;
         for (mp_uint_t i = 0; i < MP_STATE_PORT(mp_terminal_map).alloc; ++i) {
 
             if (!MP_MAP_SLOT_IS_FILLED(&MP_STATE_PORT(mp_terminal_map), i)) {
@@ -132,58 +127,45 @@ void modterm_rx_thread(void *arg) {
             poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
             int errcode;
 
-			taskENTER_CRITICAL();
 			mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
-			taskEXIT_CRITICAL();
             
             if (ret & MP_STREAM_POLL_HUP) {
-                taskENTER_CRITICAL();
                 mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),
                         MP_MAP_LOOKUP_REMOVE_IF_FOUND);
                 mp_obj_t close_m[3];
                 mp_load_method(poll_obj->obj, MP_QSTR_close, close_m);
                 mp_call_method_n_kw(0, 0, close_m);
-                taskEXIT_CRITICAL();
                 continue;
             }
 
             if (ret & MP_STREAM_POLL_RD && !(ret & MP_STREAM_POLL_HUP)) {
-				taskENTER_CRITICAL();
-                mp_int_t ret = poll_obj->read(poll_obj->obj, &chr, 1, &errcode);
-				taskEXIT_CRITICAL();
-                // Do something with ret
-                if (chr == mp_interrupt_char)
-                    mp_keyboard_interrupt();
-                else {
-                    xQueueSendToBack(xRxQueue, (void *)&chr, portMAX_DELAY);
+                memset(array, 0x00, TERM_RX_CHUNK_SIZE);
+                mp_int_t ret = poll_obj->read(poll_obj->obj, array, TERM_RX_CHUNK_SIZE, &errcode);
+                for (mp_uint_t j = 0; j < TERM_RX_CHUNK_SIZE; j++) {
+                    // Do something with ret
+                    chr = array[j];
+                    if (chr == mp_interrupt_char)
+                        mp_keyboard_interrupt();
+                    else if (chr != 0x00){
+                        rtw_push_to_xqueue(&xRxQueue, (void *)&chr, RTW_WAIT_FOREVER);
+                    } else {}
                 }
             }
-
-
         }
-        // Should use queue instead of delay to save cpu resource
-        mp_hal_delay_ms(1);
+        rtw_yield_os();
     }
-    vTaskDelete(NULL);
+    rtw_deinit_xqueue(&xRxQueue);
+    rtw_thread_exit();;
 }
 
 void modterm_init (void) {
     mp_map_init(&MP_STATE_PORT(mp_terminal_map), 0);
 
-    // Create MicroPython main task
-    xTermRxHandler = xTaskGenericCreate(modterm_rx_thread,
-            (signed char *)MICROPY_TERM_RX_STACK_NAME, 
-            MICROPY_TERM_RX_STACK_DEPTH, 
-            NULL,
-            MICROPY_TERM_RX_STACK_PRIORITY,
-            NULL,           // No arguments to pass to mp thread
-            mpTermRxStack,  // Use user define stack memory to make it predictable.
-            NULL);
-
-    if (xTermRxHandler != pdTRUE)
-        mp_printf(&mp_plat_print, "Create %s task failed", MICROPY_TASK_NAME);
-	
-    xRxQueue = xQueueCreate(64, sizeof(char));
+    // Create terminal task
+    struct task_struct stTermTask;
+    BaseType_t xReturn = rtw_create_task(&stTermTask, MICROPY_TERM_RX_STACK_NAME,
+            MICROPY_TERM_RX_STACK_DEPTH, MICROPY_TERM_RX_STACK_PRIORITY, modterm_rx_thread, NULL);
+    rtw_init_xqueue(&xRxQueue, "RX_Q", sizeof(char), TERM_RX_QUEUE_MSG_LENGTH);
 }
 
 STATIC mp_obj_t term_register(mp_obj_t obj_in) {

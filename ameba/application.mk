@@ -79,7 +79,7 @@ DRAM_C =
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/cmsis/device/system_8195a.c
 
 SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/low_level_io.c
-#SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/rtl_consol.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/driver/rtl_consol.c
 
 #network - api
 SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/wifi_eap_config.c
@@ -139,7 +139,7 @@ SRC_C += $(VENDOR)/component/common/network/mDNS/mDNSPlatform.c
 
 #os - freertos
 SRC_C += $(VENDOR)/component/os/freertos/cmsis_os.c
-SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/MemMang/heap_5.c
+SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/MemMang/heap_4.c
 SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/portable/GCC/ARM_CM3/port.c
 SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/croutine.c
 SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/event_groups.c

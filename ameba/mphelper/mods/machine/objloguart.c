@@ -214,21 +214,27 @@ STATIC MP_DEFINE_CONST_DICT(log_uart_locals_dict, log_uart_locals_dict_table);
 
 STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_uint_t i = 0;
 
     // Direct return 0 when size = 0, to save the time
     if (size == 0) 
         return 0;
 
-    for (i = 0; i < size; i++) {
-        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_DR));
+    int32_t ret = 0;
+
+    mp_uint_t start = mp_hal_ticks_ms();
+    for (mp_uint_t i = 0; i < size; i++) {
+        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_DR)) {
+            if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
+                *errcode = MP_ETIMEDOUT;
+                goto ret;
+            }
+        }
+        ret += 1;
         buf_in[i] = (char)HAL_UART_READ32(UART_REV_BUF_OFF);
     }
 
-    int32_t ret = size;
-
-    if (ret < 0) {
-        *errcode = MP_EAGAIN;
+ret:
+    if (ret == 0) {
         return MP_STREAM_ERROR;
     } else {
         return ret;
@@ -237,20 +243,25 @@ STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, i
 
 STATIC mp_uint_t log_uart_write(mp_obj_t self_in, const char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_uint_t i = 0;
 
-    for (i = 0; i < size; i++) {
-        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_THRE));
+    int32_t ret = 0;
+
+    mp_uint_t start = mp_hal_ticks_ms();
+    for (mp_uint_t i = 0; i < size; i++) {
+        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_THRE)) {
+            if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
+                *errcode = MP_ETIMEDOUT;
+                goto ret;
+            }
+        }
+        ret += 1;
         HAL_UART_WRITE8(UART_TRAN_HOLD_OFF, buf_in[i]);
-
         // A workaround, it seems log uart's FIFO is not working ...
         mp_hal_delay_ms(1);
     }
 
-    int32_t ret = size;
-
-    if (ret < 0) {
-        *errcode = MP_EAGAIN;
+ret:
+    if (ret == 0) {
         return MP_STREAM_ERROR;
     } else {
         return ret;

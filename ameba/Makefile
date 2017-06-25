@@ -13,13 +13,13 @@ VENDOR := vendor
 GDB_SERVER := openocd
 TOOL := tool
 CHIP := MP_RTL8195A
-# CHIP would be MP_RTL8195A, MP_RTL8711AM, MP_RTL8711AF, MP_RTL8710AF
+# CHIP would be MP_RTL8195A, MP_RTL8710BN
 
 # -------------------------------------------------------------------
 AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
 FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
 
-CROSS_COMPILE = arm-none-eabi-
+CROSS_COMPILE := arm-none-eabi-
 
 # Compilation tools
 AR = $(CROSS_COMPILE)ar
@@ -78,7 +78,7 @@ SRC_QSTR_AUTO_DEPS +=
 # -------------------------------------------------------------------
 
 CFLAGS = -O2
-CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -DARDUINO_SDK -D$(CHIP)
+CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -D$(CHIP)
 CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(CFLAGS_MOD)
 CFLAGS += $(INC)
@@ -171,21 +171,6 @@ $(DRAM_O): $(BUILD)/%.o : %.c
 	$(CC) $(CFLAGS)  -c $< -o $@
 	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
 
-.PHONY: setup
-setup:
-	@echo "----------------"
-	@echo Setup $(GDB_SERVER)
-	@echo "----------------"
-ifeq ($(GDB_SERVER), openocd)
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_debug_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_ramdebug_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_flash_write_openocd.txt $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
-else
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_debug_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_ramdebug_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt
-	$(Q)cp -p $(FLASH_TOOLDIR)/rtl_gdb_flash_write_jlink.txt $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
-endif
-
 .PHONY: flashburn
 flashburn:
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
@@ -218,9 +203,5 @@ ifeq ($(findstring CYGWIN, $(OS)), CYGWIN)
 else
 	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
 endif
-
-.PHONY: print
-print:
-	echo $(SRC_C)
 
 include ../py/mkrules.mk

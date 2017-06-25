@@ -31,19 +31,9 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
+#include "osdep_service.h"
 
-enum terminal_msg_type {
-    TERM_RX_CHR,
-};
-
-struct terminal_msg {
-    enum terminal_msg_type type;
-    union {
-        struct {
-            mp_obj_t obj_from;
-            mp_obj_t obj_array;
-        } chr;
-    } msg;
-};
+#define TERM_RX_CHUNK_SIZE 32
+#define TERM_RX_QUEUE_MSG_LENGTH  16
 
 #endif
