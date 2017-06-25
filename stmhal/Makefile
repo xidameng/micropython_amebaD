@@ -110,7 +110,12 @@ SRC_LIB = $(addprefix lib/,\
 	timeutils/timeutils.c \
 	utils/pyexec.c \
 	utils/interrupt_char.c \
+	utils/sys_stdio_mphal.c \
 	)
+
+EXTMOD_SRC_C = $(addprefix extmod/,\
+	modonewire.c \
+        )
 
 DRIVERS_SRC_C = $(addprefix drivers/,\
 	memory/spiflash.c \
@@ -145,9 +150,7 @@ SRC_C = \
 	usb.c \
 	wdt.c \
 	gccollect.c \
-	pybstdio.c \
 	help.c \
-	input.c \
 	machine_i2c.c \
 	modmachine.c \
 	modpyb.c \
@@ -255,6 +258,7 @@ endif
 OBJ =
 OBJ += $(PY_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_LIB:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(EXTMOD_SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(DRIVERS_SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_O))
@@ -344,7 +348,7 @@ GEN_CDCINF_FILE = $(HEADER_BUILD)/pybcdc.inf
 GEN_CDCINF_HEADER = $(HEADER_BUILD)/pybcdc_inf.h
 
 # List of sources for qstr extraction
-SRC_QSTR += $(SRC_C) $(SRC_MOD) $(SRC_LIB)
+SRC_QSTR += $(SRC_C) $(SRC_MOD) $(SRC_LIB) $(EXTMOD_SRC_C)
 # Append any auto-generated sources that are needed by sources listed in
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS += $(GEN_CDCINF_HEADER)
