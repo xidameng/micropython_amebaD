@@ -32,8 +32,6 @@
 
 #include "exception.h"
 
-#include "sd.h"
-
 extern const mp_obj_type_t sdio_host_type;
 
 #define SDIO_HOST_BLOCK_SIZE 512

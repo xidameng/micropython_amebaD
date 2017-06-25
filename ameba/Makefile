@@ -3,7 +3,6 @@ include ../py/mkenv.mk
 QSTR_DEFS += qstrdefsport.h
 
 # declare before py.mk
-MICROPY_PY_LWIP := 1
 FROZEN_DIR = scripts
 FROZEN_MPY_DIR = modules
 
@@ -88,8 +87,8 @@ LFLAGS =
 LFLAGS += -mcpu=cortex-m3 -mthumb -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
 
 LIBFLAGS =
-all: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -l_sdcard -lm -lc -lnosys -lgcc
-mp: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan_mp -l_p2p -l_wps -l_rtlstd -l_websocket -l_xmodem -l_sdcard -lm -lc -lnosys -lgcc
+all: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
+mp: LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan_mp -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
 
 RAMALL_BIN =
 OTA_BIN = 
@@ -189,15 +188,16 @@ endif
 
 .PHONY: flashburn
 flashburn:
-	$(Q)@if [ ! -f $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt ] ; then echo Please do \"make setup GDB_SERVER=[jlink or openocd]\" first; echo && false ; fi
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
 	$(Q)$(FLASH_TOOLDIR)/Check_Jtag.sh
 endif
-	$(Q)$(CP)	$(FLASH_TOOLDIR)/target_NORMALB.axf $(FLASH_TOOLDIR)/target_NORMAL.axf
-	$(Q)chmod +rw $(FLASH_TOOLDIR)/target_NORMAL.axf
-	$(Q)chmod +rx $(FLASH_TOOLDIR)/SetupGDB_NORMAL.sh
-	$(Q)$(FLASH_TOOLDIR)/SetupGDB_NORMAL.sh
-	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_flash_write.txt
+	$(Q)$(CP) -f $(FLASH_TOOLDIR)/target_NORMALB.axf $(BUILD)/target_NORMAL.axf
+	$(Q)$(CP) -f $(TOOL)/SetupGDB_NORMAL.sh $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(CP) -f $(TOOL)/rtl_gdb_flash_write_openocd.txt $(BUILD)/rtl_gdb_flash_write_openocd.txt
+	$(Q)chmod +rw $(BUILD)/target_NORMAL.axf
+	$(Q)chmod +rx $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(GDB) -x $(BUILD)/rtl_gdb_flash_write_openocd.txt
 	
 .PHONY: debug
 debug:

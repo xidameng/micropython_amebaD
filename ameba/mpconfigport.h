@@ -33,3 +33,7 @@ typedef const void *machine_const_ptr_t; // must be of pointer size
 typedef long mp_off_t;
 
 #define MP_STATE_PORT MP_STATE_VM
+
+#ifdef UINT
+#undef UINT
+#endif

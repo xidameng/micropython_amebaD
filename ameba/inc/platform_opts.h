@@ -148,3 +148,6 @@
 #endif
 
 #endif
+
+#define AUTO_RECONNECT_COUNT	8
+#define AUTO_RECONNECT_INTERVAL	5 // in sec

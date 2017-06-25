@@ -25,9 +25,9 @@ INC += -I$(VENDOR)/component/common/mbed/hal_ext
 INC += -I$(VENDOR)/component/common/mbed/targets/hal/rtl8195a
 INC += -I$(VENDOR)/component/common/network
 INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos
-#INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include
-#INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/lwip
-#INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/ipv4
+INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include
+INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/lwip
+INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/include/ipv4
 INC += -I$(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek
 INC += -I$(VENDOR)/component/common/test
 INC += -I$(VENDOR)/component/soc/realtek/8195a/cmsis
@@ -70,10 +70,6 @@ INC += -I./mphelper/mods
 INC += -I./mphelper/mods/network
 INC += -I./mphelper/mods/machine
 
-# workaround to prevent from modify micropython core makefile
-TMPINC := $(INC)
-INC = $(filter-out -I../extmod/lwip-include, $(TMPINC))
-
 # Source file list
 # -------------------------------------------------------------------
 
@@ -92,65 +88,53 @@ SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/w
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_conf.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_ind.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_promisc.c
-#SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
+SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
-#SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
+SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
 
 #network - lwip
-SRC_C += $(SRC_MOD)
-SRC_C += $(addprefix $(LWIP_DIR)/,\
-		 core/dhcp.c \
-		 netif/etharp.c \
-		 api/api_lib.c \
-		 api/api_msg.c \
-		 api/sockets.c \
-		 api/err.c \
-		 api/netbuf.c \
-		 api/netdb.c \
-		 api/netifapi.c \
-		 api/tcpip.c \
-)
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_lib.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_msg.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/err.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netbuf.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netdb.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netifapi.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/sockets.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/tcpip.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/autoip.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/icmp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/igmp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet_chksum.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_addr.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_frag.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/def.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dhcp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dns.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/init.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/lwip_timers.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/mem.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/memp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/netif.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/pbuf.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/raw.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/stats.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/sys.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_in.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_out.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/udp.c
-#SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/netif/etharp.c
+
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_lib.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_msg.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/err.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netbuf.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netdb.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/netifapi.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/sockets.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/tcpip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/autoip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/icmp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/igmp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/inet_chksum.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_addr.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/ipv4/ip_frag.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/def.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dhcp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/dns.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/init.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/lwip_timers.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/mem.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/memp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/netif.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/pbuf.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/raw.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/stats.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/sys.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_in.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/tcp_out.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/core/udp.c
+SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/netif/etharp.c
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/ethernetif.c
 SRC_C += $(VENDOR)/component/common/drivers/wlan/realtek/src/osdep/lwip_intf.c
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freertos/sys_arch.c
 SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
-#SRC_C += $(VENDOR)/component/common/network/sntp/sntp.c
+SRC_C += $(VENDOR)/component/common/network/sntp/sntp.c
 
 #network - mdns
-#SRC_C += $(VENDOR)/component/common/network/mDNS/mDNSPlatform.c
+SRC_C += $(VENDOR)/component/common/network/mDNS/mDNSPlatform.c
 
 
 #os - freertos
@@ -167,10 +151,11 @@ SRC_C += $(VENDOR)/component/os/freertos/freertos_v8.1.2/Source/timers.c
 #os - osdep
 SRC_C += $(VENDOR)/component/os/os_dep/device_lock.c
 SRC_C += $(VENDOR)/component/os/freertos/freertos_service.c
-#SRC_C += $(VENDOR)/component/os/os_dep/mailbox.c
-#SRC_C += $(VENDOR)/component/os/os_dep/osdep_api.c
 SRC_C += $(VENDOR)/component/os/os_dep/osdep_service.c
 SRC_C += $(VENDOR)/component/os/os_dep/tcm_heap.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/os/osdep_api.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/os/freertos_pmu_8195a.c
+SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/os/mailbox.c
 
 #peripheral - api
 SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8195a/analogin_api.c
@@ -336,6 +321,7 @@ DRAM_C += mphelper/mpthreadport.c
 DRAM_C += mphelper/gccollect/gccollect.c
 DRAM_C += mphelper/mods/modameba.c
 DRAM_C += mphelper/mods/modmachine.c
+DRAM_C += mphelper/mods/modlwip.c
 DRAM_C += mphelper/mods/moduwireless.c
 DRAM_C += mphelper/mods/modnetwork.c
 DRAM_C += mphelper/mods/modutime.c
@@ -343,7 +329,7 @@ DRAM_C += mphelper/mods/modterm.c
 DRAM_C += mphelper/mods/moduos.c
 DRAM_C += mphelper/mods/modussl.c
 DRAM_C += mphelper/mods/machine/objloguart.c
-DRAM_C += mphelper/mods/machine/objsdio_host.c
+#DRAM_C += mphelper/mods/machine/objsdio_host.c
 DRAM_C += mphelper/mods/machine/objwdt.c
 DRAM_C += mphelper/mods/machine/objrtc.c
 DRAM_C += mphelper/mods/machine/objadc.c
@@ -369,4 +355,5 @@ DRAM_C += \
 		lib/oofatfs/ff.c \
 		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
+		lib/netutils/netutils.c \
 		stmhal/pybstdio.c \

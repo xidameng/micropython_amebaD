@@ -62,7 +62,6 @@ void modmachine_init(void) {
     loguart_init0();
     adc_init0();
     pin_init0();
-    //flash_get_status(&flash);
 }
 
 STATIC mp_obj_t machine_reset(void) {
@@ -84,7 +83,9 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
 #if MP_RTL8195A
+#if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO_HOST),     MP_OBJ_FROM_PTR(&sdio_host_type) },
+#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
 #endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
