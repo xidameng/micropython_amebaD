@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Chester Tseng
+ * Copyright (c) 2017 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,6 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 #include "py/stream.h"
-#include "py/ringbuf.h"
 
 #include "py/mperrno.h"
 #include "exception.h"
@@ -35,10 +34,60 @@
 #include "bufhelper.h"
 #include "objuart.h"
 
-STATIC uart_obj_t uart_obj[3] = {
-    {.base.type = &uart_type, .unit = 0, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
-    {.base.type = &uart_type, .unit = 1, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
-    {.base.type = &uart_type, .unit = 2, .bits = 8, .stop = 1, .baudrate= UART_DEFAULT_BAUD_RATE },
+STATIC const char *_parity_name[] = {"None", "1", "0"};
+
+STATIC uart_obj_t uart_obj[3] = {{
+    .base.type      = &uart_type,
+    .unit           = 0,
+    .params = {
+        .baudrate  = UART_DEFAULT_BAUDRATE,
+        .data_bits = UART_DEFAULT_DATA_BITS,
+        .parity    = UART_DEFAULT_PARITY,
+        .stop_bits = UART_DEFAULT_STOP_BITS,
+    },
+    .tx = {
+        .timeout_ms = UART_DEFAULT_TX_TIMEOUT,
+    },
+    .rx = {
+        .timeout_ms = UART_DEFAULT_RX_TIMEOUT,
+    },
+    .irq_enabled = true,
+    .irq_handler = mp_const_none,
+}, {
+    .base.type      = &uart_type,
+    .unit           = 1,
+    .params = {
+        .baudrate  = UART_DEFAULT_BAUDRATE,
+        .data_bits = UART_DEFAULT_DATA_BITS,
+        .parity    = UART_DEFAULT_PARITY,
+        .stop_bits = UART_DEFAULT_STOP_BITS,
+    },
+    .tx = {
+        .timeout_ms = UART_DEFAULT_TX_TIMEOUT,
+    },
+    .rx = {
+        .timeout_ms = UART_DEFAULT_RX_TIMEOUT,
+    },
+    .irq_enabled = true,
+    .irq_handler = mp_const_none,
+}, {
+    .base.type      = &uart_type,
+    .unit           = 2,
+    .params = {
+        .baudrate  = UART_DEFAULT_BAUDRATE,
+        .data_bits = UART_DEFAULT_DATA_BITS,
+        .parity    = UART_DEFAULT_PARITY,
+        .stop_bits = UART_DEFAULT_STOP_BITS,
+    },
+    .tx = {
+        .timeout_ms = UART_DEFAULT_TX_TIMEOUT,
+    },
+    .rx = {
+        .timeout_ms = UART_DEFAULT_RX_TIMEOUT,
+    },
+    .irq_enabled = true,
+    .irq_handler = mp_const_none,
+}
 };
 
 void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
@@ -71,9 +120,10 @@ void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
 
 STATIC void uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     uart_obj_t *self = self_in;
-    mp_printf(print, "UART(%d, baudrate=%u, bits=%d, stop=%d, parity=%d, TX=%q, Rx=%q)",
-            self->unit, self->baudrate, self->bits, self->stop, self->parity,
-            self->tx->name, self->rx->name);
+    mp_printf(print, "UART(baudrate=%u, bits=%u, parity=%s, stop=%u, tx_timeout=%u, rx_timeout=%u, tx=%q, rx=%q)",
+        self->params.baudrate, self->params.data_bits,
+        _parity_name[self->params.parity], self->params.stop_bits,
+        self->tx.timeout_ms, self->rx.timeout_ms, self->tx.pin, self->rx.pin);
 }
 
 STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
@@ -82,11 +132,11 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
         ARG_parity, ARG_timeout, ARG_tx, ARG_rx};
     const mp_arg_t uart_init_args[] = {
         { MP_QSTR_unit,                          MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_baudrate,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_BAUD_RATE} },
-        { MP_QSTR_bits,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
-        { MP_QSTR_stop,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
-        { MP_QSTR_parity,       MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = ParityNone} },
-        { MP_QSTR_timeout,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_baudrate,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_BAUDRATE} },
+        { MP_QSTR_bits,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_DATA_BITS} },
+        { MP_QSTR_stop,         MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_STOP_BITS} },
+        { MP_QSTR_parity,       MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_PARITY} },
+        { MP_QSTR_timeout,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = UART_DEFAULT_RX_TIMEOUT} },
         { MP_QSTR_tx,           MP_ARG_REQUIRED | MP_ARG_OBJ },
         { MP_QSTR_rx,           MP_ARG_REQUIRED | MP_ARG_OBJ },
     };
@@ -108,23 +158,24 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     if (pn_rx == NC)
         mp_raise_ValueError("UART RX pin not match");
 
-    uart_obj_t *self    = &uart_obj[args[ARG_unit].u_int];
-    self->baudrate      = MIN(MAX(args[ARG_baudrate].u_int, UART_MIN_BAUD_RATE), UART_MAX_BAUD_RATE);
-    self->bits          = args[ARG_bits].u_int;
-    self->stop          = args[ARG_stop].u_int;
-    self->parity        = args[ARG_parity].u_int;
-    self->timeout       = args[ARG_timeout].u_int;
-    self->tx            = tx;
-    self->rx            = rx;
+    uart_obj_t *self       = &uart_obj[args[ARG_unit].u_int];
+    self->params.baudrate  = MIN(MAX(args[ARG_baudrate].u_int, UART_MIN_BAUDRATE), UART_MAX_BAUDRATE);
+    self->params.data_bits = args[ARG_bits].u_int;
+    self->params.stop_bits = args[ARG_stop].u_int;
+    self->params.parity    = args[ARG_parity].u_int;
+    self->tx.timeout_ms    = args[ARG_timeout].u_int;
+    self->rx.timeout_ms    = args[ARG_timeout].u_int;
+    self->tx.pin           = tx;
+    self->rx.pin           = rx;
 
     return (mp_obj_t)self;
 }
 
 STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    serial_init(&(self->obj), self->tx->id, self->rx->id);
-    serial_baud(&(self->obj), self->baudrate);
-    serial_format(&(self->obj), self->bits, self->parity, self->stop);
+    serial_init(&(self->obj), self->tx.pin->id, self->rx.pin->id);
+    serial_baud(&(self->obj), self->params.baudrate);
+    serial_format(&(self->obj), self->params.data_bits, self->params.parity, self->params.stop_bits);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_init_obj, uart_init0);
@@ -193,49 +244,57 @@ STATIC const mp_map_elem_t uart_locals_dict_table[] = {
 };
 STATIC MP_DEFINE_CONST_DICT(uart_locals_dict, uart_locals_dict_table);
 
-STATIC mp_obj_t uart_recv(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+STATIC mp_obj_t uart_recv(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
     uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_uint_t i = 0;
     
-    byte *buf = (byte *)buf_in;
+    int32_t ret = 0;
 
     // Direct return 0 when size = 0, to save the time
     if (size == 0) 
         return 0;
 
-    for (i = 0; i < size; i++) {
-        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_DR));
-        buf[i] = (byte)HAL_RUART_READ32(self->unit, RUART_REV_BUF_REG_OFF);
+    mp_uint_t start = mp_hal_ticks_ms();
+    for (mp_uint_t i = 0; i < size; i++) {
+        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_DR)) {
+            if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
+                *errcode = MP_ETIMEDOUT;
+                goto ret;
+            }
+        }
+        ret += 1;
+        buf_in[i] = (byte)HAL_RUART_READ32(self->unit, RUART_REV_BUF_REG_OFF);
     }
 
-    int32_t ret = size;
-
-    if (ret < 0) {
-        *errcode = MP_EAGAIN;
+ret:
+    if (ret == 0) {
         return MP_STREAM_ERROR;
     } else {
         return ret;
     }
 }
 
-STATIC mp_obj_t uart_send(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
+STATIC mp_obj_t uart_send(mp_obj_t self_in, const char *buf_in, mp_uint_t size, int *errcode) {
     uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_uint_t i = 0;
 
-    byte *buf = (byte *)buf_in;
+    int32_t ret = 0;
 
-    for (i = 0; i < size; i++) {
-        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_THRE));
-        HAL_RUART_WRITE32(self->unit, RUART_TRAN_HOLD_REG_OFF, buf[i]);
+    mp_uint_t start = mp_hal_ticks_ms();
+    for (mp_uint_t i = 0; i < size; i++) {
+        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_THRE)) {
+            if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
+                *errcode = MP_ETIMEDOUT;
+                goto ret;
+            }
+        }
+        ret += 1;
+        HAL_RUART_WRITE32(self->unit, RUART_TRAN_HOLD_REG_OFF, buf_in[i]);
 
         // A workaround, it seems log uart's FIFO is not working ...
         mp_hal_delay_ms(1);
     }
 
-    int32_t ret = size;
-
-    if (ret < 0) {
-        *errcode = MP_EAGAIN;
+ret:
+    if (ret == 0) {
         return MP_STREAM_ERROR;
     } else {
         return ret;

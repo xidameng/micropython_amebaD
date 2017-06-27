@@ -29,22 +29,21 @@
  * ***************************************************************************/
 #include "objloguart.h"
 
-// TODO(Chester) This array should place in objuart.c
 STATIC const char *_parity_name[] = {"None", "1", "0"};
 
 STATIC log_uart_obj_t log_uart_obj = {
     .base.type      = &log_uart_type,
     .params = {
-        .baudrate  = LOG_UART_DEFAULT_BAUDRATE,
-        .data_bits = LOG_UART_DEFAULT_DATA_BITS,
-        .parity    = LOG_UART_DEFAULT_PARITY,
-        .stop_bits = LOG_UART_DEFAULT_STOP_BITS,
+        .baudrate  = UART_DEFAULT_BAUDRATE,
+        .data_bits = UART_DEFAULT_DATA_BITS,
+        .parity    = UART_DEFAULT_PARITY,
+        .stop_bits = UART_DEFAULT_STOP_BITS,
     },
     .tx = {
-        .timeout_ms = LOG_UART_DEFAULT_TX_TIMEOUT,
+        .timeout_ms = UART_DEFAULT_TX_TIMEOUT,
     },
     .rx = {
-        .timeout_ms = LOG_UART_DEFAULT_RX_TIMEOUT,
+        .timeout_ms = UART_DEFAULT_RX_TIMEOUT,
     },
     .irq_enabled = true,
     .irq_handler = mp_const_none,

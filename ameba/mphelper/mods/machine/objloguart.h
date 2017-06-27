@@ -35,26 +35,9 @@
 // mbed lib headers
 #include "log_uart_api.h"
 
-#define LOG_UART_DEFAULT_BAUDRATE       (38400)
-#define LOG_UART_DEFAULT_DATA_BITS      (8)
-#define LOG_UART_DEFAULT_PARITY         (0)
-#define LOG_UART_DEFAULT_STOP_BITS      (1)
-#define LOG_UART_DEFAULT_TX_TIMEOUT     (10)
-#define LOG_UART_DEFAULT_RX_TIMEOUT     (10)
+#include "objuart.h"
 
 extern const mp_obj_type_t log_uart_type;
-
-// TODO(Chester) This struct should be place in objuart.h
-typedef struct {
-    uint32_t        baudrate;
-    uint8_t         data_bits;
-    uint8_t         parity;
-    uint8_t         stop_bits;
-} UartParams;
-
-typedef struct {
-    uint32_t    timeout_ms;
-} UartLane;
 
 typedef struct {
     mp_obj_base_t   base;

@@ -30,27 +30,41 @@
 
 #include "serial_api.h"
 
-#define UART_MIN_BAUD_RATE                (4800)
-#define UART_DEFAULT_BAUD_RATE            (9600)
-#define UART_MAX_BAUD_RATE                (115200)
+#define UART_MIN_BAUDRATE          (4800)
+#define UART_MAX_BAUDRATE          (115200)
+
+#define UART_DEFAULT_BAUDRATE       (38400)
+#define UART_DEFAULT_DATA_BITS      (8)
+#define UART_DEFAULT_PARITY         (0)
+#define UART_DEFAULT_STOP_BITS      (1)
+#define UART_DEFAULT_TX_TIMEOUT     (10)
+#define UART_DEFAULT_RX_TIMEOUT     (10)
 
 extern const mp_obj_type_t uart_type;
 extern const PinMap PinMap_UART_TX[];
 extern const PinMap PinMap_UART_RX[];
 
 typedef struct {
+    uint32_t        baudrate;
+    uint8_t         data_bits;
+    uint8_t         parity;
+    uint8_t         stop_bits;
+} UartParams;
+
+typedef struct {
+    uint32_t    timeout_ms;
+    pin_obj_t   *pin;
+} UartLane;
+
+typedef struct {
     mp_obj_base_t base;
     serial_t  obj;
     uint8_t   unit;
-    uint8_t   bits;
-    uint8_t   stop;
-    uint8_t   parity;
-    uint32_t  baudrate;
-    uint16_t  timeout;
+    UartParams params;
+    UartLane   tx;
+    UartLane   rx;
     bool      irq_enabled;
     mp_obj_t  irq_handler;
-    pin_obj_t *tx;
-    pin_obj_t *rx;
 } uart_obj_t;
 
 #endif  // OBJUART_H_
