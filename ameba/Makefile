@@ -82,6 +82,7 @@ CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -D$(CHIP)
 CFLAGS += -mcpu=cortex-m3 -mthumb -g2 -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -mcpu=cortex-m3 -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(CFLAGS_MOD)
 CFLAGS += $(INC)
+CFLAGS += -DPOLARSSL_CONFIG_FILE=\"polarssl-config.h\"
 
 LFLAGS = 
 LFLAGS += -mcpu=cortex-m3 -mthumb -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
