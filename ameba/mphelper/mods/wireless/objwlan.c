@@ -31,6 +31,7 @@
 /*****************************************************************************
  *                              Local variables
  * ***************************************************************************/
+#if WLAN_PROMISC_ENABLE
 struct eth_frame {
 	struct eth_frame *prev;
 	struct eth_frame *next;
@@ -42,10 +43,14 @@ struct eth_buffer {
 	struct eth_frame *head;
 	struct eth_frame *tail;
 };
+#endif
 
 STATIC xSemaphoreHandle xSTAConnectAPSema;
+rtw_mode_t wifi_mode;
 
+#if WLAN_PROMISC_ENABLE
 static struct eth_buffer eth_buffer;
+#endif
 
 extern struct netif xnetif[NET_IF_NUM];
 
@@ -54,7 +59,9 @@ STATIC wlan_obj_t wlan_obj = {
     .mode           = RTW_MODE_STA,
     .security_type  = RTW_SECURITY_OPEN,
     .channel        = 6,
+#if WLAN_PROMISC_ENABLE
     .promisc_level  = RTW_PROMISC_DISABLE,
+#endif
     .netif          = {
         { .base.type = &netif_type, .piface = &xnetif[0], .index = 0 },
         { .base.type = &netif_type, .piface = &xnetif[1], .index = 1 },
@@ -67,9 +74,11 @@ STATIC wlan_obj_t wlan_obj = {
 void validate_wlan_mode(uint8_t mode) {
     if (mode != RTW_MODE_AP &&
         mode != RTW_MODE_STA &&
-        mode != RTW_MODE_STA_AP &&
-        mode != RTW_MODE_PROMISC &&
-        mode != RTW_MODE_P2P) {
+        mode != RTW_MODE_STA_AP 
+#if WLAN_PROMISC_ENABLE
+        mode != RTW_MODE_PROMISC
+#endif
+        ) {
             mp_raise_msg(&mp_type_ValueError, "Invalid WLAN mode");
     }
 }
@@ -77,7 +86,7 @@ void validate_wlan_mode(uint8_t mode) {
 void validate_ssid(mp_uint_t len) {
 
     if ((len > WLAN_MAX_SSID_LEN) || (len < WLAN_MIN_SSID_LEN)) {
-        mp_raise_ValueError("Wring SSID length");
+        mp_raise_ValueError("Invalid SSID length");
     }
 
 }
@@ -183,7 +192,9 @@ void wlan_init0(void) {
 
     netif_set_default(netif_obj_0.piface);
 
+#if WLAN_PROMISC_ENABLE
     wifi_init_packet_filter();
+#endif
 }
 
 STATIC const qstr wlan_scan_info_fields[] = {
@@ -209,10 +220,11 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
         { MP_QSTR_auth, MP_ARG_REQUIRED | MP_ARG_OBJ },
     };
     int16_t ret = RTW_ERROR;
+
     wlan_obj_t *self = pos_args[0];
 
     if (self->mode != RTW_MODE_AP && self->mode != RTW_MODE_STA_AP) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Only AP / STA_AP mode can start AP"));
+        mp_raise_ValueError("Only AP and STA_AP can start ap");
     }
 
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -224,10 +236,6 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     ssid = mp_obj_str_get_data(args[ARG_ssid].u_obj, &ssid_len);
 
     validate_ssid(ssid_len);
-
-    if (ssid != NULL) {
-        memcpy(self->ssid, ssid, ssid_len);
-    }
 
     int8_t   *key = NULL;
     uint32_t  security_type = 0;
@@ -286,6 +294,9 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     if (ret != RTW_SUCCESS) {
         mp_raise_msg(&mp_type_OSError, "set ssid error");
     }
+
+    dhcps_deinit();
+
     if (self->mode == RTW_MODE_AP) {
         dhcps_init(&xnetif[0]);
     } else if(self->mode == RTW_MODE_STA_AP) {
@@ -518,6 +529,7 @@ STATIC mp_obj_t wlan_on(mp_uint_t n_args, const mp_obj_t *args) {
     if (n_args > 1) {
         mode = mp_obj_get_int(args[1]);
         self->mode = mode;
+        wifi_mode = mode;
     }
 
     // Init WLAN0 first
@@ -596,6 +608,7 @@ STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_is_connect_to_ap_obj, wlan_is_connect_to_ap);
 
+#if WLAN_PROMISC_ENABLE
 static void promisc_callback_all(unsigned char *buf, unsigned int len, void* userdata) {
 
     struct eth_frame *frame = (struct eth_frame *) pvPortMalloc(sizeof(struct eth_frame));
@@ -641,6 +654,7 @@ STATIC mp_obj_t wlan_promisc_level(mp_uint_t n_args, const mp_obj_t *args) {
     }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(wlan_promisc_level_obj, 1, 3, wlan_promisc_level);
+#endif
 
 void wifi_event_scan_result_report_hdl (char *buf, int buf_len, int flags,
         void *userfunc) {
@@ -961,9 +975,6 @@ STATIC void wlan_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_
         case RTW_MODE_STA_AP:
             wlan_qstr = MP_QSTR_STA_AP;
             break;
-        case RTW_MODE_P2P:
-            wlan_qstr = MP_QSTR_P2P;
-            break;
         case RTW_MODE_PROMISC:
             wlan_qstr = MP_QSTR_PROMISC;
             break;
@@ -1029,7 +1040,8 @@ STATIC mp_obj_t wlan_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     validate_wlan_mode(self->mode);
 
     memset(self->ssid, 0, sizeof(self->ssid));
-    memset(self->ap_ssid, 0, sizeof(self->ap_ssid));
+
+    wifi_mode = self->mode;
 
     return (mp_obj_t)self;
 }
@@ -1042,7 +1054,9 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_mac),              MP_OBJ_FROM_PTR(&wlan_mac_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_rf),               MP_OBJ_FROM_PTR(&wlan_rf_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_channel),          MP_OBJ_FROM_PTR(&wlan_channel_obj) },
+#if WLAN_PROMISC_ENABLE
     { MP_OBJ_NEW_QSTR(MP_QSTR_promisc_level),    MP_OBJ_FROM_PTR(&wlan_promisc_level_obj) },
+#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),          MP_OBJ_FROM_PTR(&wlan_connect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),       MP_OBJ_FROM_PTR(&wlan_disconnect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
@@ -1052,19 +1066,19 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap), MP_OBJ_FROM_PTR(&wlan_is_connect_to_ap_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_event_handler),    MP_OBJ_FROM_PTR(&wlan_event_handler_obj) },
 
+#if WLAN_PROMISC_ENABLE
     { MP_OBJ_NEW_QSTR(MP_QSTR_read),             (mp_obj_t)&mp_stream_read_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),         (mp_obj_t)&mp_stream_readinto_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readline),         (mp_obj_t)&mp_stream_unbuffered_readline_obj},
-
+#endif
     // class constants
     
     // WLAN mode 
     { MP_OBJ_NEW_QSTR(MP_QSTR_STA),              MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AP),               MP_OBJ_NEW_SMALL_INT(RTW_MODE_AP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_STA_AP),           MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA_AP) },
+#if WLAN_PROMISC_ENABLE
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC),          MP_OBJ_NEW_SMALL_INT(RTW_MODE_PROMISC) },
-#if 0 // Not support yet
-    { MP_OBJ_NEW_QSTR(MP_QSTR_P2P),              MP_OBJ_NEW_SMALL_INT(RTW_MODE_P2P) },
 #endif
 
     // SECURITY MODE
@@ -1104,7 +1118,7 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_INFRASTRUCTURE),       MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_INFRASTRUCTURE) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_ADHOC),                MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_ADHOC) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BSS_TYPE_ANY),                  MP_OBJ_NEW_SMALL_INT(RTW_BSS_TYPE_ANY) },
-
+#if WLAN_PROMISC_ENABLE
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_DISABLE),               MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_DISABLE) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE),                MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_ENABLE_1),              MP_OBJ_NEW_SMALL_INT(RTW_PROMISC_ENABLE_1) },
@@ -1113,99 +1127,14 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_FILTER_MATCHING),       MP_OBJ_NEW_SMALL_INT(RTW_POSITIVE_MATCHING) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PROMISC_FILTER_NOT_MATCHING),   MP_OBJ_NEW_SMALL_INT(RTW_NEGATIVE_MATCHING) },
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(wlan_locals_dict, wlan_locals_dict_table);
-
-STATIC mp_uint_t wlan_raw_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
-    wlan_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_uint_t i = 0;
-
-    // Direct return 0 when size = 0, to save the time
-    if (size == 0) 
-        return 0;
-
-    if (self->mode != RTW_MODE_PROMISC) {
-        *errcode = MP_EIO;
-        return -1;
-    }
-
-	struct eth_frame *frame = NULL;
-
-	taskENTER_CRITICAL();
-
-    if(eth_buffer.head) {
-		frame = eth_buffer.head;
-
-		if(eth_buffer.head->next) {
-			eth_buffer.head = eth_buffer.head->next;
-			eth_buffer.head->prev = NULL;
-		}
-		else {
-			eth_buffer.head = NULL;
-			eth_buffer.tail = NULL;
-		}
-	}
-
-	taskEXIT_CRITICAL();
-
-    if (frame == NULL) {
-        *errcode = MP_EAGAIN;
-        return 0;
-    }
-
-    unsigned int ret = 0;
-
-    for (i = 0; i < frame->len; i++) {
-        buf_in[i] = frame->buf_in[i];
-        ret = i;
-        if (i > size)
-            break;
-    }
-
-    vPortFree((void *) frame);
-
-    if (ret < 0) {
-        *errcode = MP_EAGAIN;
-        return MP_STREAM_ERROR;
-    } else {
-        return ret;
-    }
-}
-
-STATIC mp_uint_t wlan_raw_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, int *errcode) {
-    wlan_obj_t *self = self_in;
-    mp_uint_t ret;
-    if (request == MP_STREAM_POLL) {
-        mp_uint_t flags = arg;
-        ret = 0;
-        mp_uint_t status = 0;
-        if ((flags & MP_STREAM_POLL_RD) && (status & LSR_DR)) {
-            ret |= MP_STREAM_POLL_RD;
-        }
-
-        if ((flags & MP_STREAM_POLL_WR) && (status & LSR_THRE)) {
-            ret |= MP_STREAM_POLL_WR;
-        }
-    } else {
-        *errcode = MP_EINVAL;
-        ret = MP_STREAM_ERROR;
-    }
-    return ret;
-}
-
-STATIC const mp_stream_p_t wlan_raw_stream_p = {
-    .read    = wlan_raw_read,
-    .ioctl   = wlan_raw_ioctl,
-    .is_text = false,
-};
 
 const mp_obj_type_t wlan_type = {
     { &mp_type_type },
     .name        = MP_QSTR_WLAN,
     .print       = wlan_print,
     .make_new    = wlan_make_new,
-    .getiter     = mp_identity_getiter,
-    .iternext    = mp_stream_unbuffered_iter,
-    .protocol    = &wlan_raw_stream_p,
     .locals_dict = (mp_obj_t)&wlan_locals_dict,
 };

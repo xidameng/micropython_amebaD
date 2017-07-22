@@ -44,6 +44,8 @@
 #define WLAN_WPA_MIN_PASS_CHAR_LEN  8
 #define WLAN_WPA_MAC_PASS_CHAR_LEN  63
 
+#define WLAN_PROMISC_ENABLE 0
+
 extern const mp_obj_type_t wlan_type;
 
 void wlan_init0(void);
@@ -58,8 +60,9 @@ typedef struct {
     int32_t       security_type;              // WLAN security mode, WPA2 / WEP ...
     uint8_t       channel;                    // WLAN channel 0 ~ 11
     int8_t        ssid[WLAN_MAX_SSID_LEN];    // WLAN STA mode ssid
-    int8_t        ap_ssid[WLAN_MAX_SSID_LEN]; // WLAN AP mode ssid
+#if WLAN_PROMISC_ENABLE
     uint8_t       promisc_level;
+#endif
     netif_obj_t   netif[];
 } wlan_obj_t;
 

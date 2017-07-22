@@ -100,6 +100,14 @@ SECTIONS
     __sdram_bss_end__ = .;
   } > SDRAM
 
+ .bf_data : 
+  {
+    __buffer_data_start__ = .;
+    *(.bfsram.data*)
+    __buffer_data_end__ = .;
+    
+  } > SDRAM
+
   .ram.start.table :
   {
     __ram_image2_text_start__ = .;
@@ -146,14 +154,6 @@ SECTIONS
     *(.bdsram.data*)
     __bss_end__ = .;
     .ram.bss$$Limit = .;
-  } > RAM
-
-  .bf_data : 
-  {
-    __buffer_data_start__ = .;
-    *(.bfsram.data*)
-    __buffer_data_end__ = .;
-    
   } > RAM
 
   .heap :
