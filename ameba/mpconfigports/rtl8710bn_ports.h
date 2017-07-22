@@ -96,7 +96,7 @@ extern const struct _mp_obj_module_t mp_network_module;
 #define MICROPY_HW_PORT_VERSION             "0.0.2"
 
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
-#define MICROPY_HW_MCU_NAME                 "RTL8711AF"
+#define MICROPY_HW_MCU_NAME                 "RTL8710BN"
 
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"

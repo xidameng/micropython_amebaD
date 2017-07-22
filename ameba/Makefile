@@ -197,12 +197,11 @@ endif
 
 .PHONY: ramdebug
 ramdebug:
-	$(Q)@if [ ! -f $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt ] ; then echo Please do \"make setup GDB_SERVER=[jlink or openocd]\" first; echo && false ; fi
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
 	$(Q)$(FLASH_TOOLDIR)/Check_Jtag.sh
 	$(Q)cmd /c start $(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
 else
-	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_ramdebug.txt	
+	$(Q)$(GDB) -x $(TOOL)/rtl_gdb_ramdebug_openocd.txt	
 endif
 
 include ../py/mkrules.mk
