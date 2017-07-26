@@ -100,7 +100,7 @@ mp: OTA_BIN = ota_mp.bin
 
 application: prerequirement build_info $(SRC_O) $(DRAM_O) $(PY_O)
 	$(ECHO) "Building $(CHIP) "
-	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -l_analout_api -l_usbd -l_usbh -T$(TOOL)/$(CHIP)-symbol-v02.ld 
+	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL) -l_analout_api -T$(TOOL)/$(CHIP)-symbol-v02.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
 
 .PHONY: manipulate_images

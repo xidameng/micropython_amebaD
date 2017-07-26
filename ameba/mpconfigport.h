@@ -2,12 +2,8 @@
 
 #ifdef MP_RTL8195A
 #include "mpconfigports/rtl8195a_ports.h"
-#elif MP_RTL8711AM
-#include "mpconfigports/rtl8711am_ports.h"
-#elif MP_RTL8711AF
-#include "mpconfigports/rtl8711af_ports.h"
-#elif MP_RTL8710AF
-#include "mpconfigports/rtl8710af_ports.h"
+#elif MP_RTL8710BN
+#include "mpconfigports/rtl8710bn_ports.h"
 #else
 #warning "Invalid CHIP set"
 #endif
