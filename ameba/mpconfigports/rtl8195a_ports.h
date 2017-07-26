@@ -163,5 +163,4 @@ extern const struct _mp_obj_module_t mp_module_ameba;
     mp_obj_list_t  term_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
     mp_obj_t log_uart_rx_chr_obj;           \
-    mp_obj_list_t netif_list_obj;           \
     mp_map_t mp_terminal_map;               \

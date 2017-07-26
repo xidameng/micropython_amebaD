@@ -48,7 +48,7 @@
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-extern uint8_t mpHeap[MP_HEAP_SIZE];
+uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
     mp_stack_ctrl_init();
@@ -60,8 +60,8 @@ void micropython_task(void const *arg) {
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
     modmachine_init();
-    modwireless_init();
     modnetwork_init();
+    modwireless_init();
     mp_hal_delay_ms(20);
     modterm_init();
     pyexec_frozen_module("_boot.py");

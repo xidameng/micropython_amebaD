@@ -1,3 +1,22 @@
+AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
+FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
+
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+PICK = $(AMEBA_TOOLDIR)pick.exe
+PAD  = $(AMEBA_TOOLDIR)padding.exe
+CHKSUM = $(AMEBA_TOOLDIR)checksum.exe
+else
+ifeq ($(findstring Darwin, $(OS)), Darwin) 
+PICK = $(TOOL)/mac/pick
+PAD  = $(TOOL)/mac/padding
+CHKSUM = $(TOOL)/mac/checksum
+else
+PICK = $(AMEBA_TOOLDIR)pick
+PAD  = $(AMEBA_TOOLDIR)padding
+CHKSUM = $(AMEBA_TOOLDIR)checksum
+endif
+endif
+
 INC += -I.
 INC += -I..
 INC += -Iinc
@@ -346,7 +365,6 @@ DRAM_C += mphelper/mods/wireless/objwlan.c
 DRAM_C += mphelper/mods/network/objnetif.c
 
 DRAM_C += main.c
-SRC_C += dummy.c
 
 DRAM_C += \
 		lib/utils/pyexec.c \
@@ -357,3 +375,143 @@ DRAM_C += \
 		lib/timeutils/timeutils.c \
 		lib/netutils/netutils.c \
 		lib//utils/sys_stdio_mphal.c \
+
+
+# Initialize target name and target object files
+# -------------------------------------------------------------------
+
+all: application manipulate_images
+
+TARGET=application
+
+# Include folder list
+# -------------------------------------------------------------------
+
+# Generate obj list
+# -------------------------------------------------------------------
+
+SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
+DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
+
+OBJ = $(PY_O) $(SRC_O) $(DRAM_O)
+
+SRC_QSTR += $(SRC_C) $(DRAM_C)
+SRC_QSTR_AUTO_DEPS +=
+
+################################
+# 			CFLAGS 			   #
+################################
+
+# Optimize level
+CFLAGS = -O2
+
+# CPU arch
+CFLAGS += -mcpu=cortex-m3 -mthumb
+
+ifeq ($(DEBUG), 1)
+CFLAGS += -g3 -ggdb
+else 
+CFLAGS += -g2
+endif
+
+# source code macro
+CFLAGS += -DM3 -DCONFIG_PLATFORM_8195A -DGCC_ARMCM3 -D$(CHIP) -DF_CPU=166000000L
+CFLAGS += -DPOLARSSL_CONFIG_FILE=\"polarssl-config.h\"
+
+CFLAGS += -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -std=gnu99 -fsigned-char
+CFLAGS += $(CFLAGS_MOD)
+CFLAGS += $(INC)
+
+LFLAGS =
+LFLAGS += -mcpu=cortex-m3 -mthumb -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
+
+LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8195a/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_wps -l_rtlstd -l_websocket -l_xmodem -lm -lc -lnosys -lgcc
+
+RAMALL_BIN = ram_all.bin
+
+application: prerequirement build_info $(SRC_O) $(DRAM_O) $(PY_O)
+	$(ECHO) "Building $(CHIP) "
+	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL)/rtl8195a -l_analout_api -T$(TOOL)/rtl8195a/$(CHIP)-symbol-v02.ld 
+	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
+
+.PHONY: manipulate_images
+manipulate_images:	
+	$(Q)echo ===========================================================
+	$(Q)echo Image manipulating
+	$(Q)echo ===========================================================
+	$(Q)$(NM) $(BUILD)/$(TARGET).axf | sort > $(BUILD)/$(TARGET).nmap
+	$(Q)$(OBJCOPY) -j .ram.start.table -j .ram.text -j .ram.rodata -j .ram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/ram_2.bin
+	$(Q)$(OBJCOPY) -j .sdram.text -j .sdram.rodata -j .sdram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
+	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.p.bin $(BUILD)/ram_1.p.bin
+	$(Q)chmod +rw $(BUILD)/ram_1.p.bin
+	$(Q)chmod +rx $(PICK) $(CHKSUM) $(PAD)
+	$(Q)$(PICK) 0x`grep __ram_image2_text_start__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __ram_image2_text_end__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` $(BUILD)/ram_2.bin $(BUILD)/ram_2.p.bin body+reset_offset+sig
+	$(Q)$(PICK) 0x`grep __ram_image2_text_start__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __ram_image2_text_end__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` $(BUILD)/ram_2.bin $(BUILD)/ram_2.ns.bin body+reset_offset
+	$(Q)$(PICK) 0x`grep __sdram_data_start__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __sdram_data_end__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` $(BUILD)/sdram.bin $(BUILD)/ram_3.p.bin body+reset_offset
+	$(Q)$(PAD) 44k 0xFF $(BUILD)/ram_1.p.bin
+	$(Q)cat $(BUILD)/ram_1.p.bin > $(BUILD)/$(RAMALL_BIN)
+	$(Q)chmod 777 $(BUILD)/$(RAMALL_BIN)
+	$(Q)cat $(BUILD)/ram_2.p.bin >> $(BUILD)/$(RAMALL_BIN)
+	$(Q)if [ -s $(BUILD)/sdram.bin ]; then cat $(BUILD)/ram_3.p.bin >> $(BUILD)/$(RAMALL_BIN); fi
+	$(Q)$(RM) $(BUILD)/ram_*.p.bin $(BUILD)/ram_*.ns.bin
+	$(Q)$(SIZE) -d $(BUILD)/$(TARGET).axf
+	$(Q)du -h $(BUILD)/$(RAMALL_BIN)
+
+# Generate build info
+# -------------------------------------------------------------------	
+
+.PHONY: build_info
+build_info:
+	@echo \#define UTS_VERSION \"`date +%Y/%m/%d-%T`\" > .ver
+	@echo \#define RTL8195AFW_COMPILE_TIME \"`date +%Y/%m/%d-%T`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_DATE \"`date +%Y%m%d`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_BY \"`id -u -n`\" >> .ver
+	@echo \#define RTL8195AFW_COMPILE_HOST \"`$(HOSTNAME_APP)`\" >> .ver
+	@if [ -x /bin/dnsdomainname ]; then \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN \"`dnsdomainname`\"; \
+	elif [ -x /bin/domainname ]; then \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN \"`domainname`\"; \
+	else \
+		echo \#define RTL8195AFW_COMPILE_DOMAIN ; \
+	fi >> .ver
+
+	@echo \#define RTL195AFW_COMPILER \"gcc `$(CC) $(CFLAGS) -dumpversion `\" >> .ver
+	@mv -f .ver inc/$@.h
+
+
+.PHONY: prerequirement
+prerequirement:
+	$(Q)echo ===========================================================
+	$(Q)echo Build $(TARGET)
+	$(Q)echo ===========================================================
+	$(Q)$(MKDIR) -p $(BUILD)
+	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.r.bin $(BUILD)/ram_1.r.bin
+	$(Q)chmod +rw $(BUILD)/ram_1.r.bin
+	$(Q)$(OBJCOPY) --rename-section .data=.loader.data,contents,alloc,load,readonly,data -I binary -O elf32-littlearm -B arm $(BUILD)/ram_1.r.bin $(BUILD)/ram_1.r.o 
+
+$(SRC_O): $(BUILD)/%.o : %.c
+	$(Q)$(MKDIR) -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(DRAM_O): $(BUILD)/%.o : %.c 
+	$(Q)$(MKDIR) -p $(dir $@)
+	$(CC) $(CFLAGS)  -c $< -o $@
+	$(Q)$(OBJCOPY) --prefix-alloc-sections .sdram $@
+
+.PHONY: flashburn
+flashburn:
+	$(Q)$(CP) -f $(FLASH_TOOLDIR)/target_NORMALB.axf $(BUILD)/target_NORMAL.axf
+	$(Q)$(CP) -f $(TOOL)/rtl8195a/SetupGDB_NORMAL.sh $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(CP) -f $(TOOL)/rtl8195a/rtl_gdb_flash_write_openocd.txt $(BUILD)/rtl_gdb_flash_write_openocd.txt
+	$(Q)chmod +rw $(BUILD)/target_NORMAL.axf
+	$(Q)chmod +rx $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(GDB) -x $(BUILD)/rtl_gdb_flash_write_openocd.txt
+	
+.PHONY: debug
+debug:
+	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
+
+.PHONY: ramdebug
+ramdebug:
+	$(Q)$(GDB) -x $(TOOL)/rtl8195a/rtl_gdb_ramdebug_openocd.txt	

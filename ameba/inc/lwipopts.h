@@ -59,12 +59,12 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                (160 * 1024) //for ping 10k test
+#define MEM_SIZE                (56 * 1024) //for ping 10k test
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */
-#define MEMP_NUM_PBUF           200
+#define MEMP_NUM_PBUF           64
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
 #define MEMP_NUM_UDP_PCB        10
@@ -240,10 +240,6 @@ a lot of data that needs to be copied, this should be set high. */
 #define DEFAULT_ACCEPTMBOX_SIZE         6
 #define DEFAULT_THREAD_STACKSIZE        512
 #define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 1)
-
-extern unsigned char lwip_ram_heap[];
-#define LWIP_RAM_HEAP_POINTER           lwip_ram_heap
-    
 
 #endif /* __LWIPOPTS_H__ */
 

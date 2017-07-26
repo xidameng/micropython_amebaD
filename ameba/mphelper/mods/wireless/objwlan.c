@@ -182,9 +182,9 @@ void wlan_init0(void) {
 
     netif_obj_t netif_obj_1 = wlan_obj.netif[1];
 
-    netif_add(netif_obj_0.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &modnetwork_input);
+    netif_add(netif_obj_0.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
     
-    netif_add(netif_obj_1.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &modnetwork_input);
+    netif_add(netif_obj_1.piface, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
 
     netif_set_up(netif_obj_0.piface);
 

@@ -40,21 +40,4 @@
 #include "lwip/dhcp.h"
 #include "lwip_netconf.h"
 
-enum network_msg_type {
-    NETWORK_MSG_INPKT,
-};
-
-struct network_msg {
-    enum network_msg_type type;
-    xSemaphoreHandle *sem;
-    union {
-        struct {
-            struct pbuf *p;
-            struct netif *netif;
-        } inp;
-    } msg;
-};
-
-err_t modnetwork_input(struct pbuf *, struct netif *);
-
 #endif
