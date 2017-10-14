@@ -9,7 +9,7 @@ This module provides network drivers and routing configuration. To use this
 module, a MicroPython variant/build with network capabilities must be installed.
 Network drivers for specific hardware are available within this module and are
 used to configure hardware network interface(s). Network services provided
-by configured interfaces are then available for use via the :mod:`socket`
+by configured interfaces are then available for use via the :mod:`usocket`
 module.
 
 For example::
@@ -39,9 +39,9 @@ Common network adapter interface
 ================================
 
 This section describes an (implied) abstract base class for all network
-interface classes implemented by different ports of MicroPython for
-different hardware. This means that MicroPython does not actually
-provide `AbstractNIC` class, but any actual NIC class, as described
+interface classes implemented by `MicroPython ports <MicroPython port>`
+for different hardware. This means that MicroPython does not actually
+provide ``AbstractNIC`` class, but any actual NIC class, as described
 in the following sections, implements methods as described here.
 
 .. class:: AbstractNIC(id=None, ...)
@@ -72,8 +72,7 @@ parameter should be `id`.
        connection parameters. For various medium types, there are different
        sets of predefined/recommended parameters, among them:
 
-       * WiFi: *bssid* keyword to connect by BSSID (MAC address) instead
-         of access point name
+       * WiFi: *bssid* keyword to connect to a specific BSSID (MAC address)
 
     .. method:: disconnect()
 
@@ -333,9 +332,12 @@ parameter should be `id`.
         argument is passed. Otherwise, query current state if no argument is
         provided. Most other methods require active interface.
 
-    .. method:: wlan.connect(ssid, password)
+    .. method:: wlan.connect(ssid=None, password=None, \*, bssid=None)
 
         Connect to the specified wireless network, using the specified password.
+        If *bssid* is given then the connection will be restricted to the
+        access-point with that MAC address (the *ssid* must also be specified
+        in this case).
 
     .. method:: wlan.disconnect()
 
@@ -411,7 +413,7 @@ parameter should be `id`.
         print(ap.config('channel'))
 
        Following are commonly supported parameters (availability of a specific parameter
-       depends on network technology type, driver, and MicroPython port).
+       depends on network technology type, driver, and `MicroPython port`).
 
        =========  ===========
        Parameter  Description
