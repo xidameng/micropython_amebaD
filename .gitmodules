@@ -13,7 +13,7 @@
 	url = https://github.com/pfalcon/berkeley-db-1.xx
 [submodule "ameba/vendor"]
 	path = ameba/vendor
-	url = git@bitbucket.org:cwyark/sdk-ameba-v4.0b_without_nda_gcc.git
+	url = https://github.com/cwyark/sdk-ameba-v4.0b_without_nda_gcc.git
 	branch = master
 [submodule "lib/stm32lib"]
 	path = lib/stm32lib
