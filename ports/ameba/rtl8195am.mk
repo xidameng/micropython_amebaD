@@ -18,8 +18,8 @@ endif
 endif
 
 INC += -I.
-INC += -I..
 INC += -Iinc
+INC += -I$(TOP)
 INC += -I$(BUILD)
 INC += -I$(HEADER_BUILD)
 INC += -I$(VENDOR)/component/soc/realtek/common/bsp
@@ -76,11 +76,11 @@ INC += -I$(VENDOR)/component/common/drivers/sdio/realtek/sdio_host/inc
 INC += -I$(VENDOR)/component/common/audio
 INC += -I$(VENDOR)/component/common/drivers/i2s
 
-INC += -I../extmod
-INC += -I../lib/utils
-INC += -I../lib/timeutils
-INC += -I../lib/mp-readline
-INC += -I../lib/netutils
+INC += -I$(TOP)/extmod
+INC += -I$(TOP)/lib/utils
+INC += -I$(TOP)/lib/timeutils
+INC += -I$(TOP)/lib/mp-readline
+INC += -I$(TOP)/lib/netutils
 
 INC += -I./mphelper
 INC += -I./mphelper/gccollect

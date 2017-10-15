@@ -1149,10 +1149,10 @@ STATIC mp_obj_t lwip_socket_sendall(mp_obj_t self_in, mp_obj_t buf_in) {
             break;
         }
         case MOD_NETWORK_SOCK_DGRAM:
-            mp_not_implemented("");
+            mp_raise_NotImplementedError("");
             break;
         case MOD_NETWORK_SOCK_RAW:
-            mp_not_implemented("");
+            mp_raise_NotImplementedError("");
             break;
     }
 

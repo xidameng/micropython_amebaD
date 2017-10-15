@@ -1,10 +1,10 @@
-include ../py/mkenv.mk
+include ../../py/mkenv.mk
 
 # declare before py.mk
 FROZEN_DIR = scripts
 FROZEN_MPY_DIR = modules
 
-include ../py/py.mk
+include $(TOP)/py/py.mk
 
 OS := $(shell uname)
 VENDOR := vendor
@@ -27,4 +27,4 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 
 include rtl8195am.mk
 
-include ../py/mkrules.mk
+include $(TOP)/py/mkrules.mk
