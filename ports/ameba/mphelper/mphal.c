@@ -37,6 +37,7 @@
 #include "lib/utils/pyexec.h"
 #include "py/obj.h"
 #include "py/ringbuf.h"
+#include "wait_api.h"
 
 #include <stdio.h>
 #include "osdep_api.h"
@@ -67,11 +68,11 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
 }
 
 void mp_hal_delay_ms(uint32_t ms) {
-    mdelay(ms);
+    wait_ms(ms);
 }
 
 void mp_hal_delay_us(uint32_t us) {
-    udelay(us);
+    wait_us(us);
 }
 
 uint32_t mp_hal_ticks_ms(void) {

@@ -4,10 +4,13 @@ try:
     import uterminal
     import flashbdev
     import uctypes
+    import utime as time
 except ImportError as e:
     print(e)
 _baudrate = 38400
 _log_uart = umachine.LOGUART()
+_log_uart.deinit()
+_log_uart.init(baudrate=_baudrate)
 # init log_uart might sometimes hang
 #_log_uart.init(baudrate=_baudrate)
 uterminal.register(_log_uart)

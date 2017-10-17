@@ -36,7 +36,6 @@
 #include "machine/objuart.h"
 #include "machine/obji2c.h"
 #include "machine/objpin.h"
-#include "machine/objsdio_host.h"
 #include "machine/objdac.h"
 #include "machine/objloguart.h"
 #include "machine/objwdt.h"
@@ -44,18 +43,16 @@
 #include "machine/objadc.h"
 #include "machine/objcrypto.h"
 #include "machine/objtimer.h"
+#include "machine/objflash.h"
 
 
 // mbed lib headers
 #include "sys_api.h"
 #include "sleep_ex_api.h"
 
-#include "flash_api.h"
-
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
-flash_t flash;
 void modmachine_init(void) {
     crypto_init0();
     rtc_init0();
@@ -83,9 +80,6 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
 #if MP_RTL8195A
-#if 0
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SDIO_HOST),     MP_OBJ_FROM_PTR(&sdio_host_type) },
-#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
 #endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
@@ -97,6 +91,7 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
 #if MP_RTL8195A || MP_RTL8711AM
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
 #endif

@@ -94,7 +94,8 @@ void loguart_init0(void) {
 
 STATIC void log_uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "LOGUART(baudrate=%u, bits=%u, parity=%s, stop=%u, tx_timeout=%u, rx_timeout=%u)",
+    mp_printf(print, "LOGUART(baudrate=%u, bits=%u, parity=%s, stop=%u, \
+      tx_timeout=%u, rx_timeout=%u)",
         self->params.baudrate, self->params.data_bits,
         _parity_name[self->params.parity], self->params.stop_bits,
         self->tx.timeout_ms, self->rx.timeout_ms);
@@ -108,44 +109,41 @@ STATIC mp_obj_t log_uart_make_new (const mp_obj_type_t *type, mp_uint_t n_args, 
 STATIC mp_obj_t log_uart_init0(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
     enum { ARG_baudrate, ARG_bits, ARG_parity, ARG_stop, ARG_tx_timeout, ARG_rx_timeout };
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_baudrate,     MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_bits,         MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_baudrate,     MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_bits,         MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_parity,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_stop,         MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_tx_timeout,   MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_rx_timeout,   MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_stop,         MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_tx_timeout,   MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rx_timeout,   MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t p_args[MP_ARRAY_SIZE(allowed_args)];
-    mp_arg_parse_all(n_args - 1, args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, p_args);
+    mp_arg_parse_all(n_args - 1, args + 1, kw_args, MP_ARRAY_SIZE(allowed_args),
+          allowed_args, p_args);
 
     log_uart_obj_t *self = MP_OBJ_TO_PTR(args[0]);
 
-    if (p_args[ARG_baudrate].u_int > 0) {
-        self->params.baudrate = p_args[ARG_baudrate].u_int;
+    if (p_args[ARG_baudrate].u_obj != MP_OBJ_NULL) {
+        self->params.baudrate = mp_obj_get_int(p_args[ARG_baudrate].u_int);
     }
 
-    if (p_args[ARG_bits].u_int > 0) {
-        self->params.data_bits = p_args[ARG_bits].u_int;
+    if (p_args[ARG_bits].u_obj != MP_OBJ_NULL) {
+        self->params.data_bits = mp_obj_get_int(p_args[ARG_bits].u_int);
     }
 
     if (p_args[ARG_parity].u_obj != MP_OBJ_NULL) {
-        if (p_args[ARG_parity].u_obj == mp_const_none) {
-            self->params.parity = 0;
-        } else {
-            self->params.parity = mp_obj_get_int(p_args[ARG_parity].u_obj);;
-        }
+        self->params.parity = mp_obj_get_int(p_args[ARG_parity].u_obj);;
     }
 
-    if (p_args[ARG_stop].u_int > 0) {
-        self->params.stop_bits = p_args[ARG_stop].u_int;
+    if (p_args[ARG_stop].u_obj != MP_OBJ_NULL) {
+        self->params.stop_bits = mp_obj_get_int(p_args[ARG_stop].u_int);
     }
 
-    if (p_args[ARG_tx_timeout].u_int > 0) {
-        self->tx.timeout_ms = p_args[ARG_tx_timeout].u_int;
+    if (p_args[ARG_tx_timeout].u_obj != MP_OBJ_NULL) {
+        self->tx.timeout_ms = mp_obj_get_int(p_args[ARG_tx_timeout].u_int);
     }
 
-    if (p_args[ARG_rx_timeout].u_int > 0) {
-        self->rx.timeout_ms = p_args[ARG_rx_timeout].u_int;
+    if (p_args[ARG_rx_timeout].u_obj != MP_OBJ_NULL) {
+        self->rx.timeout_ms = mp_obj_get_int(p_args[ARG_rx_timeout].u_int);
     }
 
     if (log_uart_init(&(self->obj), self->params.baudrate,
@@ -159,11 +157,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(log_uart_init_obj, 1, log_uart_init0);
 
 STATIC mp_obj_t log_uart_deinit(mp_obj_t *self_in) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    //log_uart_free(&(self->obj));
-    LOC_UART_FCTRL(OFF);
-    ACTCK_LOG_UART_CCTRL(OFF);
-    SLPCK_LOG_UART_CCTRL(OFF);
-    // unregister log uart interrupt here
+    log_uart_free(&(self->obj));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(log_uart_deinit_obj, log_uart_deinit);
@@ -222,14 +216,14 @@ STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, i
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_DR)) {
+        while (!log_uart_readable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        buf_in[i] = (char)HAL_UART_READ32(UART_REV_BUF_OFF);
+        buf_in[i] = log_uart_getc(&(self->obj));
     }
 
 ret:
@@ -247,16 +241,16 @@ STATIC mp_uint_t log_uart_write(mp_obj_t self_in, const char *buf_in, mp_uint_t 
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!(HAL_UART_READ8(UART_LINE_STATUS_REG_OFF) & LSR_THRE)) {
+        while (!log_uart_writable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        HAL_UART_WRITE8(UART_TRAN_HOLD_OFF, buf_in[i]);
+        log_uart_putc(&(self->obj), buf_in[i]);
         // A workaround, it seems log uart's FIFO is not working ...
-        mp_hal_delay_ms(1);
+        mp_hal_delay_us(250);
     }
 
 ret:
@@ -275,14 +269,14 @@ STATIC mp_uint_t log_uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t a
         ret = 0;
         mp_uint_t status = 0;
         // Only return none zero when RX FIFO is not empty
-        status = HAL_UART_READ32(UART_LINE_STATUS_REG_OFF);
-        if ((flags & MP_STREAM_POLL_RD) && (status & LSR_DR)) {
+        status = log_uart_readable(&(self->obj));
+        if ((flags & MP_STREAM_POLL_RD) && (status & true)) {
             ret |= MP_STREAM_POLL_RD;
         }
 
         // Only return none zero when TX FIFO is not full
-        status = HAL_UART_READ32(UART_LINE_STATUS_REG_OFF);
-        if ((flags & MP_STREAM_POLL_WR) && (status & LSR_THRE)) {
+        status = log_uart_writable(&(self->obj));
+        if ((flags & MP_STREAM_POLL_WR) && (status & true)) {
             ret |= MP_STREAM_POLL_WR;
         }
     } else {

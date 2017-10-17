@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Chester Tseng
+ * Copyright (c) 2017 Chester Tseng
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef _OBJSDIO_H_
-#define _OBJSDIO_H_
+#ifndef OBJFLASH_H_
+#define OBJFLASH_H_
 
 #include "py/mpstate.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#include "exception.h"
+#include "flash_api.h"
 
-extern const mp_obj_type_t sdio_host_type;
-
-#define SDIO_HOST_BLOCK_SIZE 512
-#define SDIO_HOST_SET_CLOCK     (0xCC)
+extern const mp_obj_type_t flash_type;
 
 typedef struct {
     mp_obj_base_t base;
-} sdio_host_obj_t;
+    flash_t         obj;
+} flash_obj_t;
 
-#endif  // _OBJSDIO_H_
+#endif  // OBJFLASH_H_
