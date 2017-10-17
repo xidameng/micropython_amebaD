@@ -46,7 +46,7 @@ monitor sleep 20
 #Variables declaration (1)
 #binary file size
 set $RamFileSize = 0x0000
-source fwsize.gdb
+source ./build/fwsize.gdb
 printf "-------------------------------\n"
 printf "RamFileSize: %x\n",$RamFileSize
 printf "-------------------------------\n"

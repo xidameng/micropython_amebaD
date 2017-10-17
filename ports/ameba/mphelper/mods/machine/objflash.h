@@ -29,6 +29,7 @@
 #include "py/mpstate.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
+#include "device_lock.h"
 
 #include "flash_api.h"
 

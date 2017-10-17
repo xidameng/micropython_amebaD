@@ -14,5 +14,5 @@ RAM_FILE_SIZE_HEX=`echo "obase=16; $RAM_FILE_SIZE"|bc`
 
 echo "size "$RAM_FILE_SIZE" --> 0x"$RAM_FILE_SIZE_HEX
 
-echo "set \$RamFileSize = 0x$RAM_FILE_SIZE_HEX" > fwsize.gdb
+echo "set \$RamFileSize = 0x$RAM_FILE_SIZE_HEX" > ./build/fwsize.gdb
 exit

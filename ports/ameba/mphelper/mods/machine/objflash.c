@@ -46,7 +46,7 @@ STATIC mp_obj_t flash_read(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t 
     enum {ARG_nbytes, ARG_addr};
     STATIC const mp_arg_t flash_read_args[] = {
         { MP_QSTR_nbytes, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_addr,   MP_ARG_REQUIRED | MP_ARG_INT, },
+        { MP_QSTR_addr,   MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL}, },
     };
 
     flash_obj_t *self = pos_args[0];
@@ -58,10 +58,13 @@ STATIC mp_obj_t flash_read(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t 
 
     vstr_t vstr;
     mp_obj_t o_ret = pyb_buf_get_for_recv(args[ARG_nbytes].u_obj, &vstr);
+    mp_uint_t addr = mp_obj_get_int(args[ARG_addr].u_obj);
     
-    uint8_t ret = 0;
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+    uint8_t ret =  flash_burst_read(&(self->obj), addr, vstr.len, vstr.buf);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
-    if ((ret = flash_burst_read(&(self->obj), args[ARG_addr].u_int, vstr.len, vstr.buf)) != 1) {
+    if (ret != 1) {
         mp_raise_msg(&mp_type_OSError, "FLASH read error");
     }
 
@@ -74,10 +77,10 @@ STATIC mp_obj_t flash_read(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t 
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(flash_read_obj, 2, flash_read);
 
 STATIC mp_obj_t flash_write(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_buf, ARG_addr, ARG_stop };
+    enum { ARG_buf, ARG_addr};
     STATIC const mp_arg_t flash_write_args[] = {
         { MP_QSTR_buf,  MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT,  },
+        { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
 
     flash_obj_t *self = pos_args[0];
@@ -92,8 +95,14 @@ STATIC mp_obj_t flash_write(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t
     uint8_t data[1];
     pyb_buf_get_for_send(args[ARG_buf].u_obj, &bufinfo, data);
 
-    if (flash_stream_write(&(self->obj), args[ARG_addr].u_int, bufinfo.len, bufinfo.buf) != 1) {
-        mp_raise_msg(&mp_type_OSError, "FLASH write error");
+    mp_uint_t addr = mp_obj_get_int(args[ARG_addr].u_obj);
+
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+    uint8_t ret = flash_stream_write(&(self->obj), addr, bufinfo.len, bufinfo.buf);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+    if (ret != 1) {
+        mp_raise_OSError("FLASH write error");
     }
   
     return mp_const_none;
@@ -103,16 +112,51 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(flash_write_obj, 2, flash_write);
 STATIC mp_obj_t flash_erase_sector0(mp_obj_t self_in, mp_obj_t addr_in) {
     mp_int_t addr = mp_obj_get_int(addr_in);
     flash_obj_t *self = MP_OBJ_TO_PTR(self_in);
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
     flash_erase_sector(&(self->obj), addr);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(flash_erase_sector_obj, flash_erase_sector0);
 
+STATIC mp_obj_t flash_erase_block0(mp_obj_t self_in, mp_obj_t addr_in) {
+    mp_int_t addr = mp_obj_get_int(addr_in);
+    flash_obj_t *self = MP_OBJ_TO_PTR(self_in);
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_erase_block(&(self->obj), addr);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(flash_erase_block_obj, flash_erase_block0);
+
+STATIC mp_obj_t flash_read_id0(mp_obj_t self_in) {
+    flash_obj_t *self = MP_OBJ_TO_PTR(self_in);
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+    uint8_t data[3];
+    uint8_t ret = flash_read_id(&(self->obj), data, sizeof(data));
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+    if (ret != 3) {
+      mp_raise_OSError("FLASH read id error");
+    }
+
+    uint16_t device_id = data[1] + (data[0] << 0xFF);
+    uint8_t manufactor_id = data[0];
+
+    mp_obj_t tuple[2] = {
+      mp_obj_new_int(manufactor_id),
+      mp_obj_new_int(device_id),
+    };
+    return mp_obj_new_tuple(2, tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(flash_read_id_obj, flash_read_id0);
+
 STATIC const mp_map_elem_t flash_locals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_flash) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_read),  MP_OBJ_FROM_PTR(&flash_read_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read), MP_OBJ_FROM_PTR(&flash_read_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_write), MP_OBJ_FROM_PTR(&flash_write_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_erase_sector), MP_OBJ_FROM_PTR(&flash_erase_sector_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_erase_block), MP_OBJ_FROM_PTR(&flash_erase_block_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_read_id), MP_OBJ_FROM_PTR(&flash_read_id_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(flash_locals_dict, flash_locals_table);
 
