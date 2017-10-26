@@ -55,7 +55,7 @@ void validate_wlan_mode(uint8_t mode) {
         mode != RTW_MODE_STA &&
         mode != RTW_MODE_STA_AP 
         ) {
-            mp_raise_msg(&mp_type_ValueError, "Invalid WLAN mode");
+            mp_raise_ValueError("Invalid WLAN mode");
     }
 }
 
