@@ -18,7 +18,7 @@
 #define DHCPS_MAX_CLIENT_NUM 	(DHCP_POOL_END-DHCP_POOL_START+1)
 
 #define IS_USE_FIXED_IP	0
-#define debug_dhcps 1
+#define debug_dhcps 0
 
 /* dhcp server states */
 #define DHCP_SERVER_STATE_OFFER 			(1)
