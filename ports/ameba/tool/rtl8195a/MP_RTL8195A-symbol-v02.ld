@@ -26,6 +26,8 @@ SECTIONS
   {
   	.valid
   	{ 
+      *mem.o (.bss*)
+	    *memp.o (.bss*)
       *(.tcm.heap)
   	}
   	.dummy 

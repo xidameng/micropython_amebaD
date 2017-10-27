@@ -231,12 +231,12 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     ret = wext_set_mode(ifname, IW_MODE_MASTER);
 
     if (ret != RTW_SUCCESS) {
-        mp_raise_msg(&mp_type_OSError, "set master mode error");
+        mp_raise_OSError("[WLAN] Set master mode error");
     }
     ret = wext_set_channel(ifname, self->channel);
 
     if (ret != RTW_SUCCESS) {
-        mp_raise_msg(&mp_type_OSError, "set channel error");
+        mp_raise_OSError("[WLAN] Set channel error");
     }
 
     switch (self->security_type) {
@@ -245,27 +245,24 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
             break;
         case RTW_SECURITY_WPA2_AES_PSK:
             ret = wext_set_auth_param(ifname, IW_AUTH_80211_AUTH_ALG, IW_AUTH_ALG_OPEN_SYSTEM);
-            if (ret == RTW_SUCCESS) {
+            if (ret == RTW_SUCCESS)
                 ret = wext_set_key_ext(ifname, IW_ENCODE_ALG_CCMP, NULL, 0, 0, 0, 0, NULL, 0);
-            }
-            if (ret == RTW_SUCCESS) {
+
+            if (ret == RTW_SUCCESS) 
                 ret = wext_set_passphrase(ifname, key, key_len);
-            }
             break;
         default:
             ret = RTW_ERROR;
             break;
     }
 
-    if (ret != RTW_SUCCESS) {
-        mp_raise_msg(&mp_type_OSError, "set passphrase error");
-    }
+    if (ret != RTW_SUCCESS)
+        mp_raise_OSError("[WLAN] Set passphrase error");
 
     ret = wext_set_ap_ssid(ifname, ssid, ssid_len);
 
-    if (ret != RTW_SUCCESS) {
-        mp_raise_msg(&mp_type_OSError, "set ssid error");
-    }
+    if (ret != RTW_SUCCESS) 
+      mp_raise_OSError("[WLAN] Set ssid error");
 
     dhcps_deinit();
 
@@ -277,7 +274,6 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     }
 
     return mp_const_none;
-
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(wlan_start_ap_obj, 0, wlan_start_ap);
 
@@ -290,7 +286,7 @@ STATIC mp_obj_t wlan_rssi(mp_obj_t self_in) {
     int16_t ret = wext_get_rssi(WLAN0_NAME, &rssi);
 
     if (ret != RTW_SUCCESS) 
-        mp_raise_msg(&mp_type_OSError, "WLAN get RSSI failed");
+      mp_raise_OSError("[WLAN] Get RSSO failed");
 
     return mp_obj_new_int(rssi);
 }

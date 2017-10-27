@@ -51,6 +51,10 @@
  */
 #define NO_SYS                  0
 
+#ifndef CONFIG_DYNAMIC_TICKLESS
+#define CONFIG_DYNAMIC_TICKLESS 0
+#endif
+
 /* ---------- Memory options ---------- */
 /* MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
@@ -59,15 +63,15 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                (56 * 1024) //for ping 10k test
+#define MEM_SIZE                (6 * 1024) //for ping 10k test
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */
-#define MEMP_NUM_PBUF           64
+#define MEMP_NUM_PBUF           100
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#define MEMP_NUM_UDP_PCB        10
+#define MEMP_NUM_UDP_PCB        6
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
 #define MEMP_NUM_TCP_PCB        10
@@ -76,7 +80,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_TCP_PCB_LISTEN 5
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
-#define MEMP_NUM_TCP_SEG        500
+#define MEMP_NUM_TCP_SEG        20
 /* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
    timeouts. */
 #define MEMP_NUM_SYS_TIMEOUT    10
@@ -84,13 +88,13 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#define PBUF_POOL_SIZE          30 //for ping 10k test
+#define PBUF_POOL_SIZE          20
 
 /* IP_REASS_MAX_PBUFS: Total maximum amount of pbufs waiting to be reassembled.*/
-#define IP_REASS_MAX_PBUFS      30 //for ping 10k test
+#define IP_REASS_MAX_PBUFS      10 
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
-#define PBUF_POOL_BUFSIZE       600
+#define PBUF_POOL_BUFSIZE       500
 
 
 /* ---------- TCP options ---------- */
@@ -110,7 +114,7 @@ a lot of data that needs to be copied, this should be set high. */
 /*  TCP_SND_QUEUELEN: TCP sender buffer space (pbufs). This must be at least
   as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work. */
 
-#define TCP_SND_QUEUELEN        (100 * TCP_SND_BUF/TCP_MSS)
+#define TCP_SND_QUEUELEN        (4 * TCP_SND_BUF/TCP_MSS)
 
 /* TCP receive window. */
 #define TCP_WND                 (2 * TCP_MSS)
@@ -128,6 +132,8 @@ a lot of data that needs to be copied, this should be set high. */
    turning this on does currently not work. */
 #define LWIP_DHCP               1
 
+#define LWIP_RAW                1
+
 
 /* ---------- UDP options ---------- */
 #define LWIP_UDP                1
@@ -139,8 +145,9 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_UPNP		        0
 
 /* Support Multicast */
-#define LWIP_IGMP               1
-#define LWIP_RAND()             rand()
+#define LWIP_IGMP                   1
+#define LWIP_RAND()                 rand()
+#define LWIP_SRAND()                srand(sys_now())
 
 /* Support TCP Keepalive */
 #define LWIP_TCP_KEEPALIVE	    1
@@ -156,7 +163,12 @@ a lot of data that needs to be copied, this should be set high. */
 #define IP_SOF_BROADCAST        (1)
 #define IP_SOF_BROADCAST_RECV   (1)
 
+#undef SO_REUSE
 #define SO_REUSE                (1)
+
+
+#undef SO_REUSE_RXTOALL
+#define SO_REUSE_RXTOALL        (1)
 
 /*
    --------------------------------------
@@ -232,14 +244,19 @@ a lot of data that needs to be copied, this should be set high. */
    ---------------------------------
 */
 
-#define TCPIP_THREAD_STACKSIZE          1024
+#define TCPIP_THREAD_STACKSIZE          1000
 #define TCPIP_MBOX_SIZE                 6
 #define DEFAULT_UDP_RECVMBOX_SIZE       6
 #define DEFAULT_TCP_RECVMBOX_SIZE       6
-#define DEFAULT_RAW_RECVMBOX_SIZE		6
+#define DEFAULT_RAW_RECVMBOX_SIZE		    6
 #define DEFAULT_ACCEPTMBOX_SIZE         6
-#define DEFAULT_THREAD_STACKSIZE        512
-#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 1)
+#define DEFAULT_THREAD_STACKSIZE        500
+#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 2)
+
+/* Added by Realtek */
+#ifndef DNS_IGNORE_REPLY_ERR
+#define DNS_IGNORE_REPLY_ERR   1
+#endif /* DNS_IGNORE_REPLY_ERR */
 
 #endif /* __LWIPOPTS_H__ */
 
