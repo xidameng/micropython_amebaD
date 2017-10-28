@@ -31,6 +31,7 @@
 #include "gpio_api.h"
 #include "PinNames.h"
 #include "pinmap.h"
+#include "extmod/virtpin.h"
 
 extern const mp_obj_type_t pin_type;
 extern const mp_obj_dict_t pin_board_pins_locals_dict;
@@ -88,7 +89,7 @@ typedef struct {
     gpio_t              obj;
     uint8_t             id;
     uint16_t            pull;
-    uint8_t             dir;         
+    uint8_t             mode;         
     uint8_t             value;
     const PinMap        *af;
 } pin_obj_t;

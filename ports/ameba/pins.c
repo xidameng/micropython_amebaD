@@ -164,13 +164,13 @@ const PinMap PinMap_PWM[] = {
     {NC,    NC,     0}
 };
 
-#define PIN(p_pin_name, p_pull, p_dir, p_value) \
+#define PIN(p_pin_name, p_pull, p_mode, p_value) \
 { \
     {&pin_type },                     \
     .name   = MP_QSTR_ ## p_pin_name, \
     .id     = (p_pin_name),           \
     .pull   = (p_pull),               \
-    .dir    = (p_dir),                \
+    .mode   = (p_mode),               \
     .value  = (p_value),              \
 }
 

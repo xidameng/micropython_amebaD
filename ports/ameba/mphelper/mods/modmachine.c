@@ -58,7 +58,6 @@ void modmachine_init(void) {
     rtc_init0();
     loguart_init0();
     adc_init0();
-    pin_init0();
 }
 
 STATIC mp_obj_t machine_reset(void) {

@@ -33,17 +33,8 @@
 /********************** Local variables ***************************************/
 
 /********************** Local functions ***************************************/
-void pin_init0(void);
-
-STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args);
-STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args);
-STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
 
 /********************** function bodies ***************************************/
-
-void pin_init0(void) {
-    // TODO: Ameba board pin hardware init 
-}
 
 STATIC pin_obj_t *pin_find_named_pin(const mp_obj_dict_t *named_pins, mp_obj_t name) {
     mp_map_t *named_map = mp_obj_dict_get_map((mp_obj_t)named_pins);
@@ -74,16 +65,16 @@ pin_obj_t *pin_find(mp_obj_t user_obj) {
 
 STATIC uint8_t pin_get_value (const pin_obj_t* self) {
     int value;
-    bool setdir = false;
-    if (self->dir == PullNone || self->dir == OpenDrain) {
-        setdir = true;
+    bool setmode = false;
+    if (self->mode == PullNone || self->mode == OpenDrain) {
+        setmode = true;
         // configure the direction to IN for a moment in order to read the pin value
         gpio_dir((gpio_t *)&(self->obj), PIN_INPUT);
     }
     // now get the value
     value = gpio_read((gpio_t *)&(self->obj));
 
-    if (setdir) {
+    if (setmode) {
         // set the direction back to output
         gpio_dir((gpio_t *)&(self->obj), PIN_OUTPUT);
         if (self->value) {
@@ -108,7 +99,7 @@ STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_
     mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(pin_init_args), pin_init_args, args);
 
     // get the io mode, default is input
-    uint dir = args[ARG_mode].u_int;
+    uint mode = args[ARG_mode].u_int;
 
     // get the pull type, default is pull none
     uint pull = PullNone;
@@ -127,12 +118,12 @@ STATIC mp_obj_t pin_obj_init_helper(pin_obj_t *self, mp_uint_t n_args, const mp_
     }
 
     // config the pin object 
-    self->dir  = dir;
+    self->mode  = mode;
     self->pull = pull;
 
     // config pin hardware
     gpio_init((gpio_t *)&(self->obj), self->id);
-    gpio_dir((gpio_t *)&(self->obj), self->dir);
+    gpio_dir((gpio_t *)&(self->obj), self->mode);
     gpio_mode((gpio_t *)&(self->obj), self->pull);
 
     if (value != -1) {
@@ -151,18 +142,18 @@ STATIC void pin_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
     mp_printf(print, "Pin('%q'", self->name);
 
     // pin mode
-    qstr dir_qst;
-    uint dir = self->dir;
-    if (dir == PIN_INPUT) {
-        dir_qst = MP_QSTR_IN;
-    } else if (dir == PIN_OUTPUT) {
-        dir_qst = MP_QSTR_OUT;
+    qstr mode_qst;
+    uint mode = self->mode;
+    if (mode == PIN_INPUT) {
+        mode_qst = MP_QSTR_IN;
+    } else if (mode == PIN_OUTPUT) {
+        mode_qst = MP_QSTR_OUT;
     } else {
         // default is input 
-        dir_qst = MP_QSTR_IN;
+        mode_qst = MP_QSTR_IN;
     }
 
-    mp_printf(print, ", dir=Pin.%q", dir_qst);
+    mp_printf(print, ", mode=Pin.%q", mode_qst);
 
     // pin pull
     qstr pull_qst;
@@ -197,23 +188,6 @@ STATIC mp_obj_t pin_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     return (mp_obj_t)pin;
 }
 
-STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, 1, false);
-    mp_obj_t _args[2] = {self_in, *args};
-    return pin_value (n_args + 1, _args);
-}
-
-STATIC mp_obj_t pin_id(mp_obj_t self_in) {
-    pin_obj_t *self = self_in;
-    return MP_OBJ_NEW_QSTR(self->name);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_id_obj, pin_id);
-
-STATIC mp_obj_t pin_init(mp_uint_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
-    return pin_obj_init_helper(args[0], n_args - 1, args + 1, kw_args);
-}
-MP_DEFINE_CONST_FUN_OBJ_KW(pin_init_obj, 1, pin_init);
-
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args) {
     pin_obj_t *self = args[0];
     if (n_args == 1) {
@@ -233,19 +207,36 @@ STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pin_value_obj, 1, 2, pin_value);
 
-STATIC mp_obj_t pin_low(mp_obj_t self_in) {
+STATIC mp_obj_t pin_call(mp_obj_t self_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
+    mp_arg_check_num(n_args, n_kw, 0, 1, false);
+    mp_obj_t _args[2] = {self_in, *args};
+    return pin_value (n_args + 1, _args);
+}
+
+STATIC mp_obj_t pin_id(mp_obj_t self_in) {
+    pin_obj_t *self = self_in;
+    return MP_OBJ_NEW_QSTR(self->name);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_id_obj, pin_id);
+
+STATIC mp_obj_t pin_init(mp_uint_t n_args, const mp_obj_t *args, mp_map_t *kw_args) {
+    return pin_obj_init_helper(args[0], n_args - 1, args + 1, kw_args);
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(pin_init_obj, 1, pin_init);
+
+STATIC mp_obj_t pin_off(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
     gpio_write(&(self->obj), 0);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_low_obj, pin_low);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_off_obj, pin_off);
 
-STATIC mp_obj_t pin_high(mp_obj_t self_in) {
+STATIC mp_obj_t pin_on(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
     gpio_write(&(self->obj), 1);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_high_obj, pin_high);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_on_obj, pin_on);
 
 STATIC mp_obj_t pin_toggle(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
@@ -266,13 +257,29 @@ const mp_obj_type_t pin_board_pins_obj_type = {
     .locals_dict = (mp_obj_dict_t *)&pin_board_pins_locals_dict,
 };
 
+STATIC mp_uint_t pin_ioctl(mp_obj_t self_in, mp_uint_t request, uintptr_t arg, int *errcode) {
+    (void)errcode;
+    pin_obj_t *self = self_in;
+
+    switch (request) {
+        case MP_PIN_READ: {
+            return gpio_read((gpio_t *)&(self->obj));
+        }
+        case MP_PIN_WRITE: {
+            gpio_write((gpio_t *)&(self->obj), arg);
+            return 0;
+        }
+    }
+    return -1;
+}
+
 STATIC const mp_map_elem_t pin_locals_dict_table[] = {
     // instance methods
     { MP_OBJ_NEW_QSTR(MP_QSTR_id),         MP_OBJ_FROM_PTR(&pin_id_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_init),       MP_OBJ_FROM_PTR(&pin_init_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_value),      MP_OBJ_FROM_PTR(&pin_value_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_low),        MP_OBJ_FROM_PTR(&pin_low_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_high),       MP_OBJ_FROM_PTR(&pin_high_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_off),        MP_OBJ_FROM_PTR(&pin_off_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_on),         MP_OBJ_FROM_PTR(&pin_on_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_toggle),     MP_OBJ_FROM_PTR(&pin_toggle_obj) },
 
     // class attributes
@@ -288,12 +295,17 @@ STATIC const mp_map_elem_t pin_locals_dict_table[] = {
 };
 STATIC MP_DEFINE_CONST_DICT(pin_locals_dict, pin_locals_dict_table);
 
+STATIC const mp_pin_p_t pin_pin_p = {
+    .ioctl = pin_ioctl,
+};
+
 const mp_obj_type_t pin_type = {
     { &mp_type_type },
     .name        = MP_QSTR_Pin,
     .print       = pin_print,
     .make_new    = pin_make_new,
     .call        = pin_call,
+    .protocol    = &pin_pin_p,
     .locals_dict = (mp_obj_dict_t *)&pin_locals_dict,
 };
 
