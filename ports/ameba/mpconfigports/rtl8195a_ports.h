@@ -56,7 +56,7 @@
 #define MICROPY_PY_SYS_STDFILES                 (1)
 #define MICROPY_PY_MACHINE                      (1)
 #define MICROPY_PY_MACHINE_SPI                  (1)
-#define MICROPY_PY_MACHINE_I2C                  (1)
+#define MICROPY_PY_MACHINE_I2C                  (0)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
 #define MICROPY_PY_USELECT                      (1)

@@ -36,6 +36,7 @@
 #include "bufhelper.h"
 
 #include "objpin.h"
+#include "extmod/machine_i2c.h"
 
 #define I2C_MASTER                (0)
 #define I2C_SLAVE                 (1)
@@ -51,8 +52,7 @@ typedef struct {
     mp_obj_base_t base;
     i2c_t     obj;
     uint8_t   unit;
-    uint8_t   mode;
-    uint32_t  baudrate;
+    uint32_t  freq;
     pin_obj_t *scl;
     pin_obj_t *sda;
 } i2c_obj_t;
