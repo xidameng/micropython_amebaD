@@ -18,7 +18,7 @@ endif
 endif
 
 INC += -I.
-INC += -Iinc
+INC += -Iinc/ameba
 INC += -I$(TOP)
 INC += -I$(BUILD)
 INC += -I$(HEADER_BUILD)
@@ -333,7 +333,7 @@ DRAM_C += pins.c
 DRAM_C += mphelper/diskio.c
 DRAM_C += mphelper/exception.c
 DRAM_C += mphelper/help.c
-DRAM_C += mphelper/mphal.c
+DRAM_C += mphelper/ameba/mphal.c
 DRAM_C += mphelper/input.c
 DRAM_C += mphelper/bufhelper.c
 DRAM_C += mphelper/mpthreadport.c
@@ -477,7 +477,7 @@ build_info:
 	fi >> .ver
 
 	@echo \#define RTL195AFW_COMPILER \"gcc `$(CC) $(CFLAGS) -dumpversion `\" >> .ver
-	@mv -f .ver inc/$@.h
+	@mv -f .ver inc/ameba/$@.h
 
 
 .PHONY: prerequirement

@@ -25,6 +25,10 @@ SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 
+ifeq ($(CHIP), MP_RTL8195A)
 include rtl8195am.mk
+else
+include amebaz.mk
+endif
 
 include $(TOP)/py/mkrules.mk

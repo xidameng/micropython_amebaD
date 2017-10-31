@@ -81,7 +81,7 @@
 #define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
 
-#include "rtl8195a.h"
+#include "rtl8710b.h"
 
 // use vfs's functions for import stat and builtin open
 #define mp_import_stat mp_vfs_import_stat
