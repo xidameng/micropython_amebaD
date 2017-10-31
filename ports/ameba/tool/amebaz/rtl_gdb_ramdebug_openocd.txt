@@ -46,5 +46,3 @@ set {int}0x40000210=0x8011157
 
 #Load the file
 lo
-
-b main

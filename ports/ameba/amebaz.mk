@@ -389,6 +389,8 @@ else
 CFLAGS += -g2
 endif
 
+CFLAGS += -ggdb
+
 # source code macro
 CFLAGS =
 CFLAGS += -DM4 -DCONFIG_PLATFORM_8711B -D$(CHIP)
@@ -480,8 +482,10 @@ flashburn:
 	$(Q)$(CP) -f $(TOOL)/amebaz/target_FPGA.axf $(BUILD)/target_NORMAL.axf
 	$(Q)$(CP) -f $(TOOL)/amebaz/SetupGDB_NORMAL.sh $(BUILD)/SetupGDB_NORMAL.sh
 	$(Q)$(CP) -f $(TOOL)/amebaz/rtl_gdb_flash_write_openocd.txt $(BUILD)/rtl_gdb_flash_write_openocd.txt
+	$(Q)$(CP) -f $(TOOL)/amebaz/flash_loader_ram_1.bin $(BUILD)/flash_loader_ram_1.bin
 	$(Q)chmod +rw $(BUILD)/target_NORMAL.axf
 	$(Q)chmod +rx $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)chmod +rwx $(BUILD)/flash_loader_ram_1.bin
 	$(Q)$(BUILD)/SetupGDB_NORMAL.sh
 	$(Q)$(GDB) -x $(BUILD)/rtl_gdb_flash_write_openocd.txt
 	

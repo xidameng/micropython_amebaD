@@ -30,6 +30,7 @@ void main(void)
 	wlan_network();
 #endif
 
+  DiagPrintf("This is a test \r\n");
 	/* Execute application example */
 	example_entry();
 

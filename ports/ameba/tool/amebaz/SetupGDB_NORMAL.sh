@@ -11,10 +11,10 @@ echo $RAMFILENAME
 
 #===============================================================================
 #get file size
-BOOTALL_FILE_SIZE=$(stat -c %s $BOOTALLFILENAME)
+BOOTALL_FILE_SIZE=$(stat -f%z $BOOTALLFILENAME)
 BOOTALL_FILE_SIZE_HEX=`echo "obase=16; $BOOTALL_FILE_SIZE"|bc`
 
-RAM_FILE_SIZE=$(stat -c %s $RAMFILENAME)
+RAM_FILE_SIZE=$(stat -f%z $RAMFILENAME)
 RAM_FILE_SIZE_HEX=`echo "obase=16; $RAM_FILE_SIZE"|bc`
 
 echo "size "$BOOTALL_FILE_SIZE" --> 0x"$BOOTALL_FILE_SIZE_HEX
