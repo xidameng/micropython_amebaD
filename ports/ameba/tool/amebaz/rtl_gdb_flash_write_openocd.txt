@@ -1,6 +1,6 @@
 # GDB script for loading ram.bin process
 
-source ./vendor/component/soc/realtek/8711b/misc/gnu_utility/flash_download/image/rtl_gdb_jtag_boot_com.txt
+source build/rtl_gdb_jtag_boot_com_openocd.txt
 
 #===============================================================================
 #Macro define
@@ -80,16 +80,16 @@ define flash_write
     		p /x $Loop
 
 		if ($FileName == $IMAGE_XIP1)
-    			restore ./application/Debug/bin/image2_all_ota1.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
+    			restore ./build/image2_all_ota1.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
 		end
 		if ($FileName == $IMAGE_XIP2)
-    			restore ./application/Debug/bin/image2_all_ota2.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
+    			restore ./build/image2_all_ota2.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
 		end
 		if ($FileName == $IMAGE_BOOT)
-			restore ./application/Debug/bin/boot_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
+			restore ./build/boot_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
 		end
 		if ($FileName == $IMAGE_SYSD)
-			restore ./application/Debug/bin/system.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
+			restore ./build/system.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $FLASHDATBUFSIZE)
 		end
     		c
     
@@ -105,16 +105,16 @@ define flash_write
 		p /x $Loop
 
 		if ($FileName == $IMAGE_XIP1)
-			restore ./application/Debug/bin/image2_all_ota1.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
+			restore ./build/image2_all_ota1.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
 		end
 		if ($FileName == $IMAGE_XIP2)
-			restore ./application/Debug/bin/image2_all_ota2.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
+			restore ./build/image2_all_ota2.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
 		end
 		if ($FileName == $IMAGE_BOOT)
-			restore ./application/Debug/bin/boot_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
+			restore ./build/boot_all.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
 		end
 		if ($FileName == $IMAGE_SYSD)
-			restore ./application/Debug/bin/system.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
+			restore ./build/system.bin binary ($FLASHDATSRC-$FILESTARTADDR) $FILESTARTADDR ($FILESTARTADDR + $TailSize)
 		end
 		c
 	end
