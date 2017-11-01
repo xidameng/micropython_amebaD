@@ -148,7 +148,6 @@ SECTIONS
 	
 		. = ALIGN (16);
 	} > XIP1
-  .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
 SECTIONS 
