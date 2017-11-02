@@ -40,8 +40,7 @@
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
-#define MICROPY_PY_WEBSOCKET                    (1)
-#define MICROPY_PY_WEBREPL_DELAY                (20)
+#define MICROPY_PY_FRAMEBUF                     (1)
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_IO                           (1)
 #define MICROPY_PY_IO_FILEIO                    (1)
@@ -114,20 +113,37 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 extern const struct _mp_obj_module_t mp_module_ameba;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ameba),        MP_OBJ_FROM_PTR(&mp_module_ameba) },    \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time),    MP_OBJ_FROM_PTR(&mp_module_utime) },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os),      MP_OBJ_FROM_PTR(&mp_module_uos) },         \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_json),    MP_OBJ_FROM_PTR(&mp_module_ujson) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_errno),   MP_OBJ_FROM_PTR(&mp_module_uerrno) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_select),  MP_OBJ_FROM_PTR(&mp_module_uselect) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine), MP_OBJ_FROM_PTR(&mp_module_umachine) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_wireless), MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
 
-#define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
+
+#define MICROPY_PY_SYS_PLATFORM             "AmebaZBoard"
 
 #define MICROPY_HW_PORT_VERSION             "1.0.2"
 
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
-#define MICROPY_HW_MCU_NAME                 "RTL8195A"
+#define MICROPY_HW_MCU_NAME                 "RTL8711BN"
 
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MP_HEAP_SIZE                        (1124 * 1024)
+#define MP_HEAP_SIZE                        (14 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (((20 * 1024) + 512) / sizeof(StackType_t))
@@ -147,5 +163,4 @@ extern const struct _mp_obj_module_t mp_module_ameba;
     mp_obj_list_t  term_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
     mp_obj_t log_uart_rx_chr_obj;           \
-    mp_obj_list_t netif_list_obj;           \
     mp_map_t mp_terminal_map;               \

@@ -26,13 +26,24 @@
 
 #include "objpin.h"
 
+
+#define PIN(p_pin_name, p_pull, p_mode, p_value) \
+{ \
+    {&pin_type },                     \
+    .name   = MP_QSTR_ ## p_pin_name, \
+    .id     = (p_pin_name),           \
+    .pull   = (p_pull),               \
+    .mode   = (p_mode),               \
+    .value  = (p_value),              \
+}
+
+#ifdef MP_RTL8195A
 #define AF(pin_name, af_name, af_index, af_sel) \
 { \
     .pin            = pin_name,                                 \
     .peripheral     = RTL_PIN_PERI(af_name ## af_index, af_index, af_sel),  \
     .function       = RTL_PIN_FUNC(af_name ## af_index, af_sel)             \
 }
-
 const PinMap PinMap_UART_TX[] = {
     AF(PC_3, UART, 0, S0),
     AF(PE_0, UART, 0, S1),
@@ -164,16 +175,6 @@ const PinMap PinMap_PWM[] = {
     {NC,    NC,     0}
 };
 
-#define PIN(p_pin_name, p_pull, p_mode, p_value) \
-{ \
-    {&pin_type },                     \
-    .name   = MP_QSTR_ ## p_pin_name, \
-    .id     = (p_pin_name),           \
-    .pull   = (p_pull),               \
-    .mode   = (p_mode),               \
-    .value  = (p_value),              \
-}
-
 pin_obj_t pin_PA_0 = PIN(PA_0, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_1 = PIN(PA_1, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_2 = PIN(PA_2, PullNone, PIN_OUTPUT, 0);
@@ -246,3 +247,56 @@ STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PE_5), MP_OBJ_FROM_PTR(&pin_PE_5) },
 };
 MP_DEFINE_CONST_DICT(pin_board_pins_locals_dict, pin_board_pins_locals_dict_table);
+
+#elif defined(MP_AMEBAZ)
+
+#define AF(pin_name, af_name, af_index, pull) \
+{ \
+    .pin        = pin_name,                                 \
+    .peripheral = af_name ## af_index,                      \
+    .function   = PIN_DATA(pull, PINMUX_FUNCTION_ ## af_name) \
+}
+
+const PinMap PinMap_UART_TX[] = {
+    AF(PA_23, UART, _0, PullUp),
+    AF(PA_30, UART, _2, PullUp),
+
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_UART_RX[] = {
+    AF(PA_18, UART, _0, PullUp),
+    AF(PA_29, UART, _2, PullUp),
+
+    {NC,    NC,     0}
+};
+
+
+pin_obj_t pin_PA_30 = PIN(PA_30, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_29 = PIN(PA_29, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_14 = PIN(PA_14, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_15 = PIN(PA_15, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_0  = PIN(PA_0,  PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_12 = PIN(PA_12, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_5  = PIN(PA_5,  PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_18 = PIN(PA_18, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_19 = PIN(PA_19, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_22 = PIN(PA_22, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_23 = PIN(PA_23, PullNone, PIN_OUTPUT, 0);
+
+STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_30), MP_OBJ_FROM_PTR(&pin_PA_30) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_29), MP_OBJ_FROM_PTR(&pin_PA_29) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_14), MP_OBJ_FROM_PTR(&pin_PA_14) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_15), MP_OBJ_FROM_PTR(&pin_PA_15) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_0),  MP_OBJ_FROM_PTR(&pin_PA_0) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_12), MP_OBJ_FROM_PTR(&pin_PA_12) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_5),  MP_OBJ_FROM_PTR(&pin_PA_5) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_18), MP_OBJ_FROM_PTR(&pin_PA_18) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_19), MP_OBJ_FROM_PTR(&pin_PA_19) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_22), MP_OBJ_FROM_PTR(&pin_PA_22) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_23), MP_OBJ_FROM_PTR(&pin_PA_23) },
+};
+MP_DEFINE_CONST_DICT(pin_board_pins_locals_dict, pin_board_pins_locals_dict_table);
+#else
+#endif

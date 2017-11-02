@@ -107,7 +107,7 @@ INC += -I./mphelper/mods/machine
 SRC_C =
 
 #app uart_adapter
-SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
+#SRC_C += $(VENDOR)/component/common/application/uart_adapter/uart_adapter.c
       
 #cmsis
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/cmsis/device/app_start.c
@@ -117,9 +117,9 @@ SRC_C += $(VENDOR)/component/soc/realtek/8711b/cmsis/device/system_8195a.c
     
 
 #console
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_lwip.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_sys.c
-SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_wifi.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_lwip.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_sys.c
+#SRC_C += $(VENDOR)/component/common/api/at_cmd/atcmd_wifi.c
 SRC_C += $(VENDOR)/component/common/api/at_cmd/log_service.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/app/monitor/ram/low_level_io.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/app/monitor/ram/monitor.c
@@ -136,7 +136,7 @@ SRC_C += $(VENDOR)/component/common/api/wifi/rtw_wpa_supplicant/wpa_supplicant/w
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_conf.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_ind.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_promisc.c
-SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
+#SRC_C += $(VENDOR)/component/common/api/wifi/wifi_simple_config.c
 SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
         
       
@@ -145,21 +145,21 @@ SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
       
     
 #network app
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTClient.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectClient.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectServer.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTDeserializePublish.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTFormat.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTFreertos.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTPacket.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSerializePublish.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeClient.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeServer.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeClient.c
-SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeServer.c
-SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
-SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
-SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTClient.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectClient.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectServer.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTDeserializePublish.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTFormat.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTFreertos.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTPacket.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSerializePublish.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeClient.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeServer.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeClient.c
+#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeServer.c
+#SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
+#SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
+#SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
 SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
       
     
@@ -217,7 +217,7 @@ SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/port/realtek/freert
 SRC_C += $(VENDOR)/component/common/network/websocket/wsclient_tls.c  
 
 #network lwip     
-SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
+#SRC_C += $(VENDOR)/component/common/network/dhcp/dhcps.c
 SRC_C += $(VENDOR)/component/common/network/sntp/sntp.c
       
     
@@ -239,7 +239,7 @@ SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/havege.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md2.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/md4.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/memory_buffer_alloc.c
-SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/net.c
+#SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/net.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/padlock.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pbkdf2.c
 SRC_C += $(VENDOR)/component/common/network/ssl/polarssl-1.3.8/library/pkcs11.c
@@ -323,44 +323,44 @@ SRC_C += $(VENDOR)/component/common/mbed/targets/hal/rtl8711b/wdt_api.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_dsleepcfg.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_dstandbycfg.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_intfcfg.c
-SRC_C += $(VENDOR)/component/soc/realtek/8711b/misc/rtl8710b_ota.c
+#SRC_C += $(VENDOR)/component/soc/realtek/8711b/misc/rtl8710b_ota.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_pinmapcfg.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_sleepcfg.c
       
 
      
 #utilities example
-SRC_C += $(VENDOR)/component/common/example/bcast/example_bcast.c
-SRC_C += $(VENDOR)/component/common/example/dct/example_dct.c
-SRC_C += $(VENDOR)/component/common/example/eap/example_eap.c
-SRC_C += $(VENDOR)/component/common/example/example_entry.c
-SRC_C += $(VENDOR)/component/common/example/get_beacon_frame/example_get_beacon_frame.c
-SRC_C += $(VENDOR)/component/common/example/high_load_memory_use/example_high_load_memory_use.c
-SRC_C += $(VENDOR)/component/common/example/http_client/example_http_client.c
-SRC_C += $(VENDOR)/component/common/example/http_download/example_http_download.c
-SRC_C += $(VENDOR)/component/common/example/mcast/example_mcast.c
-SRC_C += $(VENDOR)/component/common/example/mdns/example_mdns.c
-SRC_C += $(VENDOR)/component/common/example/mqtt/example_mqtt.c
-SRC_C += $(VENDOR)/component/common/example/nonblock_connect/example_nonblock_connect.c
-SRC_C += $(VENDOR)/component/common/example/rarp/example_rarp.c
-SRC_C += $(VENDOR)/component/common/example/sntp_showtime/example_sntp_showtime.c
-SRC_C += $(VENDOR)/component/common/example/socket_select/example_socket_select.c
-SRC_C += $(VENDOR)/component/common/example/ssl_download/example_ssl_download.c
-SRC_C += $(VENDOR)/component/common/example/ssl_server/example_ssl_server.c
-SRC_C += $(VENDOR)/component/common/example/tcp_keepalive/example_tcp_keepalive.c
-SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
-SRC_C += $(VENDOR)/component/common/example/wifi_mac_monitor/example_wifi_mac_monitor.c
-SRC_C += $(VENDOR)/component/common/example/wlan_fast_connect/example_wlan_fast_connect.c
-SRC_C += $(VENDOR)/component/common/example/wlan_scenario/example_wlan_scenario.c
-SRC_C += $(VENDOR)/component/common/example/websocket/example_wsclient.c
-SRC_C += $(VENDOR)/component/common/example/xml/example_xml.c
+#SRC_C += $(VENDOR)/component/common/example/bcast/example_bcast.c
+#SRC_C += $(VENDOR)/component/common/example/dct/example_dct.c
+#SRC_C += $(VENDOR)/component/common/example/eap/example_eap.c
+#SRC_C += $(VENDOR)/component/common/example/example_entry.c
+#SRC_C += $(VENDOR)/component/common/example/get_beacon_frame/example_get_beacon_frame.c
+#SRC_C += $(VENDOR)/component/common/example/high_load_memory_use/example_high_load_memory_use.c
+#SRC_C += $(VENDOR)/component/common/example/http_client/example_http_client.c
+#SRC_C += $(VENDOR)/component/common/example/http_download/example_http_download.c
+#SRC_C += $(VENDOR)/component/common/example/mcast/example_mcast.c
+#SRC_C += $(VENDOR)/component/common/example/mdns/example_mdns.c
+#SRC_C += $(VENDOR)/component/common/example/mqtt/example_mqtt.c
+#SRC_C += $(VENDOR)/component/common/example/nonblock_connect/example_nonblock_connect.c
+#SRC_C += $(VENDOR)/component/common/example/rarp/example_rarp.c
+#SRC_C += $(VENDOR)/component/common/example/sntp_showtime/example_sntp_showtime.c
+#SRC_C += $(VENDOR)/component/common/example/socket_select/example_socket_select.c
+#SRC_C += $(VENDOR)/component/common/example/ssl_download/example_ssl_download.c
+#SRC_C += $(VENDOR)/component/common/example/ssl_server/example_ssl_server.c
+#SRC_C += $(VENDOR)/component/common/example/tcp_keepalive/example_tcp_keepalive.c
+#SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
+#SRC_C += $(VENDOR)/component/common/example/wifi_mac_monitor/example_wifi_mac_monitor.c
+#SRC_C += $(VENDOR)/component/common/example/wlan_fast_connect/example_wlan_fast_connect.c
+#SRC_C += $(VENDOR)/component/common/example/wlan_scenario/example_wlan_scenario.c
+#SRC_C += $(VENDOR)/component/common/example/websocket/example_wsclient.c
+#SRC_C += $(VENDOR)/component/common/example/xml/example_xml.c
       
     
 #utilities 
 SRC_C += $(VENDOR)/component/common/utilities/cJSON.c
 SRC_C += $(VENDOR)/component/common/utilities/http_client.c
-SRC_C += $(VENDOR)/component/common/utilities/uart_socket.c
-SRC_C += $(VENDOR)/component/common/utilities/webserver.c
+#SRC_C += $(VENDOR)/component/common/utilities/uart_socket.c
+#SRC_C += $(VENDOR)/component/common/utilities/webserver.c
 SRC_C += $(VENDOR)/component/common/utilities/xml.c
 #SRC_C += $(VENDOR)/component/soc/realtek/8195a/misc/platform/gcc_wrap.c
 
@@ -370,7 +370,7 @@ SRC_C += mphelper/amebaz/startup.c
 SRC_C += mphelper/diskio.c
 SRC_C += mphelper/exception.c
 SRC_C += mphelper/help.c
-SRC_C += mphelper/ameba/mphal.c
+SRC_C += mphelper/amebaz/mphal.c
 SRC_C += mphelper/input.c
 SRC_C += mphelper/bufhelper.c
 SRC_C += mphelper/mpthreadport.c
@@ -384,19 +384,19 @@ SRC_C += mphelper/mods/modutime.c
 SRC_C += mphelper/mods/modterm.c
 SRC_C += mphelper/mods/moduos.c
 SRC_C += mphelper/mods/modussl.c
-SRC_C += mphelper/mods/machine/objloguart.c
+#SRC_C += mphelper/mods/machine/objloguart.c
 SRC_C += mphelper/mods/machine/objwdt.c
 SRC_C += mphelper/mods/machine/objflash.c
 SRC_C += mphelper/mods/machine/objrtc.c
-SRC_C += mphelper/mods/machine/objadc.c
-SRC_C += mphelper/mods/machine/objdac.c
+#SRC_C += mphelper/mods/machine/objadc.c
+#SRC_C += mphelper/mods/machine/objdac.c
 SRC_C += mphelper/mods/machine/objpin.c
 SRC_C += mphelper/mods/machine/obji2c.c
 SRC_C += mphelper/mods/machine/objpwm.c
 SRC_C += mphelper/mods/machine/objtimer.c
-SRC_C += mphelper/mods/machine/objspi.c
+#SRC_C += mphelper/mods/machine/objspi.c
 SRC_C += mphelper/mods/machine/objuart.c
-SRC_C += mphelper/mods/machine/objcrypto.c
+#SRC_C += mphelper/mods/machine/objcrypto.c
 
 SRC_C += mphelper/mods/wireless/objwlan.c
 SRC_C += mphelper/mods/network/objnetif.c
@@ -431,7 +431,7 @@ TARGET=application
 
 SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 
-OBJ =  $(SRC_O) 
+OBJ =  $(SRC_O) $(PY_O)
 
 SRC_QSTR += $(SRC_C) $(SRC_C)
 SRC_QSTR_AUTO_DEPS +=
@@ -448,19 +448,16 @@ CFLAGS += -g3 -ggdb
 else 
 CFLAGS += -g2
 endif
-
-CFLAGS += -ggdb
-
 # source code macro
 CFLAGS =
 CFLAGS += -DM3 -DCONFIG_PLATFORM_8711B -D$(CHIP)
 CFLAGS += -DPOLARSSL_CONFIG_FILE=\"polarssl-config.h\"
-CFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -g2 -w -O2 -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -DF_CPU=166000000L -std=gnu99 -fsigned-char
+CFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(CFLAGS_MOD)
 CFLAGS += $(INC)
 
 LFLAGS =
-LFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -g --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
+LFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
 LFLAGS += -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc
 
 LIBFLAGS += -L$(VENDOR)/component/soc/realtek/8711b/misc/bsp/lib/common/GCC/ -l_platform -l_wlan -l_wps -l_dct -l_rtlstd -lm -lc -lnosys -lgcc -l_websocket
@@ -469,7 +466,7 @@ RAMALL_BIN = ram_all.bin
 IMAGE2_OTA1 = image2_all_ota1.bin
 IMAGE2_OTA2 = image2_all_ota2.bin
 
-application: prerequirement build_info $(SRC_O) 
+application: prerequirement build_info $(SRC_O) $(PY_O)
 	$(ECHO) "Building $(CHIP) "
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/boot_all.o $(LIBFLAGS) -L$(TOOL)/amebaz -T$(TOOL)/amebaz/MP_RTL8710BN-symbol-v02.ld
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm

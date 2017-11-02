@@ -31,6 +31,11 @@
 
 // local object headers
 //
+#include "py/mpstate.h"
+#include "py/runtime.h"
+#include "py/mphal.h"
+
+#ifdef MP_RTL8195A
 #include "machine/objpwm.h"
 #include "machine/objspi.h"
 #include "machine/objuart.h"
@@ -44,6 +49,11 @@
 #include "machine/objcrypto.h"
 #include "machine/objtimer.h"
 #include "machine/objflash.h"
+#elif defined(MP_AMEBAZ)
+#include "machine/objpin.h"
+#include "machine/objuart.h"
+#else
+#endif
 
 
 // mbed lib headers
@@ -54,10 +64,12 @@
  *                              External variables
  * ***************************************************************************/
 void modmachine_init(void) {
+#ifdef MP_RTL8195A
     crypto_init0();
     rtc_init0();
     loguart_init0();
     adc_init0();
+#endif
 }
 
 STATIC mp_obj_t machine_reset(void) {
@@ -77,10 +89,9 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
+#ifdef MP_RTL8195A
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
-#if MP_RTL8195A
     { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
-#endif
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
@@ -91,8 +102,11 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
-#if MP_RTL8195A || MP_RTL8711AM
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
+#elif defined(MP_AMEBAZ)
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
+#else
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);

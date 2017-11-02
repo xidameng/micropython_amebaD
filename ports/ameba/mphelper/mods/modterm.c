@@ -127,7 +127,7 @@ void modterm_rx_thread(void const *arg) {
             poll_obj_t *poll_obj = (poll_obj_t*)MP_STATE_PORT(mp_terminal_map).table[i].value;
             int errcode;
 
-			mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
+            mp_int_t ret = poll_obj->ioctl(poll_obj->obj, MP_STREAM_POLL, poll_obj->flags, &errcode);
             
             if (ret & MP_STREAM_POLL_HUP) {
                 mp_map_lookup(&MP_STATE_PORT(mp_terminal_map), mp_obj_id(poll_obj->obj),

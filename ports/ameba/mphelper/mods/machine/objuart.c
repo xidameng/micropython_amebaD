@@ -168,12 +168,13 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->tx.pin           = tx;
     self->rx.pin           = rx;
 
+    serial_init(&(self->obj), self->tx.pin->id, self->rx.pin->id);
+
     return (mp_obj_t)self;
 }
 
 STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    serial_init(&(self->obj), self->tx.pin->id, self->rx.pin->id);
     serial_baud(&(self->obj), self->params.baudrate);
     serial_format(&(self->obj), self->params.data_bits, self->params.parity, self->params.stop_bits);
     return mp_const_none;
@@ -255,14 +256,14 @@ STATIC mp_obj_t uart_recv(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *e
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_DR)) {
+        while (!serial_readable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        buf_in[i] = (byte)HAL_RUART_READ32(self->unit, RUART_REV_BUF_REG_OFF);
+        buf_in[i] = (byte)serial_getc(&(self->obj));
     }
 
 ret:
@@ -280,14 +281,14 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const char *buf_in, mp_uint_t size, 
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!(HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF) & RUART_LINE_STATUS_REG_THRE)) {
+        while (!serial_writable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        HAL_RUART_WRITE32(self->unit, RUART_TRAN_HOLD_REG_OFF, buf_in[i]);
+        serial_putc(&(self->obj), buf_in[i]);
 
         // A workaround, it seems log uart's FIFO is not working ...
         mp_hal_delay_ms(1);
@@ -309,14 +310,14 @@ STATIC mp_uint_t uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, 
         ret = 0;
         mp_uint_t status = 0;
         // Only return none zero when RX FIFO is not empty
-        status = HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF);
-        if ((flags & MP_STREAM_POLL_RD) && (status & RUART_LINE_STATUS_REG_DR)) {
+        status = serial_readable(&(self->obj));
+        if ((flags & MP_STREAM_POLL_RD) && (status & true)) {
             ret |= MP_STREAM_POLL_RD;
         }
 
         // Only return none zero when TX FIFO is not full
-        status = HAL_RUART_READ32(self->unit, RUART_LINE_STATUS_REG_OFF);
-        if ((flags & MP_STREAM_POLL_WR) && (status & RUART_LINE_STATUS_REG_THRE)) {
+        status = serial_writable(&(self->obj));
+        if ((flags & MP_STREAM_POLL_WR) && (status & true)) {
             ret |= MP_STREAM_POLL_WR;
         }
     } else {
