@@ -1,12 +1,11 @@
 from umachine import FLASH
 
 class FlashBdev:
-    START_ADDR = 0x100000
     SEC_SIZE = 0x1000 # most flash sector is 4K
-    START_SEC = START_ADDR // SEC_SIZE
-    NUM_BLK = 252
-    def __init__(self, blocks=NUM_BLK):
+    def __init__(self, start_addr, blocks):
         self.blocks = blocks
+        self.start_addr = start_addr
+        self.START_SEC = self.start_addr // self.SEC_SIZE
         self.flash = FLASH()
 
     def erasesector(self, addr):

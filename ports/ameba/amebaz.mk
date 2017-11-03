@@ -21,6 +21,7 @@ endif
 
 INC =
 INC += -I.
+INC += -Imphelper
 INC += -Iinc/amebaz
 INC += -I$(TOP)
 INC += -I$(BUILD)
@@ -323,6 +324,7 @@ SRC_C += mphelper/diskio.c
 SRC_C += mphelper/exception.c
 SRC_C += mphelper/help.c
 SRC_C += mphelper/amebaz/mphal.c
+SRC_C += mphelper/amebaz/objloguart.c
 SRC_C += mphelper/input.c
 SRC_C += mphelper/bufhelper.c
 SRC_C += mphelper/mpthreadport.c
@@ -336,7 +338,6 @@ SRC_C += mphelper/mods/modutime.c
 SRC_C += mphelper/mods/modterm.c
 SRC_C += mphelper/mods/moduos.c
 SRC_C += mphelper/mods/modussl.c
-#SRC_C += mphelper/mods/machine/objloguart.c
 SRC_C += mphelper/mods/machine/objwdt.c
 SRC_C += mphelper/mods/machine/objflash.c
 SRC_C += mphelper/mods/machine/objrtc.c
@@ -392,26 +393,15 @@ SRC_QSTR_AUTO_DEPS +=
 # 			CFLAGS 			   #
 ################################
 
-# Optimize level
-CFLAGS = -O2
-
-ifeq ($(DEBUG), 1)
-CFLAGS += -g3 -ggdb
-LFLAGS += -g3 -ggdb
-else 
-CFLAGS += -g2
-LFLAGS += -g2
-endif
-
 # source code macro
-CFLAGS =
+CFLAGS = 
 CFLAGS += -DM3 -DCONFIG_PLATFORM_8711B -D$(CHIP)
 CFLAGS += -DPOLARSSL_CONFIG_FILE=\"polarssl-config.h\"
-CFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -w -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -DF_CPU=166000000L -std=gnu99 -fsigned-char
+CFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -g2 -w -O2 -Wno-pointer-sign -fno-common -fmessage-length=0  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-short-enums -DF_CPU=166000000L -std=gnu99 -fsigned-char
 CFLAGS += $(CFLAGS_MOD)
 CFLAGS += $(INC)
 
-LFLAGS =
+LFLAGS = 
 LFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nano.specs -nostartfiles -Wl,-Map=$(BUILD)/application.map -Os -Wl,--gc-sections -Wl,--cref -Wl,--entry=Reset_Handler -Wl,--no-enum-size-warning -Wl,--no-wchar-size-warning
 LFLAGS += -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc
 

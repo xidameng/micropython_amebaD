@@ -1,6 +1,4 @@
 import sys
-import uerrno
-import array
 import uctypes
 try:
     import uos_vfs as uos
