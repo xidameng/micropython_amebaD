@@ -271,6 +271,30 @@ const PinMap PinMap_UART_RX[] = {
     {NC,    NC,     0}
 };
 
+const PinMap PinMap_I2C_SDA[] = {
+    AF(PA_19, I2C, _0, PullUp),
+    AF(PA_23, I2C, _1, PullUp),
+
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_I2C_SCL[] = {
+    AF(PA_22, I2C, _0, PullUp),
+    AF(PA_18, I2C, _1, PullUp),
+   
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_PWM[] = {
+    AF(PA_14, PWM, _0, PullNone),
+    AF(PA_15, PWM, _1, PullNone),
+    AF(PA_0,  PWM, _2, PullNone),
+    AF(PA_12, PWM, _3, PullNone),
+    AF(PA_5,  PWM, _4, PullNone),
+    AF(PA_23, PWM, _5, PullNone),
+
+    {NC,    NC,     0}
+};
 
 pin_obj_t pin_PA_30 = PIN(PA_30, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_29 = PIN(PA_29, PullNone, PIN_OUTPUT, 0);

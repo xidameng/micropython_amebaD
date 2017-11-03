@@ -143,24 +143,7 @@ SRC_C += $(VENDOR)/component/common/api/wifi/wifi_util.c
 SRC_C += $(VENDOR)/component/common/api/lwip_netconf.c
       
     
-#network app
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTClient.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectClient.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTConnectServer.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTDeserializePublish.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTFormat.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTClient/MQTTFreertos.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTPacket.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSerializePublish.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeClient.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTSubscribeServer.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeClient.c
-#SRC_C += $(VENDOR)/component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeServer.c
-#SRC_C += $(VENDOR)/component/common/api/network/src/ping_test.c
-#SRC_C += $(VENDOR)/component/common/utilities/ssl_client.c
-#SRC_C += $(VENDOR)/component/common/utilities/tcptest.c
 SRC_C += $(VENDOR)/component/common/api/network/src/wlan_network.c
-      
     
 #network lwip api
 SRC_C += $(VENDOR)/component/common/network/lwip/lwip_v1.4.1/src/api/api_lib.c
@@ -326,35 +309,6 @@ SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_intfcfg.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_pinmapcfg.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/rtl8710b_sleepcfg.c
       
-
-     
-#utilities example
-#SRC_C += $(VENDOR)/component/common/example/bcast/example_bcast.c
-#SRC_C += $(VENDOR)/component/common/example/dct/example_dct.c
-#SRC_C += $(VENDOR)/component/common/example/eap/example_eap.c
-#SRC_C += $(VENDOR)/component/common/example/example_entry.c
-#SRC_C += $(VENDOR)/component/common/example/get_beacon_frame/example_get_beacon_frame.c
-#SRC_C += $(VENDOR)/component/common/example/high_load_memory_use/example_high_load_memory_use.c
-#SRC_C += $(VENDOR)/component/common/example/http_client/example_http_client.c
-#SRC_C += $(VENDOR)/component/common/example/http_download/example_http_download.c
-#SRC_C += $(VENDOR)/component/common/example/mcast/example_mcast.c
-#SRC_C += $(VENDOR)/component/common/example/mdns/example_mdns.c
-#SRC_C += $(VENDOR)/component/common/example/mqtt/example_mqtt.c
-#SRC_C += $(VENDOR)/component/common/example/nonblock_connect/example_nonblock_connect.c
-#SRC_C += $(VENDOR)/component/common/example/rarp/example_rarp.c
-#SRC_C += $(VENDOR)/component/common/example/sntp_showtime/example_sntp_showtime.c
-#SRC_C += $(VENDOR)/component/common/example/socket_select/example_socket_select.c
-#SRC_C += $(VENDOR)/component/common/example/ssl_download/example_ssl_download.c
-#SRC_C += $(VENDOR)/component/common/example/ssl_server/example_ssl_server.c
-#SRC_C += $(VENDOR)/component/common/example/tcp_keepalive/example_tcp_keepalive.c
-#SRC_C += $(VENDOR)/component/common/example/uart_atcmd/example_uart_atcmd.c
-#SRC_C += $(VENDOR)/component/common/example/wifi_mac_monitor/example_wifi_mac_monitor.c
-#SRC_C += $(VENDOR)/component/common/example/wlan_fast_connect/example_wlan_fast_connect.c
-#SRC_C += $(VENDOR)/component/common/example/wlan_scenario/example_wlan_scenario.c
-#SRC_C += $(VENDOR)/component/common/example/websocket/example_wsclient.c
-#SRC_C += $(VENDOR)/component/common/example/xml/example_xml.c
-      
-    
 #utilities 
 SRC_C += $(VENDOR)/component/common/utilities/cJSON.c
 SRC_C += $(VENDOR)/component/common/utilities/http_client.c
@@ -443,9 +397,12 @@ CFLAGS = -O2
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g3 -ggdb
+LFLAGS += -g3 -ggdb
 else 
 CFLAGS += -g2
+LFLAGS += -g2
 endif
+
 # source code macro
 CFLAGS =
 CFLAGS += -DM3 -DCONFIG_PLATFORM_8711B -D$(CHIP)

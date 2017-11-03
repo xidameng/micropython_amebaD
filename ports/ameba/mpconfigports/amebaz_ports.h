@@ -135,7 +135,7 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaZBoard"
 
-#define MICROPY_HW_PORT_VERSION             "1.0.2"
+#define MICROPY_HW_PORT_VERSION             "1.0.3"
 
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
 #define MICROPY_HW_MCU_NAME                 "RTL8711BN"
@@ -143,10 +143,10 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MP_HEAP_SIZE                        (14 * 1024)
+#define MP_HEAP_SIZE                        (20 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
-#define MICROPY_TASK_STACK_DEPTH            (((20 * 1024) + 512) / sizeof(StackType_t))
+#define MICROPY_TASK_STACK_DEPTH            (((10 * 1024) + 512) / sizeof(StackType_t))
 #define MICROPY_TASK_PRIORITY               (1)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
