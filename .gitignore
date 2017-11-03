@@ -44,3 +44,4 @@ user.props
 genrst/
 
 cscope.*
+build_info.h

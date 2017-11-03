@@ -291,7 +291,7 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const char *buf_in, mp_uint_t size, 
         serial_putc(&(self->obj), buf_in[i]);
 
         // A workaround, it seems log uart's FIFO is not working ...
-        mp_hal_delay_ms(1);
+        mp_hal_delay_us(250);
     }
 
 ret:

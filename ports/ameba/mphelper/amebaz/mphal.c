@@ -67,12 +67,10 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
 }
 
 void mp_hal_delay_ms(uint32_t ms) {
-    //wait_ms(ms);
     rtw_mdelay_os(ms);
 }
 
 void mp_hal_delay_us(uint32_t us) {
-    //wait_us(us);
     rtw_udelay_os(us);
 }
 

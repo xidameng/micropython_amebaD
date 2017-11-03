@@ -111,8 +111,7 @@ SRC_C =
       
 #cmsis
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/cmsis/device/app_start.c
-# Chester remove startupt.c from vendor's, use out custom startup.c`
-#SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/startup.c
+SRC_C += $(VENDOR)/component/soc/realtek/8711b/fwlib/ram_lib/startup.c
 SRC_C += $(VENDOR)/component/soc/realtek/8711b/cmsis/device/system_8195a.c
     
 
@@ -366,7 +365,6 @@ SRC_C += $(VENDOR)/component/common/utilities/xml.c
 
 # put micropython source to sdram section
 SRC_C += pins.c
-SRC_C += mphelper/amebaz/startup.c
 SRC_C += mphelper/diskio.c
 SRC_C += mphelper/exception.c
 SRC_C += mphelper/help.c
@@ -419,7 +417,7 @@ SRC_C += \
 # Initialize target name and target object files
 # -------------------------------------------------------------------
 
-all: application
+all: compile mkimage
 
 TARGET=application
 
@@ -466,13 +464,18 @@ RAMALL_BIN = ram_all.bin
 IMAGE2_OTA1 = image2_all_ota1.bin
 IMAGE2_OTA2 = image2_all_ota2.bin
 
-application: prerequirement build_info $(SRC_O) $(PY_O)
+.PHONY: compile
+compile: prerequirement build_info $(SRC_O) $(PY_O)
+	$(ECHO) "Compiling $(CHIP) "
+
+.PHONY: application
+application: 
 	$(ECHO) "Building $(CHIP) "
 	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/boot_all.o $(LIBFLAGS) -L$(TOOL)/amebaz -T$(TOOL)/amebaz/MP_RTL8710BN-symbol-v02.ld
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
 
-.PHONY: manipulate_images
-manipulate_images:	
+.PHONY: mkimage
+mkimage: application
 	$(Q)echo ===========================================================
 	$(Q)echo Image manipulating
 	$(Q)echo ===========================================================
@@ -494,7 +497,6 @@ manipulate_images:
 	$(Q)chmod 777 $(BUILD)/$(IMAGE2_OTA1)
 	$(Q)cat $(BUILD)/ram_2.p.bin >> $(BUILD)/$(IMAGE2_OTA1)
 	$(Q)$(CHKSUM) $(BUILD)/$(IMAGE2_OTA1) || true
-	$(Q)$(RM) $(BUILD)/ram_*.bin
 	$(Q)$(SIZE) -d $(BUILD)/$(TARGET).axf
 
 # Generate build info
@@ -525,8 +527,8 @@ prerequirement:
 	$(Q)echo Build $(TARGET)
 	$(Q)echo ===========================================================
 	$(Q)$(MKDIR) -p $(BUILD)
-	$(Q)cp $(VENDOR)/component/soc/realtek/8711b/misc/bsp/image/boot_all.bin $(BUILD)/boot_all.bin
-	$(Q)chmod +rw $(BUILD)/boot_all.bin
+	$(Q)cp -f $(VENDOR)/component/soc/realtek/8711b/misc/bsp/image/boot_all.bin $(BUILD)/boot_all.bin
+	$(Q)chmod 777 $(BUILD)/boot_all.bin
 	$(Q)$(OBJCOPY) -I binary -O elf32-littlearm -B arm $(BUILD)/boot_all.bin $(BUILD)/boot_all.o 
 
 $(SRC_O): $(BUILD)/%.o : %.c
