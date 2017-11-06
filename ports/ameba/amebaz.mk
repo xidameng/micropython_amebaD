@@ -349,7 +349,7 @@ SRC_C += mphelper/mods/machine/objpwm.c
 SRC_C += mphelper/mods/machine/objtimer.c
 #SRC_C += mphelper/mods/machine/objspi.c
 SRC_C += mphelper/mods/machine/objuart.c
-#SRC_C += mphelper/mods/machine/objcrypto.c
+SRC_C += mphelper/mods/machine/objcrypto.c
 
 SRC_C += mphelper/mods/wireless/objwlan.c
 SRC_C += mphelper/mods/network/objnetif.c

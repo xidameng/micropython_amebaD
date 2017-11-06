@@ -50,6 +50,7 @@
 #include "machine/objtimer.h"
 #include "machine/objflash.h"
 #elif defined(MP_AMEBAZ)
+#include "machine/objcrypto.h"
 #include "machine/objtimer.h"
 #include "machine/objrtc.h"
 #include "amebaz/objloguart.h"
@@ -72,8 +73,8 @@
 void modmachine_init(void) {
     loguart_init0();
     rtc_init0();
-#ifdef MP_RTL8195A
     crypto_init0();
+#ifdef MP_RTL8195A
     adc_init0();
 #endif
 }
@@ -110,6 +111,7 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
 #elif defined(MP_AMEBAZ)
+    { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
