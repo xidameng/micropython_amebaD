@@ -50,10 +50,11 @@
 #include "machine/objtimer.h"
 #include "machine/objflash.h"
 #elif defined(MP_AMEBAZ)
+#include "amebaz/objloguart.h"
+#include "amebaz/objspi.h"
 #include "machine/objcrypto.h"
 #include "machine/objtimer.h"
 #include "machine/objrtc.h"
-#include "amebaz/objloguart.h"
 #include "machine/objwdt.h"
 #include "machine/objpwm.h"
 #include "machine/obji2c.h"
@@ -121,6 +122,7 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
 #else
 #endif
 };

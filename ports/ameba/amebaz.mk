@@ -325,6 +325,7 @@ SRC_C += mphelper/exception.c
 SRC_C += mphelper/help.c
 SRC_C += mphelper/amebaz/mphal.c
 SRC_C += mphelper/amebaz/objloguart.c
+SRC_C += mphelper/amebaz/objspi.c
 SRC_C += mphelper/input.c
 SRC_C += mphelper/bufhelper.c
 SRC_C += mphelper/mpthreadport.c

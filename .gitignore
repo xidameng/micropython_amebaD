@@ -45,3 +45,4 @@ genrst/
 
 cscope.*
 build_info.h
+.vscode
