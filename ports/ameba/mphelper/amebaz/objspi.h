@@ -52,6 +52,8 @@ typedef struct {
     uint32_t  baudrate;
     uint8_t   pol;
     uint8_t   pha;
+    GDMA_InitTypeDef SSITxGdmaInitStruct;
+    GDMA_InitTypeDef SSIRxGdmaInitStruct;
 } spi_obj_t;
 
 #endif  // OBJSPI_H_

@@ -70,11 +70,23 @@ STATIC void objspi_deinit(mp_obj_base_t *self_in) {
     SSI_Cmd(SPI_DEV_TABLE[1].SPIx, DISABLE);
 }
 
+static void spi_dma_tx_irq(void *arg) {
+    spi_obj_t *self = (spi_obj_t*)arg;
+    PGDMA_InitTypeDef gdma_init_struct;
+    gdma_init_struct = &(self->SSITxGdmaInitStruct);
+    GDMA_ClearINT(gdma_init_struct->GDMA_Index, gdma_init_struct->GDMA_ChNum);
+    GDMA_Cmd(gdma_init_struct->GDMA_Index, gdma_init_struct->GDMA_ChNum, DISABLE);
+    
+}
+
 STATIC void objspi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *src, uint8_t *dest) {
     spi_obj_t *self = (spi_obj_t*)self_in;
     if (dest == NULL) {
+       
+    } else if (src == NULL) {
 
     } else {
+
     }
 }
 
