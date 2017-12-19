@@ -143,7 +143,7 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
 
-#define MP_HEAP_SIZE                        (20 * 1024)
+#define MP_HEAP_SIZE                        (40 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (((10 * 1024) + 512) / sizeof(StackType_t))
