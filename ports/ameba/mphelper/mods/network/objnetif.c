@@ -62,9 +62,9 @@ STATIC mp_obj_t ip_get(mp_uint_t n_args, const mp_obj_t *args) {
         ipaddr = self->piface->ip_addr;   
         netmask = self->piface->netmask;   
         gateway = self->piface->gw;
-        tuple[0] = mp_obj_new_str(ip_ntoa(&ipaddr), strlen(ip_ntoa(&ipaddr)), false);
-        tuple[1] = mp_obj_new_str(ip_ntoa(&netmask), strlen(ip_ntoa(&netmask)), false);
-        tuple[2] = mp_obj_new_str(ip_ntoa(&gateway), strlen(ip_ntoa(&gateway)), false);
+        tuple[0] = mp_obj_new_str(ip_ntoa(&ipaddr), strlen(ip_ntoa(&ipaddr)));
+        tuple[1] = mp_obj_new_str(ip_ntoa(&netmask), strlen(ip_ntoa(&netmask)));
+        tuple[2] = mp_obj_new_str(ip_ntoa(&gateway), strlen(ip_ntoa(&gateway)));
         return mp_obj_new_tuple(3, tuple);
     } else {
         mp_obj_t *sec;
@@ -130,7 +130,7 @@ STATIC mp_obj_t netif_hostname(mp_uint_t n_args, const mp_obj_t *args) {
     if (n_args == 1) {
         // get the value
         hostname = self->piface->hostname;
-        return mp_obj_new_str(hostname, strlen(hostname), false);
+        return mp_obj_new_str(hostname, strlen(hostname));
     } else {
         hostname = mp_obj_str_get_data(args[1], &len);
         self->piface->hostname = hostname;

@@ -307,7 +307,7 @@ STATIC mp_obj_t wlan_mac(mp_uint_t n_args, const mp_obj_t *args) {
         if (ret != RTW_SUCCESS) {
             mp_raise_msg(&mp_type_OSError, "Get MAC address error");
         }
-        return mp_obj_new_str(mac_str, sizeof(mac_str), false);
+        return mp_obj_new_str(mac_str, sizeof(mac_str));
     }
     else {
         //TODO(Chester) Should parse MAC string here
@@ -596,7 +596,7 @@ void wifi_event_scan_result_report_hdl (char *buf, int buf_len, int flags,
             mp_obj_t tuple[8];
             mp_obj_t attrtuple;
 
-            tuple[0] = mp_obj_new_str((*ptr)->SSID.val, (*ptr)->SSID.len, false);
+            tuple[0] = mp_obj_new_str((*ptr)->SSID.val, (*ptr)->SSID.len);
             tuple[1] = mp_obj_new_bytes((*ptr)->BSSID.octet, ETH_ALEN);
             tuple[2] = mp_obj_new_int((*ptr)->signal_strength);
             tuple[3] = mp_obj_new_int((*ptr)->bss_type);
