@@ -37,7 +37,7 @@
     .value  = (p_value),              \
 }
 
-#ifdef MP_RTL8195A
+#ifdef AMEBA1
 #define AF(pin_name, af_name, af_index, af_sel) \
 { \
     .pin            = pin_name,                                 \

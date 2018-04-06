@@ -395,7 +395,6 @@ SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
 
 OBJ = $(PY_O) $(SRC_O) $(DRAM_O)
-
 SRC_QSTR += $(SRC_C) $(DRAM_C)
 SRC_QSTR_AUTO_DEPS +=
 

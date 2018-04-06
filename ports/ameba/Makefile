@@ -9,9 +9,9 @@ include $(TOP)/py/py.mk
 OS := $(shell uname)
 VENDOR := vendor
 TOOL := tool
-CHIP := MP_RTL8195A
+CHIP := AMEBA1
 DEBUG := 1
-# CHIP would be MP_RTL8195A, MP_RTL8710BN
+# CHIP would be AMEBA1, MP_RTL8710BN
 
 # toolchains
 CROSS_COMPILE := arm-none-eabi-
@@ -25,8 +25,8 @@ SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 
-ifeq ($(CHIP), MP_RTL8195A)
-include rtl8195am.mk
+ifeq ($(CHIP), AMEBA1)
+include ameba1.mk
 else
 include amebaz.mk
 endif

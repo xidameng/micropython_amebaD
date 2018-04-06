@@ -1,8 +1,8 @@
 #include <stdint.h>
 
-#ifdef MP_RTL8195A
+#ifdef AMEBA1
 #include "mpconfigports/rtl8195a_ports.h"
-#elif MP_AMEBAZ
+#elif AMEBAZ
 #include "mpconfigports/amebaz_ports.h"
 #else
 #warning "Invalid CHIP set"
