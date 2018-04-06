@@ -97,7 +97,7 @@ $(HEADER_BUILD):
 
 ifneq ($(FROZEN_DIR),)
 $(BUILD)/frozen.c: $(wildcard $(FROZEN_DIR)/*) $(HEADER_BUILD) $(FROZEN_EXTRA_DEPS)
-	$(ECHO) "Generating $@"
+	$(ECHO) "GEN $@"
 	$(Q)$(MAKE_FROZEN) $(FROZEN_DIR) > $@
 endif
 
@@ -111,15 +111,15 @@ FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | 
 FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/frozen_mpy/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
 
 # to build .mpy files from .py files
-$(BUILD)/frozen_mpy/%.mpy: $(FROZEN_MPY_DIR)/%.py $(MPY_CROSS)
+$(BUILD)/frozen_mpy/%.mpy: $(FROZEN_MPY_DIR)/%.py $(TOP)/mpy-cross/mpy-cross
 	@$(ECHO) "MPY $<"
 	$(Q)$(MKDIR) -p $(dir $@)
 	$(Q)$(MPY_CROSS) -o $@ -s $(<:$(FROZEN_MPY_DIR)/%=%) $(MPY_CROSS_FLAGS) $<
 
 # to build frozen_mpy.c from all .mpy files
 $(BUILD)/frozen_mpy.c: $(FROZEN_MPY_MPY_FILES) $(BUILD)/genhdr/qstrdefs.generated.h
-	@$(ECHO) "Creating $@"
-	$(Q)$(PYTHON) $(MPY_TOOL) -f -q $(BUILD)/genhdr/qstrdefs.preprocessed.h $(FROZEN_MPY_MPY_FILES) > $@
+	@$(ECHO) "GEN $@"
+	$(Q)$(MPY_TOOL) -f -q $(BUILD)/genhdr/qstrdefs.preprocessed.h $(FROZEN_MPY_MPY_FILES) > $@
 endif
 
 ifneq ($(PROG),)
@@ -133,13 +133,13 @@ $(PROG): $(OBJ)
 # we may want to compile using Thumb, but link with non-Thumb libc.
 	$(Q)$(CC) -o $@ $^ $(LIB) $(LDFLAGS)
 ifndef DEBUG
-	$(Q)$(STRIP) $(STRIPFLAGS_EXTRA) $(PROG)$(PROG_EXT)
+	$(Q)$(STRIP) $(STRIPFLAGS_EXTRA) $(PROG)
 endif
-	$(Q)$(SIZE) $$(find $(BUILD) -path "$(BUILD)/build/frozen*.o") $(PROG)$(PROG_EXT)
+	$(Q)$(SIZE) $$(find $(BUILD) -path "$(BUILD)/build/frozen*.o") $(PROG)
 
 clean: clean-prog
 clean-prog:
-	$(RM) -f $(PROG)$(PROG_EXT)
+	$(RM) -f $(PROG)
 	$(RM) -f $(PROG).map
 
 .PHONY: clean-prog
@@ -159,6 +159,27 @@ lib $(LIBMICROPYTHON): $(OBJ)
 clean:
 	$(RM) -rf $(BUILD) $(CLEAN_EXTRA)
 .PHONY: clean
+
+# Clean every non-git file from FROZEN_DIR/FROZEN_MPY_DIR, but making a backup.
+# We run rmdir below to avoid empty backup dir (it will silently fail if backup
+# is non-empty).
+clean-frozen:
+	if [ -n "$(FROZEN_MPY_DIR)" ]; then \
+	backup_dir=$(FROZEN_MPY_DIR).$$(date +%Y%m%dT%H%M%S); mkdir $$backup_dir; \
+	cd $(FROZEN_MPY_DIR); git status --ignored -u all -s . | awk ' {print $$2}' \
+	| xargs --no-run-if-empty cp --parents -t ../$$backup_dir; \
+	rmdir ../$$backup_dir 2>/dev/null || true; \
+	git clean -d -f .; \
+	fi
+
+	if [ -n "$(FROZEN_DIR)" ]; then \
+	backup_dir=$(FROZEN_DIR).$$(date +%Y%m%dT%H%M%S); mkdir $$backup_dir; \
+	cd $(FROZEN_DIR); git status --ignored -u all -s . | awk ' {print $$2}' \
+	| xargs --no-run-if-empty cp --parents -t ../$$backup_dir; \
+	rmdir ../$$backup_dir 2>/dev/null || true; \
+	git clean -d -f .; \
+	fi
+.PHONY: clean-frozen
 
 print-cfg:
 	$(ECHO) "PY_SRC = $(PY_SRC)"
