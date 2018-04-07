@@ -12,8 +12,8 @@ target remote :3333
 set verbose off
 set complaints 0
 set confirm off
-set exec-done-display off
-show exec-done-display
+#set exec-done-display off
+#show exec-done-display
 set trace-commands off
 #set debug aix-thread off
 #set debug dwarf2-die 0

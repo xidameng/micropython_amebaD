@@ -11,7 +11,7 @@ VENDOR := vendor
 TOOL := tool
 CHIP := AMEBA1
 DEBUG := 1
-# CHIP would be AMEBA1, MP_RTL8710BN
+# CHIP would be AMEBA1, AMEBAZ
 
 # toolchains
 CROSS_COMPILE := arm-none-eabi-

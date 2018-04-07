@@ -1,19 +1,17 @@
-AMEBA_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/iar_utility/common/tools/
-FLASH_TOOLDIR = $(VENDOR)/component/soc/realtek/8195a/misc/gcc_utility/
-
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
-PICK = $(AMEBA_TOOLDIR)pick.exe
-PAD  = $(AMEBA_TOOLDIR)padding.exe
-CHKSUM = $(AMEBA_TOOLDIR)checksum.exe
+PICK = $(BUILD)pick.exe
+PAD  = $(BUILD)padding.exe
+CHKSUM = $(BUILD)checksum.exe
 else
 ifeq ($(findstring Darwin, $(OS)), Darwin) 
-PICK = $(TOOL)/mac/pick
-PAD  = $(TOOL)/mac/padding
-CHKSUM = $(TOOL)/mac/checksum
+PICK = $(BUILD)/pick
+PAD  = $(BUILD)/padding
+CHKSUM = $(BUILD)/checksum
+AMEBASIZE = $(BUILD)/amebasize
 else
-PICK = $(AMEBA_TOOLDIR)pick
-PAD  = $(AMEBA_TOOLDIR)padding
-CHKSUM = $(AMEBA_TOOLDIR)checksum
+PICK = $(BUILD)pick
+PAD  = $(BUILD)padding
+CHKSUM = $(BUILD)checksum
 endif
 endif
 
@@ -329,45 +327,45 @@ DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map
 DRAM_C += $(VENDOR)/component/common/network/ssl/ssl_ram_map/ssl_ram_map.c
 
 # put micropython source to sdram section
-DRAM_C += pins.c
-DRAM_C += mphelper/diskio.c
-DRAM_C += mphelper/exception.c
-DRAM_C += mphelper/help.c
-DRAM_C += mphelper/ameba/mphal.c
-DRAM_C += mphelper/input.c
-DRAM_C += mphelper/bufhelper.c
-DRAM_C += mphelper/mpthreadport.c
-DRAM_C += mphelper/gccollect/gccollect.c
-DRAM_C += mphelper/mods/modameba.c
-DRAM_C += mphelper/mods/modmachine.c
-DRAM_C += mphelper/mods/modlwip.c
-DRAM_C += mphelper/mods/moduwireless.c
-DRAM_C += mphelper/mods/modnetwork.c
-DRAM_C += mphelper/mods/modutime.c
-DRAM_C += mphelper/mods/modterm.c
-DRAM_C += mphelper/mods/moduos.c
-DRAM_C += mphelper/mods/modussl.c
-DRAM_C += mphelper/mods/machine/objloguart.c
-DRAM_C += mphelper/mods/machine/objwdt.c
-DRAM_C += mphelper/mods/machine/objflash.c
-DRAM_C += mphelper/mods/machine/objrtc.c
-DRAM_C += mphelper/mods/machine/objadc.c
-DRAM_C += mphelper/mods/machine/objdac.c
-DRAM_C += mphelper/mods/machine/objpin.c
-DRAM_C += mphelper/mods/machine/obji2c.c
-DRAM_C += mphelper/mods/machine/objpwm.c
-DRAM_C += mphelper/mods/machine/objtimer.c
-DRAM_C += mphelper/mods/machine/objspi.c
-DRAM_C += mphelper/mods/machine/objuart.c
-DRAM_C += mphelper/mods/machine/objcrypto.c
+UPY_C += pins.c
+UPY_C += mphelper/diskio.c
+UPY_C += mphelper/exception.c
+UPY_C += mphelper/help.c
+UPY_C += mphelper/ameba/mphal.c
+UPY_C += mphelper/input.c
+UPY_C += mphelper/bufhelper.c
+UPY_C += mphelper/mpthreadport.c
+UPY_C += mphelper/gccollect/gccollect.c
+UPY_C += mphelper/mods/modameba.c
+UPY_C += mphelper/mods/modmachine.c
+UPY_C += mphelper/mods/modlwip.c
+UPY_C += mphelper/mods/moduwireless.c
+UPY_C += mphelper/mods/modnetwork.c
+UPY_C += mphelper/mods/modutime.c
+UPY_C += mphelper/mods/modterm.c
+UPY_C += mphelper/mods/moduos.c
+UPY_C += mphelper/mods/modussl.c
+UPY_C += mphelper/mods/machine/objloguart.c
+UPY_C += mphelper/mods/machine/objwdt.c
+UPY_C += mphelper/mods/machine/objflash.c
+UPY_C += mphelper/mods/machine/objrtc.c
+UPY_C += mphelper/mods/machine/objadc.c
+UPY_C += mphelper/mods/machine/objdac.c
+UPY_C += mphelper/mods/machine/objpin.c
+UPY_C += mphelper/mods/machine/obji2c.c
+UPY_C += mphelper/mods/machine/objpwm.c
+UPY_C += mphelper/mods/machine/objtimer.c
+UPY_C += mphelper/mods/machine/objspi.c
+UPY_C += mphelper/mods/machine/objuart.c
+UPY_C += mphelper/mods/machine/objcrypto.c
 
-DRAM_C += mphelper/mods/wireless/objwlan.c
-DRAM_C += mphelper/mods/network/objnetif.c
-DRAM_C += mphelper/mods/network/dhcps.c
+UPY_C += mphelper/mods/wireless/objwlan.c
+UPY_C += mphelper/mods/network/objnetif.c
+UPY_C += mphelper/mods/network/dhcps.c
 
-DRAM_C += main.c
+UPY_C += main.c
 
-DRAM_C += \
+UPY_C += \
 		lib/utils/pyexec.c \
 		lib/mp-readline/readline.c \
 		lib/utils/interrupt_char.c \
@@ -377,6 +375,7 @@ DRAM_C += \
 		lib/netutils/netutils.c \
 		lib//utils/sys_stdio_mphal.c \
 
+DRAM_C += $(UPY_C)
 
 # Initialize target name and target object files
 # -------------------------------------------------------------------
@@ -395,7 +394,7 @@ SRC_O = $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 DRAM_O = $(addprefix $(BUILD)/, $(DRAM_C:.c=.o))
 
 OBJ = $(PY_O) $(SRC_O) $(DRAM_O)
-SRC_QSTR += $(SRC_C) $(DRAM_C)
+SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
 ################################
@@ -431,18 +430,18 @@ RAMALL_BIN = ram_all.bin
 
 application: prerequirement build_info $(SRC_O) $(DRAM_O) $(PY_O)
 	$(ECHO) "Building $(CHIP) "
-	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL)/rtl8195a -l_analout_api -T$(TOOL)/rtl8195a/$(CHIP)-symbol-v02.ld 
+	$(Q)$(LD) $(LFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(BUILD)/ram_1.r.o $(LIBFLAGS) -L$(TOOL)/ameba1 -l_analout_api -T$(TOOL)/ameba1/$(CHIP)-symbol-v02.ld 
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
 
 .PHONY: manipulate_images
-manipulate_images:	
+manipulate_images: $(PICK) $(PAD) $(CHKSUM) $(AMEBASIZE)
 	$(Q)echo ===========================================================
 	$(Q)echo Image manipulating
 	$(Q)echo ===========================================================
 	$(Q)$(NM) $(BUILD)/$(TARGET).axf | sort > $(BUILD)/$(TARGET).nmap
 	$(Q)$(OBJCOPY) -j .ram.start.table -j .ram.text -j .ram.rodata -j .ram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/ram_2.bin
 	$(Q)$(OBJCOPY) -j .sdram.text -j .sdram.rodata -j .sdram.data -Obinary $(BUILD)/$(TARGET).axf $(BUILD)/sdram.bin
-	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.p.bin $(BUILD)/ram_1.p.bin
+	$(Q)cp -f $(TOOL)/ameba1/image/ram_1.p.bin $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rw $(BUILD)/ram_1.p.bin
 	$(Q)chmod +rx $(PICK) $(CHKSUM) $(PAD)
 	$(Q)$(PICK) 0x`grep __ram_image2_text_start__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` 0x`grep __ram_image2_text_end__ $(BUILD)/$(TARGET).nmap | gawk '{print $$1}'` $(BUILD)/ram_2.bin $(BUILD)/ram_2.p.bin body+reset_offset+sig
@@ -485,9 +484,21 @@ prerequirement:
 	$(Q)echo Build $(TARGET)
 	$(Q)echo ===========================================================
 	$(Q)$(MKDIR) -p $(BUILD)
-	$(Q)cp $(VENDOR)/component/soc/realtek/8195a/misc/bsp/image/ram_1.r.bin $(BUILD)/ram_1.r.bin
+	$(Q)cp -f $(TOOL)/ameba1/image/ram_1.r.bin $(BUILD)/ram_1.r.bin
 	$(Q)chmod +rw $(BUILD)/ram_1.r.bin
 	$(Q)$(OBJCOPY) --rename-section .data=.loader.data,contents,alloc,load,readonly,data -I binary -O elf32-littlearm -B arm $(BUILD)/ram_1.r.bin $(BUILD)/ram_1.r.o 
+
+$(PICK): tool/ameba1/src/$(OS)/pick.c
+	$(Q)gcc -o $@ $<
+
+$(PAD): tool/ameba1/src/$(OS)/padding.c
+	$(Q)gcc -o $@ $<
+
+$(CHKSUM): tool/ameba1/src/$(OS)/checksum.c
+	$(Q)gcc -o $@ $< 
+
+$(AMEBASIZE): tool/ameba1/src/$(OS)/amebasize.c
+	$(Q)gcc -o $@ $<
 
 $(SRC_O): $(BUILD)/%.o : %.c
 	$(Q)$(MKDIR) -p $(dir $@)
@@ -500,18 +511,14 @@ $(DRAM_O): $(BUILD)/%.o : %.c
 
 .PHONY: flashburn
 flashburn:
-	$(Q)$(CP) -f $(FLASH_TOOLDIR)/target_NORMALB.axf $(BUILD)/target_NORMAL.axf
-	$(Q)$(CP) -f $(TOOL)/rtl8195a/SetupGDB_NORMAL.sh $(BUILD)/SetupGDB_NORMAL.sh
-	$(Q)$(CP) -f $(TOOL)/rtl8195a/rtl_gdb_flash_write_openocd.txt $(BUILD)/rtl_gdb_flash_write_openocd.txt
+	$(Q)$(CP) -f $(TOOL)/ameba1/target_NORMALB.axf $(BUILD)/target_NORMAL.axf
+	$(Q)$(CP) -f $(TOOL)/ameba1/SetupGDB_NORMAL.sh $(BUILD)/SetupGDB_NORMAL.sh
+	$(Q)$(CP) -f $(TOOL)/ameba1/rtl_gdb_flash_write_openocd.txt $(BUILD)/rtl_gdb_flash_write_openocd.txt
 	$(Q)chmod +rw $(BUILD)/target_NORMAL.axf
 	$(Q)chmod +rx $(BUILD)/SetupGDB_NORMAL.sh
 	$(Q)$(BUILD)/SetupGDB_NORMAL.sh
 	$(Q)$(GDB) -x $(BUILD)/rtl_gdb_flash_write_openocd.txt
 	
-.PHONY: debug
-debug:
-	$(Q)$(GDB) -x $(FLASH_TOOLDIR)/rtl_gdb_debug.txt
-
 .PHONY: ramdebug
 ramdebug:
-	$(Q)$(GDB) -x $(TOOL)/rtl8195a/rtl_gdb_ramdebug_openocd.txt	
+	$(Q)$(GDB) -x $(TOOL)/ameba1/rtl_gdb_ramdebug_openocd.txt	

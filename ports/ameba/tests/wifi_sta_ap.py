@@ -34,6 +34,7 @@ ap_netif.ip(('192.168.5.1', '255.255.255.0', '192.168.14.1'))
 _wlan.start_ap(ssid='ameba-ap-1', auth=(WLAN.WPA2_AES_PSK, '0987654321'))
 
 try:
-    _wlan.connect(ssid="YOUR-SSID", auth=(WLAN.WPA2_AES_PSK, "YOUR-PASSWORD"))
+    _wlan.connect(ssid="cwyark-ap", auth=(WLAN.WPA2_AES_PSK, "0963802970"))
+    sta_netif.dhcp_request(10)
 except OSError as e:
     print("connect to YOUR-SSID failed. {}".format(e))
