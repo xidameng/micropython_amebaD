@@ -1,5 +1,11 @@
 #define CONFIG_PROJECT_CUSTOM   0
 #define CONFIG_SSL_RSA          1
+#define MBEDTLS_ENTROPY_C  
+#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_CTR_DRBG_C
+#define MBEDTLS_PLATFORM_MEMORY
+
+#include "mbedtls/config.h"
 
 #if (defined CONFIG_PLATFORM_8195A) || (defined CONFIG_PLATFORM_8711B)
 #include "section_config.h"
@@ -11,17 +17,15 @@
 
 #if defined (CONFIG_SSL_ROM) //define in ROM makefile
 #define SUPPORT_HW_SW_CRYPTO
-#include "polarssl/ssl_rom_lib.h"
-#include "polarssl/config_rom.h"
+#include "mbedtls/ssl_rom_lib.h"
+#include "mbedtls/config_rom.h"
 #elif CONFIG_PROJECT_CUSTOM
 #include "platform_stdlib.h"
 #include "ssl_config.h"
 #elif CONFIG_SSL_RSA
 #include "platform_stdlib.h"
-#include "polarssl/config_rsa.h"
+#include "mbedtls/config_rsa.h"
 #else
 #include "platform_stdlib.h"
-#include "polarssl/config_all.h"
+#include "mbedtls/config_all.h"
 #endif /* CONFIG_SSL_ROM */
-
-#define POLARSSL_DEBUG_C

@@ -63,7 +63,7 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                (6 * 1024) //for ping 10k test
+#define MEM_SIZE                (7 * 1024) //for ping 10k test
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this

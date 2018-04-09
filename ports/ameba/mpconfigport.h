@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #ifdef AMEBA1
-#include "mpconfigports/rtl8195a_ports.h"
+#include "mpconfigports/ameba1_ports.h"
 #elif AMEBAZ
 #include "mpconfigports/amebaz_ports.h"
 #else

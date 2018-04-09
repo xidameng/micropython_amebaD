@@ -36,6 +36,7 @@
 #define MICROPY_PY_BUILTINS_PROPERTY            (1)
 #define MICROPY_PY_BUILTINS_TIMEOUTERROR        (1)
 #define MICROPY_PY___FILE__                     (1)
+#define MICROPY_ENABLE_SCHEDULER                (1)
 #define MICROPY_PY_GC                           (1)
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
@@ -51,6 +52,7 @@
 #define MICROPY_PY_UZLIB                        (1)
 #define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
+#define MICROPY_PY_USSL_FINALISER               (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
 #define MICROPY_PY_SYS_STDFILES                 (1)
@@ -90,12 +92,11 @@
 #define mp_builtin_open mp_vfs_open
 #define mp_builtin_open_obj mp_vfs_open_obj
 
-#define MICROPY_EVENT_POLL_HOOK                             \
-    if (MP_STATE_VM(mp_pending_exception) != NULL) {        \
-        mp_obj_t obj = MP_STATE_VM(mp_pending_exception);   \
-        MP_STATE_VM(mp_pending_exception) = MP_OBJ_NULL;    \
-        nlr_raise(obj);                                     \
-    }                                                       \
+#define MICROPY_EVENT_POLL_HOOK \
+    do { \
+        extern void mp_handle_pending(void); \
+        mp_handle_pending(); \
+    } while(0); \
 
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
