@@ -65,6 +65,9 @@ STATIC mp_obj_t get_wlan(size_t n_args, const mp_obj_t *args) {
     int idx = 0;
     if (n_args > 0) {
         idx = mp_obj_get_int(args[0]);
+        if (idx < 0 || idx >= sizeof(wlan_objs)) {
+            mp_raise_ValueError(NULL);
+        }
     }
     return MP_OBJ_FROM_PTR(&wlan_objs[idx]);
 }
@@ -80,7 +83,19 @@ STATIC mp_obj_t esp_active(size_t n_args, const mp_obj_t *args) {
         } else {
             mode &= ~mask;
         }
+        if (mode != NULL_MODE) {
+            wifi_fpm_do_wakeup();
+            wifi_fpm_close();
+        }
         error_check(wifi_set_opmode(mode), "Cannot update i/f status");
+        if (mode == NULL_MODE) {
+            // Wait for the interfaces to go down before forcing power management
+            while (wifi_get_opmode() != NULL_MODE) {
+                ets_loop_iter();
+            }
+            wifi_fpm_open();
+            wifi_fpm_do_sleep(0xfffffff);
+        }
         return mp_const_none;
     }
 
@@ -332,7 +347,7 @@ STATIC mp_obj_t esp_config(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs
     if (kwargs->used != 0) {
 
         for (mp_uint_t i = 0; i < kwargs->alloc; i++) {
-            if (MP_MAP_SLOT_IS_FILLED(kwargs, i)) {
+            if (mp_map_slot_is_filled(kwargs, i)) {
                 #define QS(x) (uintptr_t)MP_OBJ_NEW_QSTR(x)
                 switch ((uintptr_t)kwargs->table[i].key) {
                     case QS(MP_QSTR_mac): {
@@ -422,8 +437,11 @@ STATIC mp_obj_t esp_config(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs
             return mp_obj_new_bytes(mac, sizeof(mac));
         }
         case MP_QSTR_essid:
-            req_if = SOFTAP_IF;
-            val = mp_obj_new_str((char*)cfg.ap.ssid, cfg.ap.ssid_len);
+            if (self->if_id == STATION_IF) {
+                val = mp_obj_new_str((char*)cfg.sta.ssid, strlen((char*)cfg.sta.ssid));
+            } else {
+                val = mp_obj_new_str((char*)cfg.ap.ssid, cfg.ap.ssid_len);
+            }
             break;
         case MP_QSTR_hidden:
             req_if = SOFTAP_IF;
@@ -440,7 +458,11 @@ STATIC mp_obj_t esp_config(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs
         case MP_QSTR_dhcp_hostname: {
             req_if = STATION_IF;
             char* s = wifi_station_get_hostname();
-            val = mp_obj_new_str(s, strlen(s));
+            if (s == NULL) {
+                val = MP_OBJ_NEW_QSTR(MP_QSTR_);
+            } else {
+                val = mp_obj_new_str(s, strlen(s));
+            }
             break;
         }
         default:

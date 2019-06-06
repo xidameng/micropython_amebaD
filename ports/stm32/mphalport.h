@@ -11,16 +11,26 @@ void mp_hal_set_interrupt_char(int c); // -1 to disable
 
 #include "irq.h"
 
+#if __CORTEX_M == 0
+// Don't have raise_irq_pri on Cortex-M0 so keep IRQs enabled to have SysTick timing
+#define mp_hal_quiet_timing_enter() (1)
+#define mp_hal_quiet_timing_exit(irq_state) (void)(irq_state)
+#else
 #define mp_hal_quiet_timing_enter() raise_irq_pri(1)
 #define mp_hal_quiet_timing_exit(irq_state) restore_irq_pri(irq_state)
+#endif
 #define mp_hal_delay_us_fast(us) mp_hal_delay_us(us)
 
 void mp_hal_ticks_cpu_enable(void);
 static inline mp_uint_t mp_hal_ticks_cpu(void) {
+    #if __CORTEX_M == 0
+    return 0;
+    #else
     if (!(DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk)) {
         mp_hal_ticks_cpu_enable();
     }
     return DWT->CYCCNT;
+    #endif
 }
 
 // C-level pin HAL
@@ -32,11 +42,20 @@ static inline mp_uint_t mp_hal_ticks_cpu(void) {
 #define MP_HAL_PIN_MODE_OUTPUT          (1)
 #define MP_HAL_PIN_MODE_ALT             (2)
 #define MP_HAL_PIN_MODE_ANALOG          (3)
+#if defined(GPIO_ASCR_ASC0)
+#define MP_HAL_PIN_MODE_ADC             (11)
+#else
+#define MP_HAL_PIN_MODE_ADC             (3)
+#endif
 #define MP_HAL_PIN_MODE_OPEN_DRAIN      (5)
 #define MP_HAL_PIN_MODE_ALT_OPEN_DRAIN  (6)
 #define MP_HAL_PIN_PULL_NONE            (GPIO_NOPULL)
 #define MP_HAL_PIN_PULL_UP              (GPIO_PULLUP)
 #define MP_HAL_PIN_PULL_DOWN            (GPIO_PULLDOWN)
+#define MP_HAL_PIN_SPEED_LOW            (GPIO_SPEED_FREQ_LOW)
+#define MP_HAL_PIN_SPEED_MEDIUM         (GPIO_SPEED_FREQ_MEDIUM)
+#define MP_HAL_PIN_SPEED_HIGH           (GPIO_SPEED_FREQ_HIGH)
+#define MP_HAL_PIN_SPEED_VERY_HIGH      (GPIO_SPEED_FREQ_VERY_HIGH)
 
 #define mp_hal_pin_obj_t const pin_obj_t*
 #define mp_hal_get_pin_obj(o)   pin_find(o)
@@ -59,3 +78,14 @@ static inline mp_uint_t mp_hal_ticks_cpu(void) {
 void mp_hal_gpio_clock_enable(GPIO_TypeDef *gpio);
 void mp_hal_pin_config(mp_hal_pin_obj_t pin, uint32_t mode, uint32_t pull, uint32_t alt);
 bool mp_hal_pin_config_alt(mp_hal_pin_obj_t pin, uint32_t mode, uint32_t pull, uint8_t fn, uint8_t unit);
+void mp_hal_pin_config_speed(mp_hal_pin_obj_t pin_obj, uint32_t speed);
+
+enum {
+    MP_HAL_MAC_WLAN0 = 0,
+    MP_HAL_MAC_WLAN1,
+    MP_HAL_MAC_BDADDR,
+    MP_HAL_MAC_ETH0,
+};
+
+void mp_hal_get_mac(int idx, uint8_t buf[6]);
+void mp_hal_get_mac_ascii(int idx, size_t chr_off, size_t chr_len, char *dest);

@@ -9,7 +9,7 @@ void STM32L476DISC_board_early_init(void);
 #define MICROPY_HW_HAS_FLASH        (1)
 #define MICROPY_HW_ENABLE_RNG       (1)
 #define MICROPY_HW_ENABLE_RTC       (1)
-#define MICROPY_HW_ENABLE_CAN       (1)
+#define MICROPY_HW_ENABLE_SERVO     (1)
 #define MICROPY_HW_ENABLE_USB       (1)
 
 // use external SPI flash for storage
@@ -37,6 +37,9 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_CLK_PLLR (RCC_PLLR_DIV2)
 #define MICROPY_HW_CLK_PLLQ (RCC_PLLQ_DIV2)
 
+// The board has an external 32kHz crystal
+#define MICROPY_HW_RTC_USE_LSE      (1)
+
 #define MICROPY_HW_FLASH_LATENCY    FLASH_LATENCY_4
 
 // USART config
@@ -57,6 +60,10 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_SPI2_SCK     (pin_D1)
 #define MICROPY_HW_SPI2_MISO    (pin_D3)
 #define MICROPY_HW_SPI2_MOSI    (pin_D4)
+
+// CAN busses
+#define MICROPY_HW_CAN1_TX (pin_B9)
+#define MICROPY_HW_CAN1_RX (pin_B8)
 
 // Joystick is pulled low. Pressing the button makes the input go high.
 #define MICROPY_HW_USRSW_PIN        (pin_A0)

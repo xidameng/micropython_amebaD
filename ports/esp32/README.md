@@ -32,7 +32,7 @@ git hash of this version can be found by running `make` without a configured
 
     $ git clone https://github.com/espressif/esp-idf.git
     $ git checkout <Current supported ESP-IDF commit hash>
-    $ git submodule update --recursive
+    $ git submodule update --init --recursive
 
 The binary toolchain (binutils, gcc, etc.) can be installed using the following
 guides:
@@ -48,12 +48,12 @@ If you use WSL then follow the
 [Linux guidelines](https://esp-idf.readthedocs.io/en/latest/get-started/linux-setup.html)
 for the ESP-IDF instead of the Windows ones.
 
-The Espressif ESP-IDF instructions above only install pyserial for Python 2,
-so if you're running Python 3 or a non-system Python you'll also need to
-install `pyserial` (or `esptool`) so that the Makefile can flash the board
-and set parameters:
+You will also need either Python 2 or Python 3, along with the `pyserial` and
+`pyparsing` packages installed for the version of Python that you will be using
+(when building you can use, eg, `make PYTHON=python2` to specify the version
+used).  To install the required packages do:
 ```bash
-$ pip install pyserial
+$ pip install pyserial pyparsing
 ```
 
 Once everything is set up you should have a functioning toolchain with
@@ -64,7 +64,7 @@ the following commands on (at least) Linux:
 
     $ export PATH=$PATH:$HOME/esp/crosstool-NG/builds/xtensa-esp32-elf/bin
 
-You cam put this command in your `.profile` or `.bash_login`.
+You can put this command in your `.profile` or `.bash_login`.
 
 You then need to set the `ESPIDF` environment/makefile variable to point to
 the root of the ESP-IDF repository.  You can set the variable in your PATH,
@@ -78,6 +78,7 @@ ESPIDF = <path to root of esp-idf repository>
 #FLASH_MODE = qio
 #FLASH_SIZE = 4MB
 #CROSS_COMPILE = xtensa-esp32-elf-
+#SDKCONFIG = boards/sdkconfig.spiram
 
 include Makefile
 ```
@@ -90,6 +91,17 @@ If the Xtensa cross-compiler is not in your path you can use the
 are `PORT` for the serial port of your esp32 module, and `FLASH_MODE`
 (which may need to be `dio` for some modules)
 and `FLASH_SIZE`.  See the Makefile for further information.
+
+The default ESP IDF configuration settings are provided in the file
+`boards/sdkconfig`, and this file is specified in the build by the make
+variable `SDKCONFIG`.  To use a custom configuration either set `SDKCONFIG`
+in your custom `makefile` (or `GNUmakefile`) or set this variable on the
+command line:
+```bash
+$ make SDKCONFIG=sdkconfig.myboard
+```
+The file `boards/sdkconfig.spiram` is provided for ESP32 modules that have
+external SPIRAM.
 
 Building the firmware
 ---------------------
