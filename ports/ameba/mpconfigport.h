@@ -8,8 +8,8 @@
 #warning "Invalid CHIP set"
 #endif
 
-#define mp_type_fileio fatfs_type_fileio
-#define mp_type_textio fatfs_type_textio
+#define mp_type_fileio mp_type_vfs_fat_fileio
+#define mp_type_textio mp_type_vfs_fat_textio // xxm
 
 // type definitions for the specific machine
 

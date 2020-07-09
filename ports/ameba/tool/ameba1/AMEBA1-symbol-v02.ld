@@ -63,6 +63,7 @@ SECTIONS
     *(.websocket.text*)
     */py/*.o(.text*)
     */lib/*.o(.text*)
+    */lib/oofatfs*.o(.text*)
     */extmod/*.o(.text*)
   } > SDRAM
 
@@ -74,6 +75,7 @@ SECTIONS
     *(.websocket.rodata*)
     */py/*.o(.rodata*)
     */lib/*.o(.rodata*)
+    */lib/oofatfs*.o(.text*)
     */extmod/*.o(.rodata*)
   } > SDRAM
 
@@ -85,6 +87,7 @@ SECTIONS
     *(.websocket.data*)
     */py/*.o(.data*)
     */lib/*.o(.data*)
+    */lib/oofatfs*.o(.text*)
     */extmod/*.o(.data*)
     __sdram_data_end__ = .;
   } > SDRAM
@@ -98,6 +101,7 @@ SECTIONS
     *(.websocket.bss*)
     */py/*.o(.bss*)
     */lib/*.o(.bss*)
+    */lib/oofatfs*.o(.text*)
     */extmod/*.o(.bss*)
     __sdram_bss_end__ = .;
   } > SDRAM

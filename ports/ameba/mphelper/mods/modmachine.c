@@ -61,6 +61,18 @@
 #include "machine/objflash.h"
 #include "machine/objpin.h"
 #include "machine/objuart.h"
+#elif defined(AMEBAD)
+#include "amebaz/objloguart.h"
+#include "amebaz/objspi.h"
+#include "machine/objcrypto.h"
+#include "machine/objtimer.h"
+#include "machine/objrtc.h"
+#include "machine/objwdt.h"
+#include "machine/objpwm.h"
+#include "machine/obji2c.h"
+#include "machine/objflash.h"
+#include "machine/objpin.h"
+#include "machine/objuart.h"
 #else
 #endif
 

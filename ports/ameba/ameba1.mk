@@ -9,9 +9,10 @@ PAD  = $(BUILD)/padding
 CHKSUM = $(BUILD)/checksum
 AMEBASIZE = $(BUILD)/amebasize
 else
-PICK = $(BUILD)pick
-PAD  = $(BUILD)padding
-CHKSUM = $(BUILD)checksum
+PICK = $(BUILD)/pick
+PAD  = $(BUILD)/padding
+CHKSUM = $(BUILD)/checksum
+AMEBASIZE = $(BUILD)/amebasize
 endif
 endif
 
@@ -79,6 +80,7 @@ INC += -I$(TOP)/lib/utils
 INC += -I$(TOP)/lib/timeutils
 INC += -I$(TOP)/lib/mp-readline
 INC += -I$(TOP)/lib/netutils
+INC += -I$(TOP)/lib/oofatfs
 
 INC += -I./mphelper
 INC += -I./mphelper/gccollect
@@ -369,11 +371,12 @@ UPY_C += \
 		lib/utils/pyexec.c \
 		lib/mp-readline/readline.c \
 		lib/utils/interrupt_char.c \
-		lib/oofatfs/ff.c \
-		lib/oofatfs/option/ccsbcs.c \
 		lib/timeutils/timeutils.c \
 		lib/netutils/netutils.c \
 		lib//utils/sys_stdio_mphal.c \
+		lib/oofatfs/ff.c \
+		lib/oofatfs/ffunicode.c \
+		#lib/oofatfs/option/ccsbcs.c \
 
 DRAM_C += $(UPY_C)
 

@@ -33,6 +33,60 @@ STATIC i2c_obj_t i2c_obj[4] = {
     {.base.type = &i2c_type, .unit = 3, .freq = I2C_DEFAULT_BAUD_RATE_HZ },
 };
 
+int _i2c_read(mp_obj_base_t *self_in, uint8_t *dest, size_t len, bool nack) {
+  i2c_obj_t *self = (i2c_obj_t*)self_in;
+  mp_uint_t i = 0;
+  for (i = 0; i < len; i++) {
+    dest[i] = i2c_byte_read(&(self->obj), nack && (i == len));
+  }
+  return 0;
+}
+
+int _i2c_write(mp_obj_base_t *self_in, const uint8_t *src, size_t len) {
+  i2c_obj_t *self = (i2c_obj_t*)self_in;
+  int num_acks = 0;
+  while (len--) {
+    int ret = i2c_byte_write(&(self->obj), *src++);
+    if (ret != true)
+      return 0;
+    ++num_acks;
+  }
+  return num_acks;
+}
+
+// return value:
+//    0 - success
+//   <0 - error, with errno being the negative of the return value
+int _i2c_readfrom(mp_obj_base_t *self_in, uint16_t addr, uint8_t *dest, size_t len, bool stop) {
+  i2c_obj_t *self = (i2c_obj_t*)self_in;
+  int ret = i2c_read(&(self->obj), addr, dest, len, stop);
+  if (ret != len)
+    return -1;
+  return 0; // success
+}
+
+// return value:
+//  >=0 - number of acks received
+//   <0 - error, with errno being the negative of the return value
+int _i2c_writeto(mp_obj_base_t *self_in, uint16_t addr, const uint8_t *src, size_t len, bool stop) {
+  i2c_obj_t *self = (i2c_obj_t*)self_in;
+  int ret = i2c_write(&(self->obj), addr, src, len, stop);
+  return ret;
+}
+
+///////////////////////  XXM  ///////////////////////
+// Replaced all i2c_p->readfrom with _i2c_readfrom //
+// Replaced all i2c_p->writeto with _i2c_writeto   //
+// due to snytax error                             //
+/////////////////////////////////////////////////////
+
+STATIC const mp_machine_i2c_p_t machine_hard_i2c_p = {
+    .read = _i2c_read,
+    .write = _i2c_write,
+    //.readfrom = _i2c_readfrom,  // xxm
+    //.writeto = _i2c_writeto,  // xxm
+};
+
 STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
     enum {ARG_unit, ARG_sda, ARG_scl, ARG_freq};
     const mp_arg_t i2c_init_args[] = {
@@ -91,7 +145,7 @@ STATIC mp_obj_t machine_i2c_scan(mp_obj_t self_in) {
     mp_obj_t list = mp_obj_new_list(0, NULL);
     // 7-bit addresses 0b0000xxx and 0b1111xxx are reserved
     for (int addr = 0x08; addr < 0x78; ++addr) {
-        int ret = i2c_p->writeto(self, addr, NULL, 0, true);
+        int ret = _i2c_writeto(self, addr, NULL, 0, true);
         if (ret == 0) {
             mp_obj_list_append(list, MP_OBJ_NEW_SMALL_INT(addr));
         }
@@ -153,7 +207,7 @@ STATIC mp_obj_t machine_i2c_readfrom(size_t n_args, const mp_obj_t *args) {
     vstr_t vstr;
     vstr_init_len(&vstr, mp_obj_get_int(args[2]));
     bool stop = (n_args == 3) ? true : mp_obj_is_true(args[3]);
-    int ret = i2c_p->readfrom(self, addr, (uint8_t*)vstr.buf, vstr.len, stop);
+    int ret = _i2c_readfrom(self, addr, (uint8_t*)vstr.buf, vstr.len, stop);
     if (ret < 0) {
         mp_raise_OSError(-ret);
     }
@@ -168,7 +222,7 @@ STATIC mp_obj_t machine_i2c_readfrom_into(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[2], &bufinfo, MP_BUFFER_WRITE);
     bool stop = (n_args == 3) ? true : mp_obj_is_true(args[3]);
-    int ret = i2c_p->readfrom(self, addr, bufinfo.buf, bufinfo.len, stop);
+    int ret = _i2c_readfrom(self, addr, bufinfo.buf, bufinfo.len, stop);
     if (ret < 0) {
         mp_raise_OSError(-ret);
     }
@@ -183,7 +237,7 @@ STATIC mp_obj_t machine_i2c_writeto(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[2], &bufinfo, MP_BUFFER_READ);
     bool stop = (n_args == 3) ? true : mp_obj_is_true(args[3]);
-    int ret = i2c_p->writeto(self, addr,  bufinfo.buf, bufinfo.len, stop);
+    int ret = _i2c_writeto(self, addr,  bufinfo.buf, bufinfo.len, stop);
     if (ret < 0) {
         mp_raise_OSError(-ret);
     }
@@ -200,13 +254,13 @@ STATIC int read_mem(mp_obj_t self_in, uint16_t addr, uint32_t memaddr, uint8_t a
     for (int16_t i = addrsize - 8; i >= 0; i -= 8) {
         memaddr_buf[memaddr_len++] = memaddr >> i;
     }
-    int ret = i2c_p->writeto(self, addr, memaddr_buf, memaddr_len, false);
+    int ret = _i2c_writeto(self, addr, memaddr_buf, memaddr_len, false);
     if (ret != memaddr_len) {
         // must generate STOP
-        i2c_p->writeto(self, addr, NULL, 0, true);
+        _i2c_writeto(self, addr, NULL, 0, true);
         return ret;
     }
-    return i2c_p->readfrom(self, addr, buf, len, true);
+    return _i2c_readfrom(self, addr, buf, len, true);
 }
 
 #define MAX_MEMADDR_SIZE (4)
@@ -234,7 +288,7 @@ STATIC int write_mem(mp_obj_t self_in, uint16_t addr, uint32_t memaddr, uint8_t 
     }
     memcpy(buf2 + memaddr_len, buf, len);
 
-    int ret = i2c_p->writeto(self, addr, buf2, memaddr_len + len, true);
+    int ret = _i2c_writeto(self, addr, buf2, memaddr_len + len, true);
     if (buf2_alloc != 0) {
         m_del(uint8_t, buf2, buf2_alloc);
     }
@@ -332,53 +386,7 @@ STATIC const mp_map_elem_t i2c_locals_dict_table[] = {
 };
 STATIC MP_DEFINE_CONST_DICT(i2c_locals_dict, i2c_locals_dict_table);
 
-int _i2c_read(mp_obj_base_t *self_in, uint8_t *dest, size_t len, bool nack) {
-  i2c_obj_t *self = (i2c_obj_t*)self_in;
-  mp_uint_t i = 0;
-  for (i = 0; i < len; i++) {
-    dest[i] = i2c_byte_read(&(self->obj), nack && (i == len));
-  }
-  return 0;
-}
 
-int _i2c_write(mp_obj_base_t *self_in, const uint8_t *src, size_t len) {
-  i2c_obj_t *self = (i2c_obj_t*)self_in;
-  int num_acks = 0;
-  while (len--) {
-    int ret = i2c_byte_write(&(self->obj), *src++);
-    if (ret != true)
-      return 0;
-    ++num_acks;
-  }
-  return num_acks;
-}
-
-// return value:
-//    0 - success
-//   <0 - error, with errno being the negative of the return value
-int _i2c_readfrom(mp_obj_base_t *self_in, uint16_t addr, uint8_t *dest, size_t len, bool stop) {
-  i2c_obj_t *self = (i2c_obj_t*)self_in;
-  int ret = i2c_read(&(self->obj), addr, dest, len, stop);
-  if (ret != len)
-    return -1;
-  return 0; // success
-}
-
-// return value:
-//  >=0 - number of acks received
-//   <0 - error, with errno being the negative of the return value
-int _i2c_writeto(mp_obj_base_t *self_in, uint16_t addr, const uint8_t *src, size_t len, bool stop) {
-  i2c_obj_t *self = (i2c_obj_t*)self_in;
-  int ret = i2c_write(&(self->obj), addr, src, len, stop);
-  return ret;
-}
-
-STATIC const mp_machine_i2c_p_t machine_hard_i2c_p = {
-    .read = _i2c_read,
-    .write = _i2c_write,
-    .readfrom = _i2c_readfrom,
-    .writeto = _i2c_writeto,
-};
 
 const mp_obj_type_t i2c_type = {
     { &mp_type_type },

@@ -31,6 +31,7 @@
 #include "py/builtin.h"
 #include "py/stream.h"
 #include "py/binary.h"
+#include "py/obj.h"
 #include "py/objarray.h"
 #include "py/objstringio.h"
 #include "py/frozenmod.h"

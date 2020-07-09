@@ -51,21 +51,31 @@
 uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
+    printf("--Test 01--\n");
     mp_stack_ctrl_init();
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
+    printf("--Test gc--\n");
 #endif
+    printf("--Test 02--\n");
     // Init micropython basic system
     mp_init();
+    printf("--Test 03--\n");
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
+    printf("--Test 04--\n");
     modmachine_init();
+    printf("--Test 05--\n");
     modnetwork_init();
+    printf("--Test 06--\n");
     modwireless_init();
+    printf("--Test 07--\n");
     modterm_init();
+    printf("--Test 08--\n");
     pyexec_frozen_module("_boot.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
+    printf("--Test 09--\n");
 #endif
     for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
@@ -80,6 +90,8 @@ void micropython_task(void const *arg) {
 }
 
 void main (void) {
+
+    printf("--Test 00--\n");
     struct task_struct stUpyTask;
     BaseType_t xReturn = rtw_create_task(&stUpyTask, MICROPY_TASK_NAME,
             MICROPY_TASK_STACK_DEPTH, MICROPY_TASK_PRIORITY, micropython_task, NULL);

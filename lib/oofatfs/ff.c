@@ -556,11 +556,13 @@ static const BYTE Dc950[] = TBL_DC950;
 
 #elif FF_CODE_PAGE < 900    /* Static code page configuration (SBCS) */
 #define CODEPAGE FF_CODE_PAGE
-static const BYTE ExCvt[] = MKCVTBL(TBL_CT, FF_CODE_PAGE);
+static const BYTE ExCvt[] = MERGE_2STR(TBL_CT, 437);
+//static const BYTE ExCvt[] = MKCVTBL(TBL_CT, FF_CODE_PAGE); // xxm
 
 #else                   /* Static code page configuration (DBCS) */
 #define CODEPAGE FF_CODE_PAGE
-static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
+static const BYTE DbcTbl[] = MERGE_2STR(TBL_DC, 437);
+//static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE); // xxm
 
 #endif
 

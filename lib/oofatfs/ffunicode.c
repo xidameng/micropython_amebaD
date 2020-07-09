@@ -259,7 +259,7 @@ WCHAR ff_uni2oem (  /* Returns OEM code character, zero on error */
 )
 {
     WCHAR c = 0;
-    const WCHAR *p = CVTBL(uc, FF_CODE_PAGE);
+    const WCHAR *p = MERGE2(uc, 437); // xxm
 
 
     if (uni < 0x80) {   /* ASCII? */
@@ -281,7 +281,7 @@ WCHAR ff_oem2uni (  /* Returns Unicode character, zero on error */
 )
 {
     WCHAR c = 0;
-    const WCHAR *p = CVTBL(uc, FF_CODE_PAGE);
+    const WCHAR *p = MERGE2(uc, 437); // xxm
 
 
     if (oem < 0x80) {   /* ASCII? */

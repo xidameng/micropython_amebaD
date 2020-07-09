@@ -41,13 +41,18 @@ _flash = flashbdev.FlashBdev(start_addr=_flash_vfs_start_addr, blocks=_flash_vfs
 flash_vfs = uos.VfsFat(_flash)
 print("Mounting Flashfs")
 try:
-    uos.mount(flash_vfs, '/flash')
+    uos.mount(flash_vfs, '/pyboard')
 except OSError as e:
-    print("Mounting Flash to vfs failed, cause: {}".format(e))
-    print("Formating flash")
-    uos.VfsFat.mkfs(_flash)
-    print("Format done")
-    uos.mount(flash_vfs, '/flash')
+    print("Mounting Flash to vfs at /flash failed, cause: {}".format(e))
+    #print("Formating flash")
+    #uos.VfsFat.mkfs(_flash)
+    #print("Format done")
+    #uos.mount(flash_vfs, '/flash')
+
+try:
+    uos.mount(flash_vfs, '/')
+except OSError as e:
+    print("Mounting Flash to vfs at / failed, cause: {}".format(e))
 
 print("Mount flash to vfs done")
 
