@@ -1,7 +1,0 @@
-!lib_*.a
-!ram_1.p.bin
-!ram_1.r.bin
-fwsize.gdb
-vendor/tools/arm-none-eabi-gcc/4.8.3-2014q1/
-inc/build_info.h
-tests/wifi_sta_test.py

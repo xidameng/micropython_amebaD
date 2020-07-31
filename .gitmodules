@@ -21,3 +21,6 @@
 [submodule "lib/mbedtls"]
 	path = lib/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
+[submodule "ameba/vendor"]
+	path = ports/ameba/vendor
+	url = https://github.com/xidameng/realtek_ameba_mp_sdk.git
