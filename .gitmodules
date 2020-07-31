@@ -21,6 +21,3 @@
 [submodule "lib/mbedtls"]
 	path = lib/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
-[submodule "ameba/vendor"]
-	path = ports/ameba/vendor
-	url = https://github.com/cwyark/sdk-ameba-v4.0b_without_nda_gcc.git
