@@ -80,6 +80,7 @@ STATIC void modterm_map_add(mp_map_t *poll_map, const mp_obj_t *obj, mp_uint_t o
 }
 
 void mp_term_tx_strn(char *str, size_t len) {
+    printf("inside--mp_term_tx_strn\n");
     for (mp_uint_t i = 0; i < MP_STATE_PORT(mp_terminal_map).alloc; ++i) {
         if (!MP_MAP_SLOT_IS_FILLED(&MP_STATE_PORT(mp_terminal_map), i)) {
             continue;
@@ -105,6 +106,7 @@ void mp_term_tx_strn(char *str, size_t len) {
 
 int mp_term_rx_chr() {
 	char chr = 0;
+    printf("inside--mp_term_rx_chr\n");
 
     if (rtw_pop_from_xqueue(&xRxQueue, (void *)&chr, RTW_WAIT_FOREVER) < 0) {
 		// Do something here...
@@ -181,7 +183,7 @@ STATIC mp_obj_t term_unregister(mp_obj_t obj_in) {
 MP_DEFINE_CONST_FUN_OBJ_1(term_unregister_obj, term_unregister);
 
 STATIC const mp_map_elem_t uterminal_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),   MP_OBJ_NEW_QSTR(MP_QSTR_uterm) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR___name__),   MP_OBJ_NEW_QSTR(MP_QSTR_uterm) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_register),   MP_OBJ_FROM_PTR(&term_register_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_unregister), MP_OBJ_FROM_PTR(&term_unregister_obj) },
 };

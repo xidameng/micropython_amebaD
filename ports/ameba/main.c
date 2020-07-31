@@ -40,6 +40,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "osdep_service.h"
+//#include ""
 
 /*****************************************************************************
  *                              Internal variables
@@ -60,18 +61,19 @@ void micropython_task(void const *arg) {
     printf("--Test 02--\n");
     // Init micropython basic system
     mp_init();
-    printf("--Test 03--\n");
+    printf("--Test 03--mp init--\n");
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
     printf("--Test 04--\n");
     modmachine_init();
-    printf("--Test 05--\n");
-    modnetwork_init();
+    //loguart_init0();
+    printf("--Test 05--loguart init--\n");
+    //modnetwork_init();
     printf("--Test 06--\n");
-    modwireless_init();
+    //modwireless_init();
     printf("--Test 07--\n");
     modterm_init();
-    printf("--Test 08--\n");
+    printf("--Test 08--term init--\n");
     pyexec_frozen_module("_boot.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
@@ -79,24 +81,43 @@ void micropython_task(void const *arg) {
 #endif
     for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
+            printf("--Test 10--\n");
             if (pyexec_raw_repl() != 0)
                 mp_printf(&mp_plat_print, "soft reboot\n");
         } else {
+            printf("--Test 11--\n");
             if (pyexec_friendly_repl() != 0) 
                 mp_printf(&mp_plat_print, "soft reboot\n");
         }
     }
+    printf("--Test 12--\n");
     rtw_thread_exit();
+    printf("--Test 13--\n");
 }
 
 void main (void) {
 
     printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    printf("--Test 00--\n");
+    #if 1
     struct task_struct stUpyTask;
     BaseType_t xReturn = rtw_create_task(&stUpyTask, MICROPY_TASK_NAME,
             MICROPY_TASK_STACK_DEPTH, MICROPY_TASK_PRIORITY, micropython_task, NULL);
+    printf("--Test 00--after--taskcreate--\n");
     vTaskStartScheduler();
+    printf("--Test 00--after--scheduler--\n");
     for(;;);
+    #endif
+    printf("--Test 00--after--for--loop--\n");
     return;
 }
 

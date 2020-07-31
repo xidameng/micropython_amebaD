@@ -66,7 +66,7 @@ pin_obj_t *pin_find(mp_obj_t user_obj) {
 STATIC uint8_t pin_get_value (const pin_obj_t* self) {
     int value;
     bool setmode = false;
-    if (self->mode == PullNone || self->mode == OpenDrain) {
+    if (self->mode == PullNone) {
         setmode = true;
         // configure the direction to IN for a moment in order to read the pin value
         gpio_dir((gpio_t *)&(self->obj), PIN_INPUT);
@@ -163,8 +163,6 @@ STATIC void pin_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
         pull_qst = MP_QSTR_PULL_UP;
     } else if (pull == PullDown) {
         pull_qst = MP_QSTR_PULL_DOWN;
-    } else if (pull == OpenDrain) {
-        pull_qst = MP_QSTR_OPEN_DRAIN;
     } else {
         // defualt is pull none
         pull_qst = MP_QSTR_PULL_NONE;
@@ -291,7 +289,6 @@ STATIC const mp_map_elem_t pin_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_NONE),  MP_OBJ_NEW_SMALL_INT(PullNone) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_UP),    MP_OBJ_NEW_SMALL_INT(PullUp) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PULL_DOWN),  MP_OBJ_NEW_SMALL_INT(PullDown) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_OPEN_DRAIN), MP_OBJ_NEW_SMALL_INT(OpenDrain) },
 };
 STATIC MP_DEFINE_CONST_DICT(pin_locals_dict, pin_locals_dict_table);
 

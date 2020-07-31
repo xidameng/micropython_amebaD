@@ -322,5 +322,88 @@ STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_23), MP_OBJ_FROM_PTR(&pin_PA_23) },
 };
 MP_DEFINE_CONST_DICT(pin_board_pins_locals_dict, pin_board_pins_locals_dict_table);
+
+
+#elif defined(AMEBAD)
+
+#define AF(pin_name, af_name, af_index, pull) \
+{ \
+    .pin        = pin_name,                                 \
+    .peripheral = af_name ## af_index,                      \
+    .function   = PIN_DATA(pull, PINMUX_FUNCTION_ ## af_name) \
+}
+
+const PinMap PinMap_UART_TX[] = {
+    AF(PA_7, UART, _0, PullUp),
+    //AF(PA_30, UART, _2, PullUp),
+
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_UART_RX[] = {
+    AF(PA_8, UART, _0, PullUp),
+    //AF(PA_29, UART, _2, PullUp),
+
+    {NC,    NC,     0}
+};
+
+#if 0
+const PinMap PinMap_I2C_SDA[] = {
+    AF(PA_19, I2C, _0, PullUp),
+    AF(PA_23, I2C, _1, PullUp),
+
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_I2C_SCL[] = {
+    AF(PA_22, I2C, _0, PullUp),
+    AF(PA_18, I2C, _1, PullUp),
+   
+    {NC,    NC,     0}
+};
+
+const PinMap PinMap_PWM[] = {
+    AF(PA_14, PWM, _0, PullNone),
+    AF(PA_15, PWM, _1, PullNone),
+    AF(PA_0,  PWM, _2, PullNone),
+    AF(PA_12, PWM, _3, PullNone),
+    AF(PA_5,  PWM, _4, PullNone),
+    AF(PA_23, PWM, _5, PullNone),
+
+    {NC,    NC,     0}
+};
+
+pin_obj_t pin_PA_30 = PIN(PA_30, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_29 = PIN(PA_29, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_14 = PIN(PA_14, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_15 = PIN(PA_15, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_0  = PIN(PA_0,  PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_12 = PIN(PA_12, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_5  = PIN(PA_5,  PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_18 = PIN(PA_18, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_19 = PIN(PA_19, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_22 = PIN(PA_22, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_23 = PIN(PA_23, PullNone, PIN_OUTPUT, 0);
+#endif
+pin_obj_t pin_PA_7 = PIN(PA_7, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_8 = PIN(PA_8, PullNone, PIN_OUTPUT, 0);
+
+STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_7), MP_OBJ_FROM_PTR(&pin_PA_7) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_8), MP_OBJ_FROM_PTR(&pin_PA_8) },
+#if 0 
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_14), MP_OBJ_FROM_PTR(&pin_PA_14) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_15), MP_OBJ_FROM_PTR(&pin_PA_15) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_0),  MP_OBJ_FROM_PTR(&pin_PA_0) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_12), MP_OBJ_FROM_PTR(&pin_PA_12) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_5),  MP_OBJ_FROM_PTR(&pin_PA_5) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_18), MP_OBJ_FROM_PTR(&pin_PA_18) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_19), MP_OBJ_FROM_PTR(&pin_PA_19) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_22), MP_OBJ_FROM_PTR(&pin_PA_22) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_23), MP_OBJ_FROM_PTR(&pin_PA_23) },
+#endif
+};
+MP_DEFINE_CONST_DICT(pin_board_pins_locals_dict, pin_board_pins_locals_dict_table);
 #else
+
 #endif

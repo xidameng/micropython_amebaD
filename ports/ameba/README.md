@@ -15,6 +15,12 @@ $> make V=1
 
 ## How to program code ?
 
+For Ameba D, simple use
+
+```bash
+$> make upload
+```
+
 Open a terminal , use your jlink jtag programmer
 
 ```bash

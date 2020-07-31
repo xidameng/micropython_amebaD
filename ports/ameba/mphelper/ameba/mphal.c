@@ -40,7 +40,7 @@
 #include "wait_api.h"
 
 #include <stdio.h>
-#include "osdep_api.h"
+//#include "osdep_api.h"  // xxm
 
 int mp_hal_stdin_rx_chr(void) {
   return mp_term_rx_chr();

@@ -1,7 +1,6 @@
 include ../../py/mkenv.mk
 
 
-
 # declare before py.mk
 FROZEN_DIR = scripts
 FROZEN_MPY_DIR = modules
@@ -9,25 +8,30 @@ FROZEN_MPY_DIR = modules
 include $(TOP)/py/py.mk
 
 OS := $(shell uname)
-TOOL := tool
 CHIP := AMEBAD
 DEBUG := 1
-TC_VERSION := $(CHIP)
+
 ifeq ($(CHIP), AMEBAD)
-VENDOR := vendor/ambd_sdk
+VENDOR := vendor/sdk
+TOOL := tool/amebad
+else ifeq ($(CHIP), AMEBA1)
+VENDOR := vendor
+TOOL := tool/ameba1
 else
 VENDOR := vendor
+TOOL := tool/amebaz
 endif
 
-$(info Now building for $(CHIP))
-# toolchains version, note ameba1 uses V4.8.3, amebaD used ASDK V6.5.0, if unspecified,it uses V9.2.1
-# CHIP would be AMEBA1, AMEBAD, AMEBAZ
+$(info Desired building environment: Ubuntu 20)
+$(info Current building target: $(CHIP))
+# Note that ameba1 uses toolchain V4.8.3, amebaD used ASDK V6.5.0, if unspecified,it uses the one installed under usr/bin
+# CHIP would be AMEBA1, AMEBAD or AMEBAZ
 
 # toolchains
-ifeq ($(TC_VERSION), AMEBA1)  
-TC_PATH := ../../../../toolchain/gcc-arm-none-eabi-4.8.3-2014q1/bin/
-else ifeq ($(TC_VERSION), AMEBAD)
-TC_PATH := ../../../../toolchain/asdk-6.5.0/bin/
+ifeq ($(CHIP), AMEBA1)  
+TC_PATH := tool/toolchain/gcc-arm-none-eabi-4.8.3-2014q1/bin/
+else ifeq ($(CHIP), AMEBAD)
+TC_PATH := tool/toolchain/asdk-6.5.0/bin/
 else
 TC_PATH :=
 endif
@@ -42,7 +46,8 @@ SIZE = $(TC_PATH)$(CROSS_COMPILE)size
 OBJCOPY = $(TC_PATH)$(CROSS_COMPILE)objcopy
 OBJDUMP = $(TC_PATH)$(CROSS_COMPILE)objdump
 STRIP = $(TC_PATH)$(CROSS_COMPILE)strip
-
+POSTBUILD = $(BUILD)/postbuild_img2_mp_linux
+IMAGETOOL = amebad_image_tool
 
 ifeq ($(CHIP), AMEBA1)
 include ameba1.mk

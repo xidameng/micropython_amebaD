@@ -33,7 +33,7 @@
 #define UART_MIN_BAUDRATE          (4800)
 #define UART_MAX_BAUDRATE          (115200)
 
-#define UART_DEFAULT_BAUDRATE       (38400)
+#define UART_DEFAULT_BAUDRATE       (115200)
 #define UART_DEFAULT_DATA_BITS      (8)
 #define UART_DEFAULT_PARITY         (0)
 #define UART_DEFAULT_STOP_BITS      (1)

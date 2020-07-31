@@ -1,3 +1,9 @@
+// xm debug flag, defualt to 0 to remove certain sections of code
+// set to 1 to restore to orginal code
+#define xmdebug                                 (0)
+
+#define MP_HAL_CLEAN_DCACHE
+
 // options to control how Micro Python is built
 #define MICROPY_QSTR_BYTES_IN_HASH              (1)
 #define MICROPY_ALLOC_PATH_MAX                  (128)
@@ -41,23 +47,23 @@
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_ATTRTUPLE                    (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
-#define MICROPY_PY_WEBSOCKET                    (1)
+#define MICROPY_PY_WEBSOCKET                    (0)
 #define MICROPY_PY_WEBREPL_DELAY                (20)
 #define MICROPY_PY_MATH                         (1)
 #define MICROPY_PY_IO                           (1)
-#define MICROPY_PY_IO_FILEIO                    (1)
+#define MICROPY_PY_IO_FILEIO                    (0)
 #define MICROPY_PY_UCTYPES                      (1)
 #define MICROPY_PY_UHEAPQ                       (1)
-#define MICROPY_PY_UJSON                        (1)
+#define MICROPY_PY_UJSON                        (0)
 #define MICROPY_PY_UZLIB                        (1)
 #define MICROPY_PY_UBINASCII                    (1)
 #define MICROPY_PY_URE                          (1)
-#define MICROPY_PY_USSL_FINALISER               (1)
+//#define MICROPY_PY_USSL_FINALISER               (1)
 #define MICROPY_PY_STRUCT                       (1)
 #define MICROPY_PY_SYS                          (1)
 #define MICROPY_PY_SYS_STDFILES                 (1)
 #define MICROPY_PY_MACHINE                      (1)
-#define MICROPY_PY_MACHINE_SPI                  (1)
+#define MICROPY_PY_MACHINE_SPI                  (0)
 #define MICROPY_PY_MACHINE_I2C                  (0)
 #define MICROPY_PY_UERRNO                       (1)
 #define MICROPY_PY_SYS_EXIT                     (1)
@@ -75,17 +81,17 @@
 #define MICROPY_PY_TERM_NUM                     (3)
 
 #define MICROPY_READER_VFS                      (MICROPY_VFS)
-#define MICROPY_VFS                             (1)
-#define MICROPY_VFS_FAT                         (1)
+#define MICROPY_VFS                             (0)
+#define MICROPY_VFS_FAT                         (0)
 #define MICROPY_READER_FATFS                    (MICROPY_VFS)
-#define MICROPY_FATFS_ENABLE_LFN                (1)
+#define MICROPY_FATFS_ENABLE_LFN                (0)
 #define MICROPY_FATFS_LFN_CODE_PAGE             (437) /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
 #define MICROPY_FATFS_VOLUMES                   (4)
 #define MICROPY_FATFS_RPATH                     (2)
 #define MICROPY_FATFS_MAX_SS                    (4096)
 #define MICROPY_FATFS_USE_LABEL                 (1)
 
-#include "rtl8195a.h"
+#include "rtl8721d.h"
 
 // use vfs's functions for import stat and builtin open
 #define mp_import_stat mp_vfs_import_stat
@@ -98,43 +104,47 @@
         mp_handle_pending(); \
     } while(0); \
 
+
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_input), MP_OBJ_FROM_PTR(&mp_builtin_input_obj) }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_open),  MP_OBJ_FROM_PTR(&mp_builtin_open_obj) },  \
 
+extern const struct _mp_obj_module_t mp_module_ameba;
 extern const struct _mp_obj_module_t mp_module_umachine;
-extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_uterminal;
+extern const struct _mp_obj_module_t mp_module_uos;
+#if xmdebug
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uwireless;
 extern const struct _mp_obj_module_t mp_module_ussl;
-
 extern const struct _mp_obj_module_t mp_network_module;
-
 extern const struct _mp_obj_module_t mp_module_lwip;
+#endif
 
-extern const struct _mp_obj_module_t mp_module_ameba;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ameba),        MP_OBJ_FROM_PTR(&mp_module_ameba) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
+/*    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_umachine),     MP_OBJ_FROM_PTR(&mp_module_umachine) },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ameba),        MP_OBJ_FROM_PTR(&mp_module_ameba) },    \
+*/
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_time),    MP_OBJ_FROM_PTR(&mp_module_utime) },       \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mem), MP_OBJ_FROM_PTR(&mp_module_ameba) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine), MP_OBJ_FROM_PTR(&mp_module_umachine) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),      MP_OBJ_FROM_PTR(&mp_module_uos) },         \
+/*    { MP_OBJ_NEW_QSTR(MP_QSTR_time),    MP_OBJ_FROM_PTR(&mp_module_utime) },       \
     { MP_OBJ_NEW_QSTR(MP_QSTR_json),    MP_OBJ_FROM_PTR(&mp_module_ujson) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_errno),   MP_OBJ_FROM_PTR(&mp_module_uerrno) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_select),  MP_OBJ_FROM_PTR(&mp_module_uselect) },  \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_machine), MP_OBJ_FROM_PTR(&mp_module_umachine) },  \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless), MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
+*/
 
 #define MICROPY_PY_SYS_PLATFORM             "AmebaBoard"
 
@@ -143,14 +153,15 @@ extern const struct _mp_obj_module_t mp_module_ameba;
 #define MICROPY_HW_BOARD_NAME               MICROPY_PY_SYS_PLATFORM
 #define MICROPY_HW_MCU_NAME                 "RTL8722"
 
-#define MICROPY_WLAN_AP_DEFAULT_SSID        "mpiot-ap"
-#define MICROPY_WLAN_AP_DEFAULT_PASS        "password"
+#define MICROPY_WLAN_AP_DEFAULT_SSID        "YourSSID"
+#define MICROPY_WLAN_AP_DEFAULT_PASS        "YourPSWD"
 
-#define MP_HEAP_SIZE                        (1124 * 1024)
+#define MP_HEAP_SIZE                        (180 * 1024)
+//#define MP_HEAP_SIZE                        (1124 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (((20 * 1024) + 512) / sizeof(StackType_t))
-#define MICROPY_TASK_PRIORITY               (1)
+#define MICROPY_TASK_PRIORITY               (3)
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (10 * 1024) + 0

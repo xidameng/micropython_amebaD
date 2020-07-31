@@ -2,8 +2,10 @@
 
 #ifdef AMEBA1
 #include "mpconfigports/ameba1_ports.h"
-#elif AMEBAZ
+#elif defined(AMEBAZ)
 #include "mpconfigports/amebaz_ports.h"
+#elif defined(AMEBAD)
+#include "mpconfigports/amebad_ports.h"
 #else
 #warning "Invalid CHIP set"
 #endif
