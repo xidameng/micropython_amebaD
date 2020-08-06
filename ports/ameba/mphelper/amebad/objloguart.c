@@ -30,6 +30,7 @@
 #include "objloguart.h"
 
 serial_t log_uart_obj;
+ringbuf_t *_rx_buffer;
 
 
 STATIC const char *_parity_name[] = {"None", "1", "0"};
@@ -54,6 +55,8 @@ STATIC log_uart_obj_t log_uart_obj = {
 };
 #endif
 
+
+#if 0
 /*
  *  OBJLOG_UART Interrupt Service Handler
  */
@@ -92,17 +95,40 @@ void mp_obj_log_uart_irq_handler (log_uart_obj_t *self, LOG_UART_INT_ID event) {
     }
 }
 
+#endif
+
+
+void mp_loguart_irq_handler(uint32_t id, SerialIrq event)
+{
+    char c;
+    _rx_buffer = (ringbuf_t *)id;
+
+    if (event == RxIrq) {
+        c = (char)(serial_getc(&log_uart_obj));
+        ringbuf_store_char(c);
+    }
+}
+
+//loguart_init();
 void loguart_init0(void) {
     // Do nothing here
 #ifdef AMEBAD
-    printf("inti log uart\n");
-    serial_init(&log_uart_obj, PA_7, PA_8);
-    //serial_init(&log_uart_obj, PB_19, PB_18);
+    printf("inti log uart-0\n");
+    ringbuf_init();
+    //serial_init(&log_uart_obj, PA_7, PA_8);
+    serial_init(&log_uart_obj, PB_19, PB_18);
+    printf("inti log uart-1\n");
     serial_format(&log_uart_obj, 8, ParityNone, 1);
+    printf("inti log uart-2\n");
     serial_baud(&log_uart_obj, 115200);
-    serial_irq_handler(&log_uart_obj, mp_obj_log_uart_irq_handler, 0);
-    //serial_irq_handler(&log_uart_obj, mp_obj_log_uart_irq_handler, (uint32_t)_rx_buffer);
+    printf("inti log uart-3\n");
+    //serial_irq_handler(&log_uart_obj, mp_loguart_irq_handler, (uint32_t)_rx_buffer);
+    printf("inti log uart-4\n");
+    serial_irq_handler(&log_uart_obj, mp_loguart_irq_handler, (uint32_t)_rx_buffer);
     serial_irq_set(&log_uart_obj, RxIrq, 1);
+    printf("inti log uart-5\n");
+    printf("inti log uart-5\n");
+
 #endif
     MP_STATE_PORT(log_uart_rx_chr_obj) = mp_obj_new_bytearray(1, "");
 }
@@ -171,11 +197,13 @@ STATIC mp_obj_t log_uart_init0(size_t n_args, const mp_obj_t *args, mp_map_t *kw
     }
     #else
     printf("func: init loguart\n");
-    serial_init(&log_uart_obj, PA_7, PA_8);
-    //serial_init(&log_uart_obj, PB_19, PB_18);
+    //serial_init(&log_uart_obj, PA_7, PA_8);
+    serial_init(&log_uart_obj, PB_19, PB_18);
     serial_format(&log_uart_obj, 8, ParityNone, 1);
     serial_baud(&log_uart_obj, 115200);
     #endif
+    serial_irq_handler(&log_uart_obj, mp_loguart_irq_handler, (uint32_t)_rx_buffer);
+    serial_irq_set(&log_uart_obj, RxIrq, 1);
     return mp_const_none;
 }
 
@@ -183,6 +211,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(log_uart_init_obj, 1, log_uart_init0);
 
 STATIC mp_obj_t log_uart_deinit(mp_obj_t *self_in) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
+    // clear any received data
+    _rx_buffer->_iHead = _rx_buffer->_iTail;
     serial_free(&log_uart_obj);
     return mp_const_none;
 }
@@ -214,7 +245,7 @@ STATIC mp_obj_t log_uart_irq_handler0(mp_obj_t self_in, mp_obj_t callback_in) {
     }
 
     self->irq_handler = callback_in;
-    serial_irq_handler(&log_uart_obj, mp_obj_log_uart_irq_handler, self);
+    serial_irq_handler(&log_uart_obj, mp_loguart_irq_handler, (uint32_t)_rx_buffer);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(log_uart_irq_handler_obj, log_uart_irq_handler0);
@@ -233,11 +264,23 @@ STATIC MP_DEFINE_CONST_DICT(log_uart_locals_dict, log_uart_locals_dict_table);
 
 STATIC mp_uint_t log_uart_read(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
-
-    // Direct return 0 when size = 0, to save the time
+    
+    // Directly return 0 when size = 0, to save the time
     if (size == 0) 
         return 0;
 
+    buf_in = (char)_rx_buffer->_aucBuffer;
+
+    // if the head isn't ahead of the tail, we don't have any characters
+    if (_rx_buffer->_iHead == _rx_buffer->_iTail)
+        return -1;
+
+    uint8_t uc = buf_in[_rx_buffer->_iTail];
+    _rx_buffer->_iTail = (unsigned int)(_rx_buffer->_iTail + 1) % SERIAL_BUFFER_SIZE;
+    return uc;
+
+
+    #if 0
     int32_t ret = 0;
 
     mp_uint_t start = mp_hal_ticks_ms();
@@ -258,11 +301,17 @@ ret:
     } else {
         return ret;
     }
+    #endif
 }
 
 STATIC mp_uint_t log_uart_write(mp_obj_t self_in, const char *buf_in, mp_uint_t size, int *errcode) {
     log_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
+    int uc_data = (int)buf_in[0];
+    serial_putc(&log_uart_obj, uc_data);
+    return 1;
+
+    #if 0
     int32_t ret = 0;
 
     mp_uint_t start = mp_hal_ticks_ms();
@@ -285,6 +334,7 @@ ret:
     } else {
         return ret;
     }
+    #endif
 }
 
 STATIC mp_uint_t log_uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, int *errcode) {

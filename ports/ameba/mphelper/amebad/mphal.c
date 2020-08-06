@@ -43,18 +43,22 @@
 //#include "osdep_api.h"  // xxm
 
 int mp_hal_stdin_rx_chr(void) {
+    printf("--mp_hal_stdin_rx_chr--\n");
   return mp_term_rx_chr();
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
+    printf("--mp_hal_stdout_tx_strn--\n");
     mp_term_tx_strn(str, len);
 }
 
 void mp_hal_stdout_tx_chr(char c) {
+    printf("mp_hal_stdout_tx_chr\n");
     mp_term_tx_strn(&c, 1);
 }
 
 void mp_hal_stdout_tx_str(const char *str) {
+    printf("mp_hal_stdout_tx_str\n");
     mp_term_tx_strn(str, strlen(str));
 }
 
@@ -63,6 +67,7 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
         if (*str == '\n') {
             mp_hal_stdout_tx_chr('\r');
         }
+        printf("mp_hal_stdout_tx_strn_cooked\n");
         mp_hal_stdout_tx_chr(*str++);
     }
 }

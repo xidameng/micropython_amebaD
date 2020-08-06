@@ -37,6 +37,7 @@
 //#include "log_uart_api.h"
 
 #include "objuart.h"
+#include "ringbuffer.h"
 
 #ifdef AMEBAD
 typedef enum {

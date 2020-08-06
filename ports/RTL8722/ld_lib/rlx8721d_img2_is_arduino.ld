@@ -14,16 +14,16 @@ MEMORY
 	MSP_RAM_NS (rw) : 			ORIGIN = 0x10004000, LENGTH = 0x10005000 - 0x10004000	/* MSP_NS RAM: 4K */
 
 	BD_RAM_NS (rwx) : 			ORIGIN = 0x10005000, LENGTH = 0x1007C000 - 0x10005000	/* MAIN RAM NS: 456K */
-	ROMBSS_RAM_S (rwx) : 		ORIGIN = 0x1007C000, LENGTH = 0x1007D000 - 0x1007C000	/* ROM BSS RAM S: 4K */
-	BOOTLOADER_RAM_S (rwx) : 	ORIGIN = 0x1007D000, LENGTH = 0x1007F000 - 0x1007D000	/* BOOT Loader RAM: 8K */
-	MSP_RAM_S (rwx) : 			ORIGIN = 0x1007F000, LENGTH = 0x10080000 - 0x1007F000	/* MSP_S RAM: 4k */
-	EXTENTION_SRAM (rwx) : 		ORIGIN = 0x100E0000, LENGTH = 0x10100000 - 0x100E0000	/* EXTENTION SRAM: 128k */
+	ROMBSS_RAM_S (rwx)  : 		ORIGIN = 0x1007C000, LENGTH = 0x1007D000 - 0x1007C000	/* ROM BSS RAM S: 4K */
+	BOOTLOADER_RAM_S (rwx)  : 	ORIGIN = 0x1007D000, LENGTH = 0x1007F000 - 0x1007D000	/* BOOT Loader RAM: 8K */
+	MSP_RAM_S (rwx)  : 		ORIGIN = 0x1007F000, LENGTH = 0x10080000 - 0x1007F000	/* MSP_S RAM: 4k */
+	EXTENTION_SRAM (rwx)  : 		ORIGIN = 0x100E0000, LENGTH = 0x10100000 - 0x100E0000	/* EXTENTION SRAM: 128k */
 
-	PSRAM_NS (rwx) : 			ORIGIN = 0x02000000, LENGTH = 0x02400000 - 0x02000000	/* PSRAM_NS: 4M */
+	PSRAM_NS (rwx)  : 		ORIGIN = 0x02000000 + 0x20, LENGTH = 0x02400000 - 0x02000000 - 0x20	/* PSRAM_NS: 4M */
 
 	/* Flash */
-	KM0_BOOT (rx) :				ORIGIN = 0x08000000+0x20, LENGTH = 0x02000-0x20	/* XIPBOOT: 8k, 32 Bytes resvd for header*/
-	BACKUP (r) :				ORIGIN = 0x08002000, LENGTH = 0x1000	/* BACKUP: 4K system data in flash */
+	KM0_BOOT (rx)  :		ORIGIN = 0x08000000+0x20, LENGTH = 0x02000-0x20	/* XIPBOOT: 8k, 32 Bytes resvd for header*/
+	BACKUP (r) :			ORIGIN = 0x08002000, LENGTH = 0x1000	/* BACKUP: 4K system data in flash */
 	XIPSYS (r) :				ORIGIN = 0x08003000, LENGTH = 0x1000	/* XIPSYS: 4K system data in flash */
 	KM4_BOOT (rx) :				ORIGIN = 0x08004000+0x20, LENGTH = 0x02000-0x20	/* XIPBOOT: 8k, 32 Bytes resvd for header*/
 	KM0_IMG2 (rx) : 			ORIGIN = 0x0C000000+0x20, LENGTH = 0x02000000-0x20	/* KM0_IMG2: 32MB, 32 Bytes resvd for header, virtual address */
@@ -106,7 +106,25 @@ SECTIONS
 		*(.img2_custom_signature*)
 
 		*(.text*)
+	/*	*(.image2.net.ram.text*) */
 		*(.rodata*)
+
+		/* Add This for C++ support */
+		. = ALIGN(4);
+		__preinit_array_start = .;
+		KEEP(*(.preinit_array))
+		__preinit_array_end = .;
+		. = ALIGN(4);
+		__init_array_start = .;
+		KEEP(*(SORT(.init_array.*)))
+		KEEP(*(.init_array))
+		__init_array_end = .;
+		. = ALIGN(4);
+		__fini_array_start = .;
+		KEEP(*(SORT(.fini_array.*)))
+		KEEP(*(.fini_array))
+		__fini_array_end = .;
+		/*-----------------*/
 
 		. = ALIGN (4);
 		__cmd_table_start__ = .;
@@ -117,6 +135,50 @@ SECTIONS
 
 		. = ALIGN (16);
 	} > KM4_IMG2
+
+	/* Add This for C++ support */
+	.ARM.extab :
+	{
+		*(.ARM.extab* .gnu.linkonce.armextab.*) 
+
+	} > KM4_IMG2
+
+	.ARM.exidx :
+	{
+		__exidx_start = .;
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+		__exidx_end = .;
+		end = .;
+	} > KM4_IMG2
+
+	__wrap_printf = 0x1010a3f5;
+	__wrap_sprintf = 0x1010a471;
+	__wrap_strcat = 0x10111635;
+	__wrap_strchr = 0x10111745;
+	__wrap_strcmp = 0x10111745;
+	__wrap_strncmp = 0x101118f9;
+	__wrap_strlen = 0x10111839;
+	__wrap_strnlen = 0x10111a05;
+	__wrap_strncat = 0x1011189d;
+	__wrap_strpbrk = 0x10111a39;
+	__wrap_strstr = 0x10111d25;
+	__wrap_strtok = 0x1011201d;
+	__wrap_strsep = 0x10111a65;
+	__wrap_strtoll = 0x10111ffd;
+	__wrap_strtoul = 0x101122e9;
+	__wrap_strtoull = 0x10111f3d;
+	__wrap_atoi = 0x101115e1;
+	__wrap_strcpy = 0x101117b9;
+	__wrap_strncpy = 0x1011199d;
+	__wrap_memset = 0x10110ea1;
+	__wrap_memcpy = 0x10110d2d;
+	__wrap_memcmp = 0x10110cc9;
+	__wrap_memmove = 0x10110dd9;
+	__wrap_snprintf = 0x1010a49d;
+	__wrap_malloc = 0x100067c0;
+	__wrap_realloc = 0x10006974;
+	__wrap_free = 0x10006878;
+	/*-----------------*/
 
 	.bluetooth_trace.text :
 	{

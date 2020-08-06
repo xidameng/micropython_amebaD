@@ -1,24 +1,67 @@
-try:
-    import uos
-    import umachine
-    import uterminal
-    import flashbdev
-    import uctypes
-    import utime as time
-except ImportError as e:
-    print(e)
+import Pin
+c = Pin("PA_19", dir=Pin.OUT)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
+c.value(1)
+c.value(0)
 
-core = uos.uname().core
-if core == 'RTL8195A':
-    _baudrate = 38400
-    _flash_vfs_start_addr = 0x100000
-    _flash_vfs_block_num = 252
-elif core == 'RTL8711BN':
-    _baudrate = 115200
-    _flash_vfs_start_addr = 0xA0000
-    _flash_vfs_block_num = 95
-else:
-    pass
+
+from umachine import Pin 
+
+a = Pin.("PA_19", dir=Pin.OUT)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+a.value(1)
+a.value(0)
+
+
+from hardware import Pin
+b = Pin("PA_19", dir=Pin.OUT)
+b.toggle()
+b.value(1)
+b.value(0)
+
+
 
 _loguart = umachine.LOGUART()
 _loguart.init(baudrate=_baudrate)

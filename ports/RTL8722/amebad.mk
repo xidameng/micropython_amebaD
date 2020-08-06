@@ -1,15 +1,14 @@
-AMEBASIZE = $(BUILD)/amebasize
-POSTBUILD = $(BUILD)/postbuild_img2_arduino_linux
 
 ################################
 #        Include path          # 
 ################################
-INC = -I.
+INC += -I.
 INC += -I$(VENDOR)/project/realtek_amebaD_va0_example/inc/inc_hp
-INC += -Iinc/include/amebad
+INC += -Iinc/ameba
 INC += -I$(TOP)
 INC += -I$(BUILD)
 INC += -I$(HEADER_BUILD)
+
 INC += -I$(VENDOR)/component/os/freertos
 INC += -I$(VENDOR)/component/os/freertos/freertos_v10.2.0/Source/include
 INC += -I$(VENDOR)/component/os/freertos/freertos_v10.2.0/Source/portable/GCC/ARM_CM33/non_secure
@@ -87,20 +86,20 @@ INC += -I$(TOP)/lib/netutils
 INC += -I$(TOP)/lib/oofatfs
 #INC += -I$(TOP)/lib/lwip/src/include/lwip
 
-INC += -Imp/mphelper
-INC += -Imp/mphelper/amebad
-INC += -Imp/mphelper/gccollect
-INC += -Imp/mphelper/mods
-INC += -Imp/mphelper/mods/network
-INC += -Imp/mphelper/mods/machine
-INC += -Imp/mpconfigports
+INC += -Imphelper
+INC += -Imphelper/amebad
+INC += -Imphelper/gccollect
+INC += -Imphelper/mods
+INC += -Imphelper/mods/network
+INC += -Imphelper/mods/machine
 
 
+ifeq ($(CHIP), AMEBA1)
 # Source file list
 # -------------------------------------------------------------------
 # micropython source
 UPY_C += pins.c
-UPY_C += mphelper/diskio.c
+#UPY_C += mphelper/diskio.c
 UPY_C += mphelper/exception.c
 UPY_C += mphelper/help.c
 UPY_C += mphelper/amebad/mphal.c
@@ -114,20 +113,19 @@ UPY_C += mphelper/mods/modmachine.c
 #UPY_C += mphelper/mods/modlwip.c
 #UPY_C += mphelper/mods/moduwireless.c
 #UPY_C += mphelper/mods/modnetwork.c
-#UPY_C += mphelper/mods/modutime.c
+UPY_C += mphelper/mods/modutime.c
 UPY_C += mphelper/mods/modterm.c
 UPY_C += mphelper/mods/moduos.c
 #UPY_C += mphelper/mods/modussl.c
-##UPY_C += mphelper/mods/machine/objloguart.c
 #UPY_C += mphelper/mods/machine/objwdt.c
 #UPY_C += mphelper/mods/machine/objflash.c
-#UPY_C += mphelper/mods/machine/objrtc.c
+UPY_C += mphelper/mods/machine/objrtc.c
 #UPY_C += mphelper/mods/machine/objadc.c
 ##UPY_C += mphelper/mods/machine/objdac.c
 UPY_C += mphelper/mods/machine/objpin.c
 #UPY_C += mphelper/mods/machine/obji2c.c
 #UPY_C += mphelper/mods/machine/objpwm.c
-#UPY_C += mphelper/mods/machine/objtimer.c
+UPY_C += mphelper/mods/machine/objtimer.c
 ##UPY_C += mphelper/mods/machine/objspi.c
 UPY_C += mphelper/mods/machine/objuart.c
 #UPY_C += mphelper/mods/machine/objcrypto.c
@@ -143,7 +141,8 @@ UPY_C += lib//utils/sys_stdio_mphal.c
 #UPY_C += lib/oofatfs/ff.c 
 #UPY_C += lib/oofatfs/ffunicode.c 
 #UPY_C += lib/oofatfs/option/ccsbcs.c 
-
+endif
+#UPY_C += mphelper/amebad/ringbuffer.c
 UPY_C += main.c
 
 
@@ -161,8 +160,8 @@ TARGET=application
 # -------------------------------------------------------------------
 
 UPY_O = $(addprefix $(BUILD)/, $(UPY_C:.c=.o))
-
-OBJ = $(UPY_O) $(PY_O) 
+#$(PY_O)
+OBJ = $(UPY_O)
 SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
@@ -170,58 +169,60 @@ SRC_QSTR_AUTO_DEPS +=
 # 			CFLAGS 			   #
 ################################
 
+# Optimize level
+CFLAGS = -O2
 
-CFLAGS += -ffunction-sections 
+# CPU arch
 CFLAGS += -march=armv8-m.main+dsp
-CFLAGS += -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -g -gdwarf-3 
+CFLAGS += -mthumb 
+CFLAGS += -D$(CHIP)
+CFLAGS += -DCONFIG_PLATFORM_8721D
+# source code macro
+CFLAGS += -ffunction-sections -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -g -gdwarf-3 
 CFLAGS += -nostartfiles -nodefaultlibs -nostdlib -O2 -D__FPU_PRESENT -gdwarf-3 -fstack-usage 
 CFLAGS += -fdata-sections -nostartfiles -nostdlib -Wall -Wpointer-arith -Wstrict-prototypes 
 CFLAGS += -Wundef -Wno-write-strings -Wno-maybe-uninitialized -c -MMD -Wextra 
-CFLAGS += -DAMEBAD
-CFLAGS += -DARDUINO_SDK -DCONFIG_PLATFORM_8721D
-CFLAGS += -DCONFIG_USE_MBEDTLS_ROM_ALG -DCONFIG_FUNCION_O0_OPTIMIZE -DDM_ODM_SUPPORT_TYPE=32 
+CFLAGS += -Wl,--start-group
 CFLAGS += $(INC)
-
-
+CFLAGS += -Wl,--end-group
 
 ###########################
 #         LDFLAGS         #
 ###########################
 LFLAGS =
-LFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
-LFLAGS += -nostartfiles -specs nosys.specs -Wl,--warn-section-align -Wl,--gc-sections -O2  
+LFLAGS += -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common
+LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
+LFLAGS += -nostartfiles -specs nosys.specs -Wl,--gc-sections
 
-LIBFLAGS += -Wl,--cref -Wl,--build-id=none 
-LIBFLAGS += -Wl,--no-enum-size-warning -Wl,--warn-common
+#LIBFLAGS = -Wl,--cref -Wl,--build-id=none 
+LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 
 
 ###############################
 #         ARCHIVE LIST        #
 ###############################
-LIBAR += -L$(LD_PATH)/ARCHIVE -l_arduino -l_wlan -l_wps -l_wlan_mp -l_wifi_ucps_fw 
+LIBAR += -L$(VENDOR)/ARCHIVE_LIB/ -l_arduino -l_wlan -l_wps -l_wlan_mp -l_wifi_ucps_fw 
 LIBAR += -l_wifi_fw -l_websocket -l_user -l_usbh -l_usbd -l_tftp -l_mdns -l_m4a_self 
-LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt
+LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt 
 
 
 ###########################
 #         BUILD RULES     #
 ###########################
-application: prerequirement $(UPY_O) $(PY_O) 
-	$(ECHO) "Building $(CHIP) "
-	$(Q)$(LD) -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/$(TARGET).map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm 
-	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/$(TARGET).asm
+application: prerequirement $(PY_O) $(UPY_O)
+	$(Q)echo '==========================================================='
+	$(Q)echo 'Linking $(CHIP)'
+	$(Q)echo '==========================================================='
+	$(LD) -L$(TOOL) -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm -lstdc++
+	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
-#$(Q)$(LD) -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/mp.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf -Wl,--start-group $(BUILD)/*.o -Wl,--end-group -Wl,--start-group -Wl,--whole-archive -Wl,--no-whole-archive $(LIBAR) -Wl,--end-group -lm 
-#-Wl,--start-group $(BUILD)/py/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/embed/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/mp-readline/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/netutils/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/oofatfs/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/timeutils/*.o -Wl,--end-group -Wl,--start-group $(BUILD)/lib/utils/*.o -Wl,--end-group \
 
 .PHONY: manipulate_images
 manipulate_images: $(POSTBUILD)
-	$(Q)echo ===========================================================
-	$(Q)echo Image manipulating
-	$(Q)echo ===========================================================
-	
-	$(Q)$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
-
+	$(Q)echo '==========================================================='
+	$(Q)echo 'Image manipulating'
+	$(Q)echo '==========================================================='
+	$(Q)$(POSTBUILD) $(BUILD) ../$(TC_PATH) 
 	$(Q)echo ===========================
 	$(Q)echo  End of Image manipulating
 	$(Q)echo ===========================
@@ -229,40 +230,57 @@ manipulate_images: $(POSTBUILD)
 
 .PHONY: prerequirement
 prerequirement:
-	$(Q)echo ===========================================================
-	$(Q)echo Build $(TARGET)
-	$(Q)echo ===========================================================
-	$(Q)$(MKDIR) -p $(BUILD)/bsp/image
+	$(Q)echo '==========================================================='
+	$(Q)echo 'Prepare tools and images'
+	$(Q)echo '==========================================================='
+	$(Q)mkdir -p $(BUILD)/bsp/image
 	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin $(BUILD)/bsp/image/km0_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km0_boot_all.bin
 	$(Q)cp -f $(TOOL)/image/km0_image2_all.bin $(BUILD)/bsp/image/km0_image2_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km0_image2_all.bin
 	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin $(BUILD)/bsp/image/km4_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km4_boot_all.bin
-	$(Q)$(MKDIR) -p $(BUILD)/tools/linux
+	$(Q)mkdir -p $(BUILD)/tools/linux
 	$(Q)cp -f $(TOOL)/pick $(BUILD)/tools/linux/pick
 	$(Q)cp -f $(TOOL)/pad $(BUILD)/tools/linux/pad
+
+
+######################
+#    Compilation     #
+######################
+$(UPY_O): $(BUILD)/%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 
 ##############
 #    Tools   #
 ##############
-$(PICK):
-	$(Q)cp -f $(TOOL)/pick $(BUILD)/tools/linux/pick
-
-$(PAD):
-	$(Q)cp -f $(TOOL)/pad $(BUILD)/tools/linux/pad
-
-$(AMEBASIZE):
-	$(Q)cp -f $(TOOL)/amebasize $(BUILD)/amebasize
-
 $(POSTBUILD):
-	$(Q)cp -f $(TOOL)/postbuild_img2_arduino_linux $(BUILD)/postbuild_img2_arduino_linux
+	$(Q)cp -f $(TOOL)/postbuild_img2_mp_linux $(BUILD)/postbuild_img2_mp_linux
 
-$(UPY_O): $(BUILD)/%.o : %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-	
+$(IMAGETOOL):
+	$(Q)cp -f $(TOOL)/amebad_image_tool $(BUILD)/amebad_image_tool
+	$(Q)cp -f $(TOOL)/imgtool_flashloader_amebad.bin ./
+	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin ./
+	$(Q)cp -f $(TOOL)/image/km0_image2_all.bin ./
+	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin ./
+	$(Q)cp -f $(BUILD)/km0_km4_image2.bin ./
 
-.PHONY: cleanD
-cleanD:
-	rm ./*.d
+.PHONY: cleanpwd
+cleanpwd:
+	rm -f ./*.d
+	rm -f ./*.bin
+
+
+.PHONY: upload
+upload: $(IMAGETOOL)
+	$(BUILD)/$(IMAGETOOL) /dev/ttyUSB0
+
+.PHONY: com
+com:
+	picocom -b115200 /dev/ttyUSB0
+
+.PHONY: clean
+clean:
+	rm -rf build
+	clear

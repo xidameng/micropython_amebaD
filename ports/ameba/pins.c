@@ -387,10 +387,12 @@ pin_obj_t pin_PA_23 = PIN(PA_23, PullNone, PIN_OUTPUT, 0);
 #endif
 pin_obj_t pin_PA_7 = PIN(PA_7, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_8 = PIN(PA_8, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_19 = PIN(PA_19, PullNone, PIN_OUTPUT, 0);
 
 STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_7), MP_OBJ_FROM_PTR(&pin_PA_7) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_8), MP_OBJ_FROM_PTR(&pin_PA_8) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_19), MP_OBJ_FROM_PTR(&pin_PA_19) },
 #if 0 
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_14), MP_OBJ_FROM_PTR(&pin_PA_14) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_15), MP_OBJ_FROM_PTR(&pin_PA_15) },
@@ -398,7 +400,6 @@ STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_12), MP_OBJ_FROM_PTR(&pin_PA_12) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_5),  MP_OBJ_FROM_PTR(&pin_PA_5) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_18), MP_OBJ_FROM_PTR(&pin_PA_18) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_19), MP_OBJ_FROM_PTR(&pin_PA_19) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_22), MP_OBJ_FROM_PTR(&pin_PA_22) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_23), MP_OBJ_FROM_PTR(&pin_PA_23) },
 #endif

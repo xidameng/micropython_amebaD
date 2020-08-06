@@ -95,7 +95,7 @@ INC += -Imphelper/mods/network
 INC += -Imphelper/mods/machine
 
 
-
+ifeq ($(CHIP), AMEBA1)
 # Source file list
 # -------------------------------------------------------------------
 # micropython source
@@ -114,19 +114,19 @@ UPY_C += mphelper/mods/modmachine.c
 #UPY_C += mphelper/mods/modlwip.c
 #UPY_C += mphelper/mods/moduwireless.c
 #UPY_C += mphelper/mods/modnetwork.c
-#UPY_C += mphelper/mods/modutime.c
+UPY_C += mphelper/mods/modutime.c
 UPY_C += mphelper/mods/modterm.c
 UPY_C += mphelper/mods/moduos.c
 #UPY_C += mphelper/mods/modussl.c
 #UPY_C += mphelper/mods/machine/objwdt.c
 #UPY_C += mphelper/mods/machine/objflash.c
-#UPY_C += mphelper/mods/machine/objrtc.c
+UPY_C += mphelper/mods/machine/objrtc.c
 #UPY_C += mphelper/mods/machine/objadc.c
 ##UPY_C += mphelper/mods/machine/objdac.c
 UPY_C += mphelper/mods/machine/objpin.c
 #UPY_C += mphelper/mods/machine/obji2c.c
 #UPY_C += mphelper/mods/machine/objpwm.c
-#UPY_C += mphelper/mods/machine/objtimer.c
+UPY_C += mphelper/mods/machine/objtimer.c
 ##UPY_C += mphelper/mods/machine/objspi.c
 UPY_C += mphelper/mods/machine/objuart.c
 #UPY_C += mphelper/mods/machine/objcrypto.c
@@ -142,7 +142,8 @@ UPY_C += lib//utils/sys_stdio_mphal.c
 #UPY_C += lib/oofatfs/ff.c 
 #UPY_C += lib/oofatfs/ffunicode.c 
 #UPY_C += lib/oofatfs/option/ccsbcs.c 
-
+endif
+#UPY_C += mphelper/amebad/ringbuffer.c
 UPY_C += main.c
 
 
@@ -160,8 +161,8 @@ TARGET=application
 # -------------------------------------------------------------------
 
 UPY_O = $(addprefix $(BUILD)/, $(UPY_C:.c=.o))
-
-OBJ = $(PY_O) $(UPY_O)
+#$(PY_O)
+OBJ = $(UPY_O)
 SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
@@ -190,11 +191,12 @@ CFLAGS += -Wl,--end-group
 #         LDFLAGS         #
 ###########################
 LFLAGS =
+LFLAGS += -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common
 LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
 LFLAGS += -nostartfiles -specs nosys.specs -Wl,--gc-sections
 
-LIBFLAGS = -Wl,--cref -Wl,--build-id=none 
-LIBFLAGS += -Wl,--no-enum-size-warning -Wl,--warn-common
+#LIBFLAGS = -Wl,--cref -Wl,--build-id=none 
+LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 
 
 ###############################
@@ -212,7 +214,7 @@ application: prerequirement $(PY_O) $(UPY_O)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
 	$(Q)echo '==========================================================='
-	$(Q)$(LD) -L$(TOOL) -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm 
+	$(LD) -L$(TOOL) -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm -lstdc++
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 

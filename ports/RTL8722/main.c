@@ -1,7 +1,15 @@
 /*****************************************************************************
  *                              Header includes
  * ***************************************************************************/
+/*#include "section_config.h"
+#include "ameba_soc.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "osdep_service.h"
+*/
+#include "main.h"
 
+#if 0
 #include "py/mpconfig.h"
 #include "py/obj.h"
 #include "py/runtime.h"
@@ -57,6 +65,8 @@ void micropython_task(void const *arg) {
     }
     rtw_thread_exit();
 }
+
+#endif
 
 //default main
 int main(void)
@@ -116,16 +126,18 @@ int main(void)
 	printf("--XM--test--at--%d--\n",count);
 	count ++;
 
+#if 0
     struct task_struct stUpyTask;
     BaseType_t xReturn = rtw_create_task(&stUpyTask, MICROPY_TASK_NAME,
             MICROPY_TASK_STACK_DEPTH, MICROPY_TASK_PRIORITY, micropython_task, NULL);
     vTaskStartScheduler();
+#endif
     for(;;);
    
     return;
 }
 
-
+#if 0
 #if !MICROPY_VFS
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return NULL;

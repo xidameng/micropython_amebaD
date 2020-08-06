@@ -36,7 +36,7 @@
 
 STATIC const char *_parity_name[] = {"None", "1", "0"};
 
-serial_t log_uart_obj;
+extern serial_t log_uart_obj;
 
 STATIC uart_obj_t uart_obj[3] = {{
     .base.type      = &uart_type,
@@ -170,14 +170,15 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->tx.pin           = tx;
     self->rx.pin           = rx;
 
-    serial_init(&log_uart_obj, self->tx.pin->id, self->rx.pin->id);
+    //serial_init(&log_uart_obj, self->tx.pin->id, self->rx.pin->id);
 
     return (mp_obj_t)self;
 }
 
 STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    serial_init(&log_uart_obj, PA_7, PA_8);
+    printf("--uart_init0--\n");
+    //serial_init(&log_uart_obj, PA_7, PA_8);
     serial_baud(&log_uart_obj, self->params.baudrate);
     serial_format(&log_uart_obj, self->params.data_bits, self->params.parity, self->params.stop_bits);
     return mp_const_none;
