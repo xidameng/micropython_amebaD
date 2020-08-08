@@ -1,2 +1,0 @@
-ringbuffer.c:5:6:ringbuf_init	136	static
-ringbuffer.c:13:6:ringbuf_store_char	136	static

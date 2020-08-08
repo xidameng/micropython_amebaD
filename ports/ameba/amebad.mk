@@ -95,7 +95,7 @@ INC += -Imphelper/mods/network
 INC += -Imphelper/mods/machine
 
 
-ifeq ($(CHIP), AMEBA1)
+ifeq ($(CHIP), AMEBAD)
 # Source file list
 # -------------------------------------------------------------------
 # micropython source
@@ -143,7 +143,7 @@ UPY_C += lib//utils/sys_stdio_mphal.c
 #UPY_C += lib/oofatfs/ffunicode.c 
 #UPY_C += lib/oofatfs/option/ccsbcs.c 
 endif
-#UPY_C += mphelper/amebad/ringbuffer.c
+UPY_C += mphelper/amebad/ringbuffer.c
 UPY_C += main.c
 
 
@@ -161,8 +161,8 @@ TARGET=application
 # -------------------------------------------------------------------
 
 UPY_O = $(addprefix $(BUILD)/, $(UPY_C:.c=.o))
-#$(PY_O)
-OBJ = $(UPY_O)
+
+OBJ = $(UPY_O) $(PY_O)
 SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
@@ -191,11 +191,9 @@ CFLAGS += -Wl,--end-group
 #         LDFLAGS         #
 ###########################
 LFLAGS =
-LFLAGS += -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common
 LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
 LFLAGS += -nostartfiles -specs nosys.specs -Wl,--gc-sections
 
-#LIBFLAGS = -Wl,--cref -Wl,--build-id=none 
 LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 
 
@@ -214,7 +212,7 @@ application: prerequirement $(PY_O) $(UPY_O)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
 	$(Q)echo '==========================================================='
-	$(LD) -L$(TOOL) -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm -lstdc++
+	$(LD) -L$(TOOL) -L$(TC_PATH)../lib -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 
@@ -267,22 +265,25 @@ $(IMAGETOOL):
 	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin ./
 	$(Q)cp -f $(BUILD)/km0_km4_image2.bin ./
 
-.PHONY: cleanpwd
-cleanpwd:
-	rm -f ./*.d
-	rm -f ./*.bin
-
 
 .PHONY: upload
 upload: $(IMAGETOOL)
 	$(BUILD)/$(IMAGETOOL) /dev/ttyUSB0
 
+
 .PHONY: com
 com:
 	picocom -b115200 /dev/ttyUSB0
+
 
 .PHONY: purge
 purge:
 	make cleanpwd
 	make clean
 	clear
+
+
+.PHONY: cleanpwd
+cleanpwd:
+	rm -f ./*.d
+	rm -f ./*.bin

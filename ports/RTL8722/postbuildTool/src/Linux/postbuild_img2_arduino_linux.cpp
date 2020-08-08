@@ -3,7 +3,7 @@
 Compile:
 
 linux:
-g++ -o postbuild_img2_arduino_linux tools/linux/src/postbuild_img2_arduino_linux.cpp -static
+g++ -o postbuild_img2_arduino_linux postbuild_img2_arduino_linux.cpp -static
 
 */
 
@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
     cout << cmd << endl;
     system(cmd.c_str());
 
+#if 1
     // 2. remove previous files
     cmd = "rm -f application.map";
     cout << cmd << endl;
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
     cmd = "rm -f *.bin";
     cout << cmd << endl;
     system(cmd.c_str());
-
+#endif
     // 3. generate information files
     path_arm_none_eabi_gcc.assign(argv[3]);
 
@@ -79,6 +80,12 @@ int main(int argc, char *argv[]) {
 
     cmdss.clear();
     cmdss << path_arm_none_eabi_gcc << "arm-none-eabi-objdump -d application.axf > application.asm";
+    getline(cmdss, cmd);
+    cout << cmd << endl;
+    system(cmd.c_str());
+
+    cmdss.clear();
+    cmdss <<path_arm_none_eabi_gcc << "arm-none-eabi-strip application.axf";
     getline(cmdss, cmd);
     cout << cmd << endl;
     system(cmd.c_str());
@@ -110,7 +117,9 @@ int main(int argc, char *argv[]) {
     }
 
     // 4. grep sram, xip/flash and psram information
+    fout.open("application.map");
     for (iter = lines.begin(); iter != lines.end(); ++iter) {
+        fout << *iter << endl;
         line = *iter;
         pos = line.find("__ram_image2_text_start__");
         if (pos != string::npos) {
@@ -145,7 +154,8 @@ int main(int argc, char *argv[]) {
             psram_end = strtol(psram_end_st.c_str(), NULL, 16);
         }
     }
-
+    fout.close();
+    
     if (xip_start > 0 && xip_end > 0) {
         has_xip = true;
     }

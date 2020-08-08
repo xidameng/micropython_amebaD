@@ -30,7 +30,7 @@ SIZE = $(TC_PATH)$(CROSS_COMPILE)size
 OBJCOPY = $(TC_PATH)$(CROSS_COMPILE)objcopy
 OBJDUMP = $(TC_PATH)$(CROSS_COMPILE)objdump
 STRIP = $(TC_PATH)$(CROSS_COMPILE)strip
-POSTBUILD = $(BUILD)/postbuild_img2_arduino_linux
+POSTBUILD = $(BUILD)/postbuild_img2_mp_linux
 IMAGETOOL = amebad_image_tool
 
 
@@ -38,7 +38,11 @@ IMAGETOOL = amebad_image_tool
 #        Include path          # 
 ################################
 INC = -I.
-INC += -I$(VENDOR)/project/{ameba.project}/inc/inc_hp
+INC += -I$(VENDOR)/project/realtek_amebaD_va0_example/inc/inc_hp
+INC += -Iinc/ameba
+#INC += -I$(TOP)
+INC += -I$(BUILD)
+#INC += -I$(HEADER_BUILD)
 INC += -I$(VENDOR)/component/os/freertos
 INC += -I$(VENDOR)/component/os/freertos/freertos_v10.2.0/Source/include
 INC += -I$(VENDOR)/component/os/freertos/freertos_v10.2.0/Source/portable/GCC/ARM_CM33/non_secure
@@ -71,6 +75,7 @@ INC += -I$(VENDOR)/component/soc/realtek/amebad/misc
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/include
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/osdep
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hci
+INC += -I$(VENDOR)/component/common/network/ssl/polarssl-1.3.8/include
 INC += -I$(VENDOR)/component/common/network/ssl/ssl_ram_map/rom
 INC += -I$(VENDOR)/component/common/utilities
 INC += -I$(VENDOR)/component/common/video/v4l2/inc
@@ -92,7 +97,7 @@ INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/board/amebad/lib
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/board/amebad/src
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/board/amebad/src/vendor_cmd
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/board/common/inc
-INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/example/bt_config
+INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/example/ble_scatternet
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/app
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/bluetooth/gap
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/bluetooth/profile
@@ -101,16 +106,78 @@ INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/os
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/platform
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/inc/stack
-INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/src/app/ble_central_client
 INC += -I$(VENDOR)/component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd
 INC += -I$(VENDOR)/component/common/drivers/ir/protocol
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/core/option
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hal
 INC += -I$(VENDOR)/component/common/drivers/wlan/realtek/src/hal/phydm
-INC += -I$(VENDOR)/component/common/network/ssl/mbedtls-2.4.0/include
+
+INC += -I$(TOP)/extmod
+INC += -I$(TOP)/lib/utils
+INC += -I$(TOP)/lib/timeutils
+INC += -I$(TOP)/lib/mp-readline
+INC += -I$(TOP)/lib/netutils
+INC += -I$(TOP)/lib/oofatfs
+#INC += -I$(TOP)/lib/lwip/src/include/lwip
+
+INC += -Imphelper
+INC += -Imphelper/amebad
+INC += -Imphelper/gccollect
+INC += -Imphelper/mods
+INC += -Imphelper/mods/network
+INC += -Imphelper/mods/machine
 
 
-UPY_C = main.c
+ifeq ($(CHIP), AMEBA1)
+# Source file list
+# -------------------------------------------------------------------
+# micropython source
+UPY_C += pins.c
+#UPY_C += mphelper/diskio.c
+UPY_C += mphelper/exception.c
+UPY_C += mphelper/help.c
+UPY_C += mphelper/amebad/mphal.c
+UPY_C += mphelper/amebad/objloguart.c
+UPY_C += mphelper/input.c
+UPY_C += mphelper/bufhelper.c
+UPY_C += mphelper/mpthreadport.c
+UPY_C += mphelper/gccollect/gccollect.c
+UPY_C += mphelper/mods/modameba.c
+UPY_C += mphelper/mods/modmachine.c
+#UPY_C += mphelper/mods/modlwip.c
+#UPY_C += mphelper/mods/moduwireless.c
+#UPY_C += mphelper/mods/modnetwork.c
+UPY_C += mphelper/mods/modutime.c
+UPY_C += mphelper/mods/modterm.c
+UPY_C += mphelper/mods/moduos.c
+#UPY_C += mphelper/mods/modussl.c
+#UPY_C += mphelper/mods/machine/objwdt.c
+#UPY_C += mphelper/mods/machine/objflash.c
+UPY_C += mphelper/mods/machine/objrtc.c
+#UPY_C += mphelper/mods/machine/objadc.c
+##UPY_C += mphelper/mods/machine/objdac.c
+UPY_C += mphelper/mods/machine/objpin.c
+#UPY_C += mphelper/mods/machine/obji2c.c
+#UPY_C += mphelper/mods/machine/objpwm.c
+UPY_C += mphelper/mods/machine/objtimer.c
+##UPY_C += mphelper/mods/machine/objspi.c
+UPY_C += mphelper/mods/machine/objuart.c
+#UPY_C += mphelper/mods/machine/objcrypto.c
+#UPY_C += mphelper/mods/wireless/objwlan.c
+#UPY_C += mphelper/mods/network/objnetif.c
+#UPY_C += mphelper/mods/network/dhcps.c
+UPY_C += lib/utils/pyexec.c
+UPY_C += lib/mp-readline/readline.c
+UPY_C += lib/utils/interrupt_char.c
+UPY_C += lib/timeutils/timeutils.c
+UPY_C += lib//utils/sys_stdio_mphal.c
+#UPY_C += lib/netutils/netutils.c 
+#UPY_C += lib/oofatfs/ff.c 
+#UPY_C += lib/oofatfs/ffunicode.c 
+#UPY_C += lib/oofatfs/option/ccsbcs.c 
+endif
+#UPY_C += mphelper/amebad/ringbuffer.c
+UPY_C += main.c
 
 
 # Initialize target name and target object files
@@ -136,41 +203,33 @@ SRC_QSTR_AUTO_DEPS +=
 # 			CFLAGS 			   #
 ################################
 
-CFLAGS = -ffunction-sections -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -g -gdwarf-3 -nostartfiles -nodefaultlibs -nostdlib -O2 -D__FPU_PRESENT -gdwarf-3 -fstack-usage -fdata-sections -nostartfiles -nostdlib -Wall -Wpointer-arith -Wstrict-prototypes -Wundef -Wno-write-strings -Wno-maybe-uninitialized -c -MMD -Wextra
-CFLAGS += -Wl,--start-group $(INC) -Wl,--end-group 
-CFLAGS += -DARDUINO_SDK -DCONFIG_PLATFORM_8721D -DCONFIG_USE_MBEDTLS_ROM_ALG -DCONFIG_FUNCION_O0_OPTIMIZE -DDM_ODM_SUPPORT_TYPE=32 -I.
-CFLAGS += main.c -o build/main.o
-
 # Optimize level
-#CFLAGS = -O2
+CFLAGS = -O2
 
 # CPU arch
-#CFLAGS += -march=armv8-m.main+dsp
-#CFLAGS += -mthumb 
-#CFLAGS += -D$(CHIP)
-#CFLAGS += -DCONFIG_PLATFORM_8721D
+CFLAGS += -march=armv8-m.main+dsp
+CFLAGS += -mthumb 
+CFLAGS += -D$(CHIP)
+CFLAGS += -DCONFIG_PLATFORM_8721D
 # source code macro
-#CFLAGS += -ffunction-sections -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -g -gdwarf-3 
-#CFLAGS += -nostartfiles -nodefaultlibs -nostdlib -O2 -D__FPU_PRESENT -gdwarf-3 -fstack-usage 
-#CFLAGS += -fdata-sections -nostartfiles -nostdlib -Wall -Wpointer-arith -Wstrict-prototypes 
-#CFLAGS += -Wundef -Wno-write-strings -Wno-maybe-uninitialized -c -MMD -Wextra 
-#CFLAGS += -Wl,--start-group
-#CFLAGS += $(INC)
-#CFLAGS += -Wl,--end-group
+CFLAGS += -ffunction-sections -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -g -gdwarf-3 
+CFLAGS += -nostartfiles -nodefaultlibs -nostdlib -O2 -D__FPU_PRESENT -gdwarf-3 -fstack-usage 
+CFLAGS += -fdata-sections -nostartfiles -nostdlib -Wall -Wpointer-arith -Wstrict-prototypes 
+CFLAGS += -Wundef -Wno-write-strings -Wno-maybe-uninitialized -c -MMD -Wextra 
+CFLAGS += -Wl,--start-group
+CFLAGS += $(INC)
+CFLAGS += -Wl,--end-group
 
 ###########################
 #         LDFLAGS         #
 ###########################
-LFLAGS = -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 -nostartfiles -specs nosys.specs -Wl,--gc-sections
-LIBFLAGS = -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common 
-
-#LFLAGS =
-#LFLAGS += -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common
-#LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
-#LFLAGS += -nostartfiles -specs nosys.specs -Wl,--gc-sections
+LFLAGS =
+LFLAGS += -Wl,--cref -Wl,--build-id=none -Wl,-wrap,strcat -Wl,-wrap,strchr -Wl,-wrap,strcmp -Wl,-wrap,strncmp -Wl,-wrap,strcpy -Wl,-wrap,strncpy -Wl,-wrap,strlen -Wl,-wrap,strnlen -Wl,-wrap,strncat -Wl,-wrap,strpbrk -Wl,-wrap,strstr -Wl,-wrap,strtok -Wl,-wrap,strsep -Wl,-wrap,strtoll -Wl,-wrap,strtoul -Wl,-wrap,strtoull -Wl,-wrap,atoi -Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,memcmp -Wl,-wrap,memcpy -Wl,-wrap,memmove -Wl,-wrap,memset -Wl,-wrap,printf -Wl,-wrap,sprintf -Wl,-wrap,snprintf -Wl,--no-enum-size-warning -Wl,--warn-common
+LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=hard -mfpu=fpv5-sp-d16 
+LFLAGS += -nostartfiles -specs nosys.specs -Wl,--gc-sections
 
 #LIBFLAGS = -Wl,--cref -Wl,--build-id=none 
-#LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
+LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 
 
 ###############################
@@ -208,11 +267,11 @@ LIBAR += -Wl,--end-group
 ###########################
 #         BUILD RULES     #
 ###########################
-application: prerequirement $(UPY_O)
+application: prerequirement $(UPY_O) #$(PY_O)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
 	$(Q)echo '==========================================================='
-	$(LD) -L/toolchain/asdk-6.5.0/lib -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf -Wl,--start-group $(OBJ) -Wl,--end-group $(LIBAR) -lm -lstdc++
+	$(LD) -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm -lstdc++
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 
@@ -221,7 +280,7 @@ manipulate_images: $(POSTBUILD)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Image manipulating'
 	$(Q)echo '==========================================================='
-	$(Q)$(POSTBUILD) $(BUILD) application.axf ../$(TC_PATH) 0
+	$(Q)$(POSTBUILD) $(BUILD) ../$(TC_PATH) 
 	$(Q)echo ===========================
 	$(Q)echo  End of Image manipulating
 	$(Q)echo ===========================
@@ -248,16 +307,14 @@ prerequirement:
 #    Compilation     #
 ######################
 $(UPY_O): $(BUILD)/%.o : %.c
-	$(CC) $(CFLAGS)
-#	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 
 ##############
 #    Tools   #
 ##############
 $(POSTBUILD):
-	$(Q)cp -f $(TOOL)/postbuild_img2_arduino_linux $(BUILD)/postbuild_img2_arduino_linux
-	#$(Q)cp -f $(TOOL)/postbuild_img2_mp_linux $(BUILD)/postbuild_img2_mp_linux
+	$(Q)cp -f $(TOOL)/postbuild_img2_mp_linux $(BUILD)/postbuild_img2_mp_linux
 
 $(IMAGETOOL):
 	$(Q)cp -f $(TOOL)/amebad_image_tool $(BUILD)/amebad_image_tool

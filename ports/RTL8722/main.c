@@ -7,7 +7,13 @@
 #include "task.h"
 #include "osdep_service.h"
 */
-#include "main.h"
+//#include "main.h"
+
+extern int                          _rtl_printf(const char *fmt, ...);
+#ifndef printf
+//#error
+#define printf                      _rtl_printf
+#endif
 
 #if 0
 #include "py/mpconfig.h"

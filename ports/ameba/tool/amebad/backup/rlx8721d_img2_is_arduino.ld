@@ -76,7 +76,7 @@ SECTIONS
 	{
 		__bss_start__ = .;
 		*(.bss*)
-		*(COMMON)
+		/**(COMMON)*/
 		__bss_end__ = .;
 	} > BD_RAM_NS
 
@@ -167,9 +167,7 @@ SECTIONS
     	*/lib/*.o(.bss*)
     	*/extmod/*.o(.bss*)
     	*/
-		/*
 		*(COMMON)
-		*/
 		__psram_bss_end__ = .;
 	} > PSRAM_NS
 

@@ -164,12 +164,6 @@ PY_EXTMOD_O_BASENAME = \
 	extmod/moducryptolib.o \
 	extmod/modubinascii.o \
 	extmod/virtpin.o \
-	extmod/machine_mem.o \
-	extmod/machine_pinbase.o \
-	extmod/machine_signal.o \
-	extmod/machine_pulse.o \
-	extmod/machine_i2c.o \
-	extmod/machine_spi.o \
 	extmod/modussl_axtls.o \
 	extmod/modussl_mbedtls.o \
 	extmod/modurandom.o \
@@ -186,6 +180,12 @@ PY_EXTMOD_O_BASENAME = \
 	extmod/utime_mphal.o \
 	extmod/uos_dupterm.o \
 	lib/embed/abort_.o \
+	extmod/machine_mem.o \
+	extmod/machine_pinbase.o \
+	extmod/machine_signal.o \
+	extmod/machine_pulse.o \
+	extmod/machine_i2c.o \
+	extmod/machine_spi.o \
 	#lib/utils/printf.o \ # xxm
 	#extmod/vfs_fat_diskio.o \
 

@@ -1,11 +1,11 @@
-#include ../../py/mkenv.mk
+include ../../py/mkenv.mk
 
 
 # declare before py.mk
 FROZEN_DIR = scripts
 FROZEN_MPY_DIR = modules
 
-#include $(TOP)/py/py.mk
+include $(TOP)/py/py.mk
 
 OS := $(shell uname)
 CHIP := AMEBAD
@@ -57,4 +57,4 @@ else
 include amebaz.mk
 endif
 
-#include $(TOP)/py/mkrules.mk
+include $(TOP)/py/mkrules.mk
