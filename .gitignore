@@ -3,7 +3,6 @@
 *.map
 *.hex
 *.dis
-*.exe
 
 # Packages
 ############
