@@ -28,6 +28,7 @@ IMAGETOOL = amebad_image_tool.exe
 PICK = pick.exe
 PAD  = pad.exe
 BUILDTOOL_PATH := tools/windows
+UPLOAD_PATH := COM11
 else
 TC_PATH := toolchain/asdk-6.5.0/bin/
 CROSS_COMPILE := arm-none-eabi-
@@ -46,6 +47,7 @@ IMAGETOOL = amebad_image_tool
 PICK = pick
 PAD  = pad
 BUILDTOOL_PATH := tools/linux
+UPLOAD_PATH := /dev/ttyUSB0
 endif
 
 #include ../../py/mkenv.mk
@@ -241,10 +243,10 @@ manipulate_images: $(POSTBUILD)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Image manipulating'
 	$(Q)echo '==========================================================='
-	$(Q)$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
-	$(Q)echo '===========================''
+	$(Q)./$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
+	$(Q)echo '==========================='
 	$(Q)echo  End of Image manipulating
-	$(Q)echo '===========================''
+	$(Q)echo '==========================='
 
 
 .PHONY: prerequirement
@@ -268,7 +270,7 @@ prerequirement:
 #    Compilation     #
 ######################
 $(UPY_O): $(BUILD)/%.o : %.c
-	$(CC) $(CFLAGS)
+	./$(CC) $(CFLAGS)
 #	$(CC) $(CFLAGS) -c $< -o $@
 
 
@@ -294,11 +296,11 @@ cleanpwd:
 
 .PHONY: upload
 upload: $(IMAGETOOL)
-	$(BUILD)/$(IMAGETOOL) /dev/ttyUSB0
+	./$(BUILD)/$(IMAGETOOL) $(UPLOAD_PATH)
 
 .PHONY: com
 com:
-	picocom -b115200 /dev/ttyUSB0
+	picocom -b115200 $(UPLOAD_PATH)
 
 .PHONY: clean
 clean:
