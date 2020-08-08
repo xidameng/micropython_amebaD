@@ -1,11 +1,3 @@
-#include ../../py/mkenv.mk
-
-# declare before py.mk
-#FROZEN_DIR = mp/scripts
-#FROZEN_MPY_DIR = mp/modules
-
-#include $(TOP)/py/py.mk
-
 OS := $(shell uname)
 CHIP := AMEBAD
 DEBUG := 1
@@ -17,7 +9,26 @@ BUILD:= build
 
 $(info Now building for $(CHIP))
 
-# toolchains
+# Declaring tools depending on OS
+ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
+TC_PATH := toolchain/ameba_d_asdk_toolchain/1.0.1/bin/
+CROSS_COMPILE := arm-none-eabi-
+AR = $(TC_PATH)$(CROSS_COMPILE)ar.exe
+CC = $(TC_PATH)$(CROSS_COMPILE)gcc.exe
+AS = $(TC_PATH)$(CROSS_COMPILE)as.exe
+NM = $(TC_PATH)$(CROSS_COMPILE)nm.exe
+LD = $(TC_PATH)$(CROSS_COMPILE)gcc.exe
+GDB = $(TC_PATH)$(CROSS_COMPILE)gdb.exe
+SIZE = $(TC_PATH)$(CROSS_COMPILE)size.exe
+OBJCOPY = $(TC_PATH)$(CROSS_COMPILE)objcopy.exe
+OBJDUMP = $(TC_PATH)$(CROSS_COMPILE)objdump.exe
+STRIP = $(TC_PATH)$(CROSS_COMPILE)strip.exe
+POSTBUILD = postbuild_img2_arduino_windows.exe
+IMAGETOOL = amebad_image_tool.exe
+PICK = pick.exe
+PAD  = pad.exe
+BUILDTOOL_PATH := tools/windows
+else
 TC_PATH := toolchain/asdk-6.5.0/bin/
 CROSS_COMPILE := arm-none-eabi-
 AR = $(TC_PATH)$(CROSS_COMPILE)ar
@@ -30,8 +41,20 @@ SIZE = $(TC_PATH)$(CROSS_COMPILE)size
 OBJCOPY = $(TC_PATH)$(CROSS_COMPILE)objcopy
 OBJDUMP = $(TC_PATH)$(CROSS_COMPILE)objdump
 STRIP = $(TC_PATH)$(CROSS_COMPILE)strip
-POSTBUILD = $(BUILD)/postbuild_img2_arduino_linux
+POSTBUILD = postbuild_img2_arduino_linux
 IMAGETOOL = amebad_image_tool
+PICK = pick
+PAD  = pad
+BUILDTOOL_PATH := tools/linux
+endif
+
+#include ../../py/mkenv.mk
+
+# declare before py.mk
+#FROZEN_DIR = mp/scripts
+#FROZEN_MPY_DIR = mp/modules
+
+#include $(TOP)/py/py.mk
 
 
 ################################
@@ -119,9 +142,6 @@ UPY_C = main.c
 all: application manipulate_images
 
 TARGET=application
-
-# Include folder list
-# -------------------------------------------------------------------
 
 # Generate obj list
 # -------------------------------------------------------------------
@@ -212,7 +232,7 @@ application: prerequirement $(UPY_O)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
 	$(Q)echo '==========================================================='
-	$(LD) -L/toolchain/asdk-6.5.0/lib -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf -Wl,--start-group $(OBJ) -Wl,--end-group $(LIBAR) -lm -lstdc++
+	$(LD) -L$(TC_PATH)../lib -L$(LD_PATH) -T$(LD_PATH)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf -Wl,--start-group $(OBJ) -Wl,--end-group $(LIBAR) -lm -lstdc++
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 
@@ -221,10 +241,10 @@ manipulate_images: $(POSTBUILD)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Image manipulating'
 	$(Q)echo '==========================================================='
-	$(Q)$(POSTBUILD) $(BUILD) application.axf ../$(TC_PATH) 0
-	$(Q)echo ===========================
+	$(Q)$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
+	$(Q)echo '===========================''
 	$(Q)echo  End of Image manipulating
-	$(Q)echo ===========================
+	$(Q)echo '===========================''
 
 
 .PHONY: prerequirement
@@ -239,9 +259,9 @@ prerequirement:
 	$(Q)chmod +rw $(BUILD)/bsp/image/km0_image2_all.bin
 	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin $(BUILD)/bsp/image/km4_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km4_boot_all.bin
-	$(Q)mkdir -p $(BUILD)/tools/linux
-	$(Q)cp -f $(TOOL)/pick $(BUILD)/tools/linux/pick
-	$(Q)cp -f $(TOOL)/pad $(BUILD)/tools/linux/pad
+	$(Q)mkdir -p $(BUILD)/$(BUILDTOOL_PATH)
+	$(Q)cp -f $(TOOL)/$(PICK) $(BUILD)/$(BUILDTOOL_PATH)/$(PICK)
+	$(Q)cp -f $(TOOL)/$(PAD) $(BUILD)/$(BUILDTOOL_PATH)/$(PAD)
 
 
 ######################
@@ -256,11 +276,10 @@ $(UPY_O): $(BUILD)/%.o : %.c
 #    Tools   #
 ##############
 $(POSTBUILD):
-	$(Q)cp -f $(TOOL)/postbuild_img2_arduino_linux $(BUILD)/postbuild_img2_arduino_linux
-	#$(Q)cp -f $(TOOL)/postbuild_img2_mp_linux $(BUILD)/postbuild_img2_mp_linux
+	$(Q)cp -f $(TOOL)/$(POSTBUILD) $(BUILD)/$(POSTBUILD)
 
 $(IMAGETOOL):
-	$(Q)cp -f $(TOOL)/amebad_image_tool $(BUILD)/amebad_image_tool
+	$(Q)cp -f $(TOOL)/$(IMAGETOOL) $(BUILD)/$(IMAGETOOL)
 	$(Q)cp -f $(TOOL)/imgtool_flashloader_amebad.bin ./
 	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin ./
 	$(Q)cp -f $(TOOL)/image/km0_image2_all.bin ./

@@ -140,7 +140,7 @@ int main(void)
 #endif
     for(;;);
    
-    return;
+    return 0;
 }
 
 #if 0
