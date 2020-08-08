@@ -306,6 +306,7 @@ com:
 clean:
 	rm -rf build
 	rm -f *.bin
+	rm -f *.asm
 	clear
 
 
