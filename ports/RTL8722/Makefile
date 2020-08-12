@@ -6,12 +6,13 @@ TOOL := postbuildTool
 LD_PATH = ld_lib
 Q := @
 BUILD:= build
+MKDIR:= mkdir
 
 $(info Now building for $(CHIP))
 
 # Declaring tools depending on OS
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
-TC_PATH := toolchain/ameba_d_asdk_toolchain/1.0.1/bin/
+TC_PATH := toolchain/cygwin/ameba_d_toolchain_windows/bin/
 CROSS_COMPILE := arm-none-eabi-
 AR = $(TC_PATH)$(CROSS_COMPILE)ar.exe
 CC = $(TC_PATH)$(CROSS_COMPILE)gcc.exe
@@ -29,8 +30,9 @@ PICK = pick.exe
 PAD  = pad.exe
 BUILDTOOL_PATH := tools/windows
 UPLOAD_PATH := COM11
+POSTBUILDTOOL_PATH := postbuildTool/windows
 else
-TC_PATH := toolchain/asdk-6.5.0/bin/
+TC_PATH := toolchain/linux/asdk-6.5.0/bin/
 CROSS_COMPILE := arm-none-eabi-
 AR = $(TC_PATH)$(CROSS_COMPILE)ar
 CC = $(TC_PATH)$(CROSS_COMPILE)gcc
@@ -48,6 +50,7 @@ PICK = pick
 PAD  = pad
 BUILDTOOL_PATH := tools/linux
 UPLOAD_PATH := /dev/ttyUSB0
+POSTBUILDTOOL_PATH := postbuildTool/linux
 endif
 
 #include ../../py/mkenv.mk
@@ -250,7 +253,7 @@ manipulate_images: $(POSTBUILD)
 
 
 .PHONY: prerequirement
-prerequirement:
+prerequirement: check_toolchain check_postbuildtools
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Prepare tools and images'
 	$(Q)echo '==========================================================='
@@ -262,10 +265,23 @@ prerequirement:
 	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin $(BUILD)/bsp/image/km4_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km4_boot_all.bin
 	$(Q)mkdir -p $(BUILD)/$(BUILDTOOL_PATH)
-	$(Q)cp -f $(TOOL)/$(PICK) $(BUILD)/$(BUILDTOOL_PATH)/$(PICK)
-	$(Q)cp -f $(TOOL)/$(PAD) $(BUILD)/$(BUILDTOOL_PATH)/$(PAD)
+	$(Q)cp -f $(POSTBUILDTOOL_PATH)/$(PICK) $(BUILD)/$(BUILDTOOL_PATH)/$(PICK)
+	$(Q)cp -f $(POSTBUILDTOOL_PATH)/$(PAD) $(BUILD)/$(BUILDTOOL_PATH)/$(PAD)
 
 
+.PHONY: check_toolchain
+check_toolchain:
+	@if [ -d $(TC_PATH) ]; \
+		then echo "--ToolChain Exists--"; \
+		else echo "Extracting toolchain..."; \
+			make -C toolchain all; fi
+
+.PHONY: check_postbuildtools
+check_postbuildtools:
+	@if [ -d $(POSTBUILDTOOL_PATH) ]; \
+		then echo "--Postbuildtool Exists--"; \
+		else echo "Extracting tools..."; \
+			make -C postbuildTool all; fi
 ######################
 #    Compilation     #
 ######################
@@ -278,11 +294,11 @@ $(UPY_O): $(BUILD)/%.o : %.c
 #    Tools   #
 ##############
 $(POSTBUILD):
-	$(Q)cp -f $(TOOL)/$(POSTBUILD) $(BUILD)/$(POSTBUILD)
+	$(Q)cp -f $(POSTBUILDTOOL_PATH)/$(POSTBUILD) $(BUILD)/$(POSTBUILD)
 
 $(IMAGETOOL):
-	$(Q)cp -f $(TOOL)/$(IMAGETOOL) $(BUILD)/$(IMAGETOOL)
-	$(Q)cp -f $(TOOL)/imgtool_flashloader_amebad.bin ./
+	$(Q)cp -f $(POSTBUILDTOOL_PATH)/$(IMAGETOOL) $(BUILD)/$(IMAGETOOL)
+	$(Q)cp -f $(POSTBUILDTOOL_PATH)/imgtool_flashloader_amebad.bin ./
 	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin ./
 	$(Q)cp -f $(TOOL)/image/km0_image2_all.bin ./
 	$(Q)cp -f $(TOOL)/image/km4_boot_all.bin ./
