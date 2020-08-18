@@ -1,5 +1,6 @@
 include ../../py/mkenv.mk
 
+MPY_CROSS = $(TOP)/mpy-cross/mpy-cross.exe
 
 # declare before py.mk
 FROZEN_DIR = scripts
