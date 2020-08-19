@@ -1,6 +1,5 @@
 include ../../py/mkenv.mk
 
-MPY_CROSS = $(TOP)/mpy-cross/mpy-cross.exe
 
 # declare before py.mk
 FROZEN_DIR = scripts
@@ -39,6 +38,7 @@ PAD  = pad.exe
 BUILDTOOL_PATH := tools/windows
 UPLOAD_PATH := COM11
 POSTBUILDTOOL_PATH := tool/amebad/windows
+MPY_CROSS = $(TOP)/mpy-cross/mpy-cross.exe
 else
 TC_PATH := tool/toolchain/linux/asdk-6.5.0/bin/
 CROSS_COMPILE := arm-none-eabi-
