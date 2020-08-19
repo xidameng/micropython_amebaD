@@ -95,7 +95,7 @@ INC += -Imphelper/mods/network
 INC += -Imphelper/mods/machine
 
 
-ifeq ($(CHIP), AMEBA1234567)
+ifeq ($(CHIP), AMEBAD)
 # Source file list
 # -------------------------------------------------------------------
 # micropython source
@@ -159,8 +159,8 @@ TARGET=application
 # -------------------------------------------------------------------
 
 UPY_O = $(addprefix $(BUILD)/, $(UPY_C:.c=.o))
-#$(PY_O)
-OBJ = $(UPY_O) 
+
+OBJ = $(UPY_O) $(PY_O)
 SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
@@ -207,29 +207,29 @@ LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt
 #         BUILD RULES     #
 ###########################
 application: prerequirement $(OBJ)
-	$(Q)echo '==========================================================='
+	echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
-	$(Q)echo '==========================================================='
+	echo '==========================================================='
 	$(LD) -L$(TOOL) -L$(TC_PATH)../lib -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 
 .PHONY: manipulate_images
 manipulate_images: $(POSTBUILD)
-	$(Q)echo '==========================================================='
-	$(Q)echo 'Image manipulating'
-	$(Q)echo '==========================================================='
+	echo '==========================================================='
+	echo 'Image manipulating'
+	echo '==========================================================='
 	$(Q)./$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
-	$(Q)echo '==========================='
-	$(Q)echo  End of Image manipulating
-	$(Q)echo '==========================='
+	echo '==========================='
+	echo  End of Image manipulating
+	echo '==========================='
 
 
 .PHONY: prerequirement
 prerequirement: check_toolchain check_postbuildtools
-	$(Q)echo '==========================================================='
-	$(Q)echo 'Prepare tools and images'
-	$(Q)echo '==========================================================='
+	echo '==========================================================='
+	echo 'Prepare tools and images'
+	echo '==========================================================='
 	$(Q)$(MKDIR) -p $(BUILD)/bsp/image
 	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin $(BUILD)/bsp/image/km0_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km0_boot_all.bin

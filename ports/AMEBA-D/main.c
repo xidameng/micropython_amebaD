@@ -41,6 +41,18 @@
 #include "task.h"
 #include "osdep_service.h"
 
+#include "device.h"
+#include "serial_api.h"
+#include "main.h"
+
+/*UART pin location:     
+   UART0: 
+   PA_18  (TX)
+   PA_19  (RX)
+   */
+#define UART_TX    PA_18
+#define UART_RX    PA_19
+
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
@@ -50,12 +62,22 @@
  * ***************************************************************************/
 #if 1
 
+
 uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
     printf("--Test 01--\n");
+    
 
-#if 0
+    char rc;
+    serial_t    sobj;
+    // mbed uart test
+    serial_init(&sobj,UART_TX,UART_RX);
+    serial_baud(&sobj,115200);
+    serial_format(&sobj, 8, ParityNone, 1);
+    //uart_send_string(&sobj, "UART API Demo on MP\r\n");
+
+#if 1
     mp_stack_ctrl_init();
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
@@ -68,16 +90,17 @@ void micropython_task(void const *arg) {
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
     printf("--Test 04--\n");
-    modmachine_init();
+    //modmachine_init();
     //loguart_init0();
+
     printf("--Test 05--loguart init--\n");
     //modnetwork_init();
     printf("--Test 06--\n");
     //modwireless_init();
     printf("--Test 07--\n");
-    modterm_init();
+    //modterm_init();
     printf("--Test 08--term init--\n");
-    pyexec_frozen_module("_boot.py");
+    //pyexec_frozen_module("_boot.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
     printf("--Test 09--\n");
@@ -96,6 +119,24 @@ void micropython_task(void const *arg) {
     printf("--Test 12--\n");
     rtw_thread_exit();
     #endif
+
+#if 0
+    char rc;
+    serial_t    sobj;
+
+    // mbed uart test
+    serial_init(&sobj,UART_TX,UART_RX);
+    serial_baud(&sobj,38400);
+    serial_format(&sobj, 8, ParityNone, 1);
+    uart_send_string(&sobj, "UART API Demo...\r\n");
+    uart_send_string(&sobj, "Hello World!!\r\n");
+    while(1){
+        uart_send_string(&sobj, "\r\n8195a$");
+        rc = serial_getc(&sobj);
+        serial_putc(&sobj, rc);
+    }
+#endif
+
     printf("--Test 13--\n");
 }
 

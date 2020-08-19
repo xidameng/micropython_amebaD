@@ -83,6 +83,7 @@
 #define MICROPY_NLR_SETJMP                      (0)
 #define MICROPY_PY_LWIP_SLIP                    (0)
 #define MICROPY_PY_OS_DUPTERM                   (0)
+#define MICROPY_NLR_X64                         (0)
 
 #define MICROPY_READER_VFS                      (MICROPY_VFS)
 #define MICROPY_VFS                             (0)
@@ -181,4 +182,4 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     mp_obj_list_t  term_list_obj;           \
     mp_obj_t dupterm_arr_obj;               \
     mp_obj_t log_uart_rx_chr_obj;           \
-    mp_map_t mp_terminal_map;               \
+    mp_map_t mp_terminal_map;
