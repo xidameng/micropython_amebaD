@@ -54,6 +54,8 @@ uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
     printf("--Test 01--\n");
+
+#if 0
     mp_stack_ctrl_init();
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
@@ -93,6 +95,7 @@ void micropython_task(void const *arg) {
     }
     printf("--Test 12--\n");
     rtw_thread_exit();
+    #endif
     printf("--Test 13--\n");
 }
 
