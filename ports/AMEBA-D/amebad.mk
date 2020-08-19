@@ -95,7 +95,7 @@ INC += -Imphelper/mods/network
 INC += -Imphelper/mods/machine
 
 
-ifeq ($(CHIP), AMEBAD)
+ifeq ($(CHIP), AMEBA1234567)
 # Source file list
 # -------------------------------------------------------------------
 # micropython source
@@ -159,8 +159,8 @@ TARGET=application
 # -------------------------------------------------------------------
 
 UPY_O = $(addprefix $(BUILD)/, $(UPY_C:.c=.o))
-
-OBJ = $(UPY_O) $(PY_O)
+#$(PY_O)
+OBJ = $(UPY_O) 
 SRC_QSTR += $(UPY_C)
 SRC_QSTR_AUTO_DEPS +=
 
@@ -206,7 +206,7 @@ LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt
 ###########################
 #         BUILD RULES     #
 ###########################
-application: prerequirement $(PY_O) $(UPY_O)
+application: prerequirement $(OBJ)
 	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
 	$(Q)echo '==========================================================='
