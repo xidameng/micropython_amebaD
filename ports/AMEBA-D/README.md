@@ -44,7 +44,8 @@ Use the ```time``` module
 >>> time.sleep_us(10)       # sleep for 10 microseconds
 >>> start = time.ticks_ms() # get millisecond counter
 ```
-### I2C
+### I2C bus
+Use the ```I2C``` module through ```umachine``` module
 ```bash
 >>> from umachine import Pin, I2C
 >>> i2c = I2C(scl=Pin("PA_25",Pin.PULL_UP), sda=Pin("PA_26",Pin.PULL_UP), freq=100000)

@@ -75,7 +75,8 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
 }
 #endif 
 
-serial_t    uartobj;
+extern serial_t    uartobj;
+//extern serial_t    sobj;
 
 void uart_send_string(serial_t *uartobj, char *pstr)
 {

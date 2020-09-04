@@ -36,7 +36,7 @@ IMAGETOOL = amebad_image_tool.exe
 PICK = pick.exe
 PAD  = pad.exe
 BUILDTOOL_PATH := tools/windows
-UPLOAD_PATH := COM6
+UPLOAD_PATH := COM8
 POSTBUILDTOOL_PATH := tool/amebad/windows
 MPY_CROSS = $(TOP)/mpy-cross/mpy-cross.exe
 else

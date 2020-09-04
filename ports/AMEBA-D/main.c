@@ -54,37 +54,31 @@
    PA_7 (TX)
    PA_8 (RX)
 */
-#define UART_TX    PA_18
-#define UART_RX    PA_19
+#define UART_TX    PA_7
+#define UART_RX    PA_8
 
 
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
 
-// test to eliminate warning msg from vsprintf
-#undef printf
-#define printf DiagPrintf
-
 /*****************************************************************************
  *                              External variables
  * ***************************************************************************/
 #if 1
 
+serial_t    uartobj;
 
 uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
     //printf("--Test 01--\n");
     
-
-    char rc;
-    serial_t    sobj;
     // mbed uart test
-    serial_init(&sobj,UART_TX,UART_RX);
-    serial_baud(&sobj,115200);
-    serial_format(&sobj, 8, ParityNone, 1);
-    //uart_send_string(&sobj, "UART API Demo on MP\r\n");
+    serial_init(&uartobj,UART_TX,UART_RX);
+    serial_baud(&uartobj,115200);
+    serial_format(&uartobj, 8, ParityNone, 1);
+    //uart_send_string(&uartobj, "UART API Demo on MP\r\n");
     //printf("--Test uart init--\n");
 #if 1
     mp_stack_ctrl_init();
@@ -131,18 +125,18 @@ void micropython_task(void const *arg) {
 
 #if 0
     char rc;
-    serial_t    sobj;
+    serial_t    uartobj;
 
     // mbed uart test
-    serial_init(&sobj,UART_TX,UART_RX);
-    serial_baud(&sobj,38400);
-    serial_format(&sobj, 8, ParityNone, 1);
-    uart_send_string(&sobj, "UART API Demo...\r\n");
-    uart_send_string(&sobj, "Hello World!!\r\n");
+    serial_init(&uartobj,UART_TX,UART_RX);
+    serial_baud(&uartobj,38400);
+    serial_format(&uartobj, 8, ParityNone, 1);
+    uart_send_string(&uartobj, "UART API Demo...\r\n");
+    uart_send_string(&uartobj, "Hello World!!\r\n");
     while(1){
-        uart_send_string(&sobj, "\r\n8195a$");
-        rc = serial_getc(&sobj);
-        serial_putc(&sobj, rc);
+        uart_send_string(&uartobj, "\r\n8195a$");
+        rc = serial_getc(&uartobj);
+        serial_putc(&uartobj, rc);
     }
 #endif
 
