@@ -408,7 +408,6 @@ raw_repl_reset:
 int pyexec_friendly_repl(void) {
     vstr_t line;
     vstr_init(&line, 32);
-    printf("--pyexec_friendly_repl--01--\n");
 #if defined(USE_HOST_MODE) && MICROPY_HW_HAS_LCD
     // in host mode, we enable the LCD for the repl
     mp_obj_t lcd_o = mp_call_function_0(mp_load_name(qstr_from_str("LCD")));
@@ -416,11 +415,9 @@ int pyexec_friendly_repl(void) {
 #endif
 
 friendly_repl_reset:
-    printf("--pyexec_friendly_repl--02--\n");
     mp_hal_stdout_tx_str("MicroPython " MICROPY_GIT_TAG " on " MICROPY_BUILD_DATE "; " MICROPY_HW_BOARD_NAME " with " MICROPY_HW_MCU_NAME "\r\n");
     #if MICROPY_PY_BUILTINS_HELP
     mp_hal_stdout_tx_str("Type \"help()\" for more information.\r\n");
-    printf("--pyexec_friendly_repl--03--\n");
     #endif
 
     // to test ctrl-C
@@ -443,9 +440,7 @@ friendly_repl_reset:
 
     for (;;) {
     input_restart:
-        printf("--pyexec_friendly_repl--04--\n");
         #if MICROPY_HW_ENABLE_USB
-        printf("--pyexec_friendly_repl--05--\n");
         if (usb_vcp_is_enabled()) {
             // If the user gets to here and interrupts are disabled then
             // they'll never see the prompt, traceback etc. The USB REPL needs
@@ -463,11 +458,8 @@ friendly_repl_reset:
         if (MP_STATE_MEM(gc_lock_depth) != 0) {
             MP_STATE_MEM(gc_lock_depth) = 0;
         }
-        printf("--pyexec_friendly_repl--06--\n");
         vstr_reset(&line);
-        printf("--pyexec_friendly_repl--07--\n");
         int ret = readline(&line, ">>> ");
-        printf("--pyexec_friendly_repl--08--\n");
         mp_parse_input_kind_t parse_input_kind = MP_PARSE_SINGLE_INPUT;
 
         if (ret == CHAR_CTRL_A) {
@@ -531,7 +523,7 @@ friendly_repl_reset:
                 }
             }
         }
-        printf("--pyexec_friendly_repl--09--\n");
+        //printf("--pyexec_friendly_repl--09--\n");
         ret = parse_compile_execute(&line, parse_input_kind, EXEC_FLAG_ALLOW_DEBUGGING | EXEC_FLAG_IS_REPL | EXEC_FLAG_SOURCE_IS_VSTR);
         if (ret & PYEXEC_FORCED_EXIT) {
             return ret;

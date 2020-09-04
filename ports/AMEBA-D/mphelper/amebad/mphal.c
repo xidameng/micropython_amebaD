@@ -87,28 +87,37 @@ void uart_send_string(serial_t *uartobj, char *pstr)
     }
 }
 
+
+void uart_send_string_with_length(serial_t *uartobj, char *pstr, size_t len)
+{
+       for (uint32_t i = 0; i < len; ++i) {
+        serial_putc(uartobj, pstr[i]);
+    }
+}
+
+
 ///////////////////////////////
 //       HAL TX & RX         //
 ///////////////////////////////
 int mp_hal_stdin_rx_chr(void) {
-    printf("--mp_hal_stdin_rx_chr--\n");
+    //printf("--mp_hal_stdin_rx_chr--\n");
   return serial_getc(&uartobj);
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-    printf("--mp_hal_stdout_tx_strn--\n");
+    //printf("--mp_hal_stdout_tx_strn--\n");
     //mp_term_tx_strn(str, len);
-    uart_send_string(&uartobj, str);
+    uart_send_string_with_length(&uartobj, str, len);
 }
 
 void mp_hal_stdout_tx_chr(char c) {
-    printf("mp_hal_stdout_tx_chr\n");
+    //printf("mp_hal_stdout_tx_chr\n");
     //mp_term_tx_strn(&c, 1);
     serial_putc(&uartobj, (int)c);
 }
 
 void mp_hal_stdout_tx_str(const char *str) {
-    printf("mp_hal_stdout_tx_str\n");
+    //printf("mp_hal_stdout_tx_str\n");
     //mp_term_tx_strn(str, strlen(str));
     uart_send_string(&uartobj, str);
 }
@@ -118,7 +127,7 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
         if (*str == '\n') {
             mp_hal_stdout_tx_chr('\r');
         }
-        printf("mp_hal_stdout_tx_strn_cooked\n");
+        //printf("mp_hal_stdout_tx_strn_cooked\n");
         mp_hal_stdout_tx_chr(*str++);
     }
 }

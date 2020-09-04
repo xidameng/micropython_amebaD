@@ -48,6 +48,8 @@
 const PinMap PinMap_UART_TX[] = {
     AF(PA_7, UART, _0, PullUp),
     AF(PB_19, UART, _2, PullUp),
+    AF(PA_18, UART, _3, PullUp),
+    
 
     {NC,    NC,     0}
 };
@@ -55,36 +57,35 @@ const PinMap PinMap_UART_TX[] = {
 const PinMap PinMap_UART_RX[] = {
     AF(PA_8, UART, _0, PullUp),
     AF(PB_18, UART, _2, PullUp),
-
+    AF(PA_19, UART, _3, PullUp),
+    
     {NC,    NC,     0}
 };
 
-#if 0
+
 const PinMap PinMap_I2C_SDA[] = {
-    AF(PA_19, I2C, _0, PullUp),
-    AF(PA_23, I2C, _1, PullUp),
+    AF(PA_26, I2C, _0, PullUp),
 
     {NC,    NC,     0}
 };
 
 const PinMap PinMap_I2C_SCL[] = {
-    AF(PA_22, I2C, _0, PullUp),
-    AF(PA_18, I2C, _1, PullUp),
+    AF(PA_25, I2C, _0, PullUp),
    
     {NC,    NC,     0}
 };
 
 const PinMap PinMap_PWM[] = {
-    AF(PA_14, PWM, _0, PullNone),
-    AF(PA_15, PWM, _1, PullNone),
-    AF(PA_0,  PWM, _2, PullNone),
-    AF(PA_12, PWM, _3, PullNone),
-    AF(PA_5,  PWM, _4, PullNone),
-    AF(PA_23, PWM, _5, PullNone),
+    AF(PA_23, PWM, _2, PullNone),
+    AF(PA_24, PWM, _3, PullNone),
+    AF(PA_25,  PWM, _4, PullNone),
+    AF(PA_26, PWM, _5, PullNone),
 
     {NC,    NC,     0}
 };
 
+
+#if 0
 pin_obj_t pin_PA_30 = PIN(PA_30, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_29 = PIN(PA_29, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_14 = PIN(PA_14, PullNone, PIN_OUTPUT, 0);
@@ -102,6 +103,8 @@ pin_obj_t pin_PA_8 = PIN(PA_8, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PA_19 = PIN(PA_19, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PB_18 = PIN(PB_18, PullNone, PIN_OUTPUT, 0);
 pin_obj_t pin_PB_19 = PIN(PB_19, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_25 = PIN(PA_25, PullNone, PIN_OUTPUT, 0);
+pin_obj_t pin_PA_26 = PIN(PA_26, PullNone, PIN_OUTPUT, 0);
 
 STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_7), MP_OBJ_FROM_PTR(&pin_PA_7) },
@@ -109,6 +112,8 @@ STATIC const mp_map_elem_t pin_board_pins_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_19), MP_OBJ_FROM_PTR(&pin_PA_19) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PB_18), MP_OBJ_FROM_PTR(&pin_PB_18) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PB_19), MP_OBJ_FROM_PTR(&pin_PB_19) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_25), MP_OBJ_FROM_PTR(&pin_PA_25) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PA_26), MP_OBJ_FROM_PTR(&pin_PA_26) },
 #if 0 
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_14), MP_OBJ_FROM_PTR(&pin_PA_14) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PA_15), MP_OBJ_FROM_PTR(&pin_PA_15) },

@@ -35,44 +35,18 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#ifdef AMEBA1
+#ifdef AMEBAD
+//#include "amebad/objloguart.h"
+#include "machine/objuart.h"
+#include "machine/objpin.h"
+#include "machine/objtimer.h"
+#include "machine/objrtc.h"
 #include "machine/objpwm.h"
-#include "machine/objspi.h"
-#include "machine/objuart.h"
-#include "machine/obji2c.h"
-#include "machine/objpin.h"
-#include "machine/objdac.h"
-#include "machine/objloguart.h"
-#include "machine/objwdt.h"
-#include "machine/objrtc.h"
-#include "machine/objadc.h"
-#include "machine/objcrypto.h"
-#include "machine/objtimer.h"
-#include "machine/objflash.h"
-#elif defined(AMEBAZ)
-#include "amebaz/objloguart.h"
-#include "amebaz/objspi.h"
-#include "machine/objcrypto.h"
-#include "machine/objtimer.h"
-#include "machine/objrtc.h"
-#include "machine/objwdt.h"
-#include "machine/objpwm.h"
-#include "machine/obji2c.h"
-#include "machine/objflash.h"
-#include "machine/objpin.h"
-#include "machine/objuart.h"
-#elif defined(AMEBAD)
-#include "amebad/objloguart.h"
-#include "machine/objuart.h"
-#include "machine/objpin.h"
-#include "machine/objtimer.h"
-#include "machine/objrtc.h"
+#include "machine/obji2c.h" 
 /*
-#include "amebad/objspi.h"  
+#include "machine/objspi.h" 
 #include "machine/objcrypto.h"
 #include "machine/objwdt.h"
-#include "machine/objpwm.h"
-#include "machine/obji2c.h"
 #include "machine/objflash.h"
 */
 #else
@@ -87,7 +61,7 @@
  * ***************************************************************************/
 
 void modmachine_init(void) {
-    loguart_init0();
+    //loguart_init0();
     rtc_init0();
     //crypto_init0();
 }
@@ -111,47 +85,19 @@ MP_DEFINE_CONST_FUN_OBJ_1(machine_deepsleep_obj, machine_deepsleep);
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
-#ifdef AMEBA1
-    { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_DAC),           MP_OBJ_FROM_PTR(&dac_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
+#ifdef AMEBAD
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ADC),           MP_OBJ_FROM_PTR(&adc_type) },
-#elif defined(AMEBAZ)
-    { MP_OBJ_NEW_QSTR(MP_QSTR_deepsleep),     MP_OBJ_FROM_PTR(&machine_deepsleep_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
-#elif defined(AMEBAD)
-    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TIMER),         MP_OBJ_FROM_PTR(&timer_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),           MP_OBJ_FROM_PTR(&rtc_type) },
     #if 0
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PWM),           MP_OBJ_FROM_PTR(&pwm_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
     #endif
 #else
 #endif

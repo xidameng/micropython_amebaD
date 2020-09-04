@@ -98,7 +98,7 @@ void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
      */
     if (event == RxIrq) {
 
-        char chr = serial_getc(&log_uart_obj);
+        char chr = serial_getc(&(self->obj));
        
         if (self->irq_handler != mp_const_none) {
         /*
@@ -170,6 +170,7 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->tx.pin           = tx;
     self->rx.pin           = rx;
 
+    serial_init(&(self->obj), self->tx.pin->id, self->rx.pin->id);
     //serial_init(&log_uart_obj, self->tx.pin->id, self->rx.pin->id);
 
     return (mp_obj_t)self;
@@ -179,15 +180,15 @@ STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
     printf("--uart_init0--\n");
     //serial_init(&log_uart_obj, PA_7, PA_8);
-    serial_baud(&log_uart_obj, self->params.baudrate);
-    serial_format(&log_uart_obj, self->params.data_bits, self->params.parity, self->params.stop_bits);
+    serial_baud(&(self->obj), self->params.baudrate);
+    serial_format(&(self->obj), self->params.data_bits, self->params.parity, self->params.stop_bits);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_init_obj, uart_init0);
 
 STATIC mp_obj_t uart_deinit0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    serial_free(&log_uart_obj);
+    serial_free(&(self->obj));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_deinit_obj, uart_deinit0);
@@ -204,7 +205,7 @@ STATIC mp_obj_t uart_irq_enable(mp_uint_t n_args, const mp_obj_t *args) {
         } else {
             self->irq_enabled = false;
         }
-        serial_irq_set(&log_uart_obj, RxIrq, self->irq_enabled);
+        serial_irq_set(&(self->obj), RxIrq, self->irq_enabled);
         return mp_const_none;
     }
 }
@@ -218,7 +219,7 @@ STATIC mp_obj_t uart_irq_handler0(mp_obj_t self_in, mp_obj_t func_in) {
     }
 
     self->irq_handler = func_in;
-    serial_irq_handler(&log_uart_obj, mp_obj_uart_irq_handler, self);
+    serial_irq_handler(&(self->obj), mp_obj_uart_irq_handler, self);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_irq_handler_obj, uart_irq_handler0);
@@ -260,14 +261,14 @@ STATIC mp_obj_t uart_recv(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *e
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!serial_readable(&log_uart_obj)) {
+        while (!serial_readable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        buf_in[i] = (byte)serial_getc(&log_uart_obj);
+        buf_in[i] = (byte)serial_getc(&(self->obj));
     }
 
 ret:
@@ -285,14 +286,14 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const char *buf_in, mp_uint_t size, 
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!serial_writable(&log_uart_obj)) {
+        while (!serial_writable(&(self->obj))) {
             if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        serial_putc(&log_uart_obj, buf_in[i]);
+        serial_putc(&(self->obj), buf_in[i]);
 
         // A workaround, it seems log uart's FIFO is not working ...
         mp_hal_delay_us(250);
@@ -314,13 +315,13 @@ STATIC mp_uint_t uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, 
         ret = 0;
         mp_uint_t status = 0;
         // Only return none zero when RX FIFO is not empty
-        status = serial_readable(&log_uart_obj);
+        status = serial_readable(&(self->obj));
         if ((flags & MP_STREAM_POLL_RD) && (status & true)) {
             ret |= MP_STREAM_POLL_RD;
         }
 
         // Only return none zero when TX FIFO is not full
-        status = serial_writable(&log_uart_obj);
+        status = serial_writable(&(self->obj));
         if ((flags & MP_STREAM_POLL_WR) && (status & true)) {
             ret |= MP_STREAM_POLL_WR;
         }

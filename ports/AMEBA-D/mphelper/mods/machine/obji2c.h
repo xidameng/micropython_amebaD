@@ -45,8 +45,19 @@
 #define I2C_MAX_BAUD_RATE_HZ      (400000)
 
 extern const mp_obj_type_t i2c_type;
-extern const PinMap PinMap_I2C_SDA[];
-extern const PinMap PinMap_I2C_SCL[];
+
+//these two struct only to validate pin, peripharel and function fields don't mean anything
+static const PinMap PinMap_I2C_SDA[] = {
+    {PA_26, 1,      1},
+    {PB_6,  2,      2},
+    {NC,    NC,     0}
+};
+
+static const PinMap PinMap_I2C_SCL[] = {
+    {PA_25, 1,      1},
+    {PB_5,  2,      2},
+    {NC,    NC,     0}
+};
 
 typedef struct {
     mp_obj_base_t base;

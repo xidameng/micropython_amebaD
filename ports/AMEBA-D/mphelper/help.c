@@ -28,8 +28,8 @@
 #include "py/builtin.h"
 
 STATIC const char *help_text =
-"Welcome to MicroPython@"
+"Welcome to use MicroPython_AmebaD Port@"
 MICROPY_HW_MCU_NAME
 "\n"
-"Please visit http://cwyark.github.io/mpiot for more information\n"
+"Please visit https://github.com/xidameng/micropython_amebaD/tree/ameba/ports/AMEBA-D for more information\n"
 ;

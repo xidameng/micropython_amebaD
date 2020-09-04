@@ -104,7 +104,7 @@ UPY_C += pins.c
 UPY_C += mphelper/exception.c
 UPY_C += mphelper/help.c
 UPY_C += mphelper/amebad/mphal.c
-UPY_C += mphelper/amebad/objloguart.c
+#UPY_C += mphelper/amebad/objloguart.c
 UPY_C += mphelper/input.c
 UPY_C += mphelper/bufhelper.c
 UPY_C += mphelper/mpthreadport.c
@@ -115,7 +115,7 @@ UPY_C += mphelper/mods/modmachine.c
 #UPY_C += mphelper/mods/moduwireless.c
 #UPY_C += mphelper/mods/modnetwork.c
 UPY_C += mphelper/mods/modutime.c
-UPY_C += mphelper/mods/modterm.c
+#UPY_C += mphelper/mods/modterm.c
 UPY_C += mphelper/mods/moduos.c
 #UPY_C += mphelper/mods/modussl.c
 #UPY_C += mphelper/mods/machine/objwdt.c
@@ -124,10 +124,10 @@ UPY_C += mphelper/mods/machine/objrtc.c
 #UPY_C += mphelper/mods/machine/objadc.c
 ##UPY_C += mphelper/mods/machine/objdac.c
 UPY_C += mphelper/mods/machine/objpin.c
-#UPY_C += mphelper/mods/machine/obji2c.c
-#UPY_C += mphelper/mods/machine/objpwm.c
+UPY_C += mphelper/mods/machine/obji2c.c
+UPY_C += mphelper/mods/machine/objpwm.c
 UPY_C += mphelper/mods/machine/objtimer.c
-##UPY_C += mphelper/mods/machine/objspi.c
+#UPY_C += mphelper/mods/machine/objspi.c
 UPY_C += mphelper/mods/machine/objuart.c
 #UPY_C += mphelper/mods/machine/objcrypto.c
 #UPY_C += mphelper/mods/wireless/objwlan.c
@@ -207,29 +207,29 @@ LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt
 #         BUILD RULES     #
 ###########################
 application: prerequirement $(OBJ)
-	echo '==========================================================='
+	$(Q)echo '==========================================================='
 	$(Q)echo 'Linking $(CHIP)'
-	echo '==========================================================='
+	$(Q)echo '==========================================================='
 	$(LD) -L$(TOOL) -L$(TC_PATH)../lib -T$(TOOL)/rlx8721d_img2_is_arduino.ld $(LFLAGS) -Wl,-Map=$(BUILD)/Preprocessed_image2.map $(LIBFLAGS) -o $(BUILD)/$(TARGET).axf $(OBJ) $(LIBAR) -lm
 	$(Q)$(OBJDUMP) -d $(BUILD)/$(TARGET).axf > $(BUILD)/Preprocessed_image2.asm
 
 
 .PHONY: manipulate_images
 manipulate_images: $(POSTBUILD)
-	echo '==========================================================='
-	echo 'Image manipulating'
-	echo '==========================================================='
-	$(Q)./$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
-	echo '==========================='
-	echo  End of Image manipulating
-	echo '==========================='
+	$(Q)echo '==========================================================='
+	$(Q)echo 'Image manipulating'
+	$(Q)echo '==========================================================='
+	./$(BUILD)/$(POSTBUILD) $(BUILD) $(TARGET).axf ../$(TC_PATH) 0
+	$(Q)echo '==========================='
+	$(Q)echo  End of Image manipulating
+	$(Q)echo '==========================='
 
 
 .PHONY: prerequirement
 prerequirement: check_toolchain check_postbuildtools
-	echo '==========================================================='
-	echo 'Prepare tools and images'
-	echo '==========================================================='
+	$(Q)echo '==========================================================='
+	$(Q)echo 'Prepare tools and images'
+	$(Q)echo '==========================================================='
 	$(Q)$(MKDIR) -p $(BUILD)/bsp/image
 	$(Q)cp -f $(TOOL)/image/km0_boot_all.bin $(BUILD)/bsp/image/km0_boot_all.bin
 	$(Q)chmod +rw $(BUILD)/bsp/image/km0_boot_all.bin

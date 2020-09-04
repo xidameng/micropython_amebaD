@@ -49,13 +49,22 @@
    UART0: 
    PA_18  (TX)
    PA_19  (RX)
-   */
+   
+   loguart:
+   PA_7 (TX)
+   PA_8 (RX)
+*/
 #define UART_TX    PA_18
 #define UART_RX    PA_19
+
 
 /*****************************************************************************
  *                              Internal variables
  * ***************************************************************************/
+
+// test to eliminate warning msg from vsprintf
+#undef printf
+#define printf DiagPrintf
 
 /*****************************************************************************
  *                              External variables
@@ -66,7 +75,7 @@
 uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
-    printf("--Test 01--\n");
+    //printf("--Test 01--\n");
     
 
     char rc;
@@ -76,47 +85,47 @@ void micropython_task(void const *arg) {
     serial_baud(&sobj,115200);
     serial_format(&sobj, 8, ParityNone, 1);
     //uart_send_string(&sobj, "UART API Demo on MP\r\n");
-
+    //printf("--Test uart init--\n");
 #if 1
     mp_stack_ctrl_init();
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
-    printf("--Test gc--\n");
+    //printf("--Test gc--\n");
 #endif
-    printf("--Test 02--\n");
+    //printf("--Test 02--\n");
     // Init micropython basic system
     mp_init();
-    printf("--Test 03--mp init--\n");
+    //printf("--Test 03--mp init--\n");
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
-    printf("--Test 04--\n");
+    //printf("--Test 04--init done--\n");
     //modmachine_init();
     //loguart_init0();
 
-    printf("--Test 05--loguart init--\n");
+    //printf("--Test 05--loguart init--\n");
     //modnetwork_init();
-    printf("--Test 06--\n");
+    //printf("--Test 06--\n");
     //modwireless_init();
-    printf("--Test 07--\n");
+    //printf("--Test 07--\n");
     //modterm_init();
-    printf("--Test 08--term init--\n");
+    //printf("--Test 08--term init--\n");
     //pyexec_frozen_module("_boot.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
-    printf("--Test 09--\n");
+    //printf("--Test 09--\n");
 #endif
     for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
-            printf("--Test 10--\n");
+            //printf("--Test 10--raw--REPL--\n");
             if (pyexec_raw_repl() != 0)
                 mp_printf(&mp_plat_print, "soft reboot\n");
         } else {
-            printf("--Test 11--\n");
+            //printf("--Test 11--fredly--REPL--\n");
             if (pyexec_friendly_repl() != 0) 
                 mp_printf(&mp_plat_print, "soft reboot\n");
         }
     }
-    printf("--Test 12--\n");
+    //printf("--Test 12--\n");
     rtw_thread_exit();
     #endif
 
@@ -137,13 +146,14 @@ void micropython_task(void const *arg) {
     }
 #endif
 
-    printf("--Test 13--\n");
+    //printf("--Test 13--\n");
 }
 
 #endif
 
 int main (void) {
-
+    //printf("--entering main--\n");
+#if 0
     //__libc_init_array();
     printf("--Test 00--\n");
     printf("--Test 00--\n");
@@ -156,14 +166,15 @@ int main (void) {
     printf("--Test 00--\n");
     printf("--Test 00--\n");
     printf("--Test 00--\n");
+#endif
 
     #if 1
     struct task_struct stUpyTask;
     BaseType_t xReturn = rtw_create_task(&stUpyTask, MICROPY_TASK_NAME,
             MICROPY_TASK_STACK_DEPTH, MICROPY_TASK_PRIORITY, micropython_task, NULL);
-    printf("--Test 00--after--taskcreate--\n");
+    //printf("--Test 00--after--taskcreate--\n");
     vTaskStartScheduler();
-    printf("--Test 00--after--scheduler--\n");
+    //printf("--Test 00--after--scheduler--\n");
     for(;;);
     
     #endif

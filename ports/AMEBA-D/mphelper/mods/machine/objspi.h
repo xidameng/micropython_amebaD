@@ -34,7 +34,7 @@
 
 #include "PinNames.h"
 
-#include "extmod/machine_spi.h"
+#include "spi_api.h"
 
 #define SPI_DEFAULT_BAUD_RATE           (10000000)
 

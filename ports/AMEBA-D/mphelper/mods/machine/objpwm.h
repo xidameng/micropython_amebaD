@@ -34,7 +34,28 @@
 #include "objpin.h"
 
 extern const mp_obj_type_t pwm_type;
-extern const PinMap PinMap_PWM[];
+
+
+/**
+  * @brief  Table elements express the pin to PWM channel number, they are:
+  *           {pinName, km0_pin2chan, km4_pin2chan}
+  */
+static const PinMap PinMap_PWM[] = {
+    {PA_23,  2, 2},
+    {PA_24,  3, 3},
+    {PA_25,  4, 4},
+    {PA_26,  5, 5},
+    {PB_4,  2, 8},
+    {PB_5,  3, 9},
+    {PB_7,  5, 17},
+    {PB_18,  4, 10},
+    {PB_19,  5, 11},
+    {PB_20,  0, 12},
+    {PB_21,  1, 13},
+    {PB_22,  2, 14},
+    {PB_23,  3, 15},
+    {NC,    NC,     0}
+};
 
 typedef struct {
     mp_obj_base_t base;
