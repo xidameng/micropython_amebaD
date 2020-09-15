@@ -35,8 +35,6 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 
-#ifdef AMEBAD
-//#include "amebad/objloguart.h"
 #include "machine/objuart.h"
 #include "machine/objpin.h"
 #include "machine/objtimer.h"
@@ -49,8 +47,6 @@
 #include "machine/objwdt.h"
 #include "machine/objflash.h"
 */
-#else
-#endif
 
 // mbed lib headers
 #include "sys_api.h"
@@ -61,7 +57,6 @@
  * ***************************************************************************/
 
 void modmachine_init(void) {
-    //loguart_init0();
     rtc_init0();
     //crypto_init0();
 }
@@ -72,7 +67,7 @@ STATIC mp_obj_t machine_reset(void) {
 }
 MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
-#if defined(AMEBA1) || defined(AMEBAZ)
+#if 0
 STATIC mp_obj_t machine_deepsleep(mp_obj_t duration_in) {
     uint32_t duration = mp_obj_get_int(duration_in);
     deepsleep_ex(DSLEEP_WAKEUP_BY_TIMER, duration);
@@ -83,9 +78,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(machine_deepsleep_obj, machine_deepsleep);
 #endif // end of checking for 'machine_deepsleep'
 
 STATIC const mp_map_elem_t machine_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_umachine) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_machine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reboot),        MP_OBJ_FROM_PTR(&machine_reset_obj) },
-#ifdef AMEBAD
     { MP_OBJ_NEW_QSTR(MP_QSTR_UART),          MP_OBJ_FROM_PTR(&uart_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Pin),           MP_OBJ_FROM_PTR(&pin_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Timer),         MP_OBJ_FROM_PTR(&timer_type) },
@@ -94,17 +88,14 @@ STATIC const mp_map_elem_t machine_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_I2C),           MP_OBJ_FROM_PTR(&i2c_type) },
     #if 0
     { MP_OBJ_NEW_QSTR(MP_QSTR_SPI),           MP_OBJ_FROM_PTR(&spi_type) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_LOGUART),       MP_OBJ_FROM_PTR(&log_uart_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CRYPTO),        MP_OBJ_FROM_PTR(&crypto_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WDT),           MP_OBJ_FROM_PTR(&wdt_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FLASH),         MP_OBJ_FROM_PTR(&flash_type) },
     #endif
-#else
-#endif
 };
 STATIC MP_DEFINE_CONST_DICT(machine_module_globals, machine_module_globals_table);
 
-const mp_obj_module_t mp_module_umachine = {
+const mp_obj_module_t mp_module_machine = {
     .base    = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&machine_module_globals,
 };

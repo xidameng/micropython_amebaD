@@ -33,10 +33,10 @@
 #include "objpin.h"
 
 #include "PinNames.h"
-
 #include "spi_api.h"
+#include "spi_ex_api.h"
 
-#define SPI_DEFAULT_BAUD_RATE           (10000000)
+#define SPI_DEFAULT_BAUD_RATE           (20000000)
 
 #ifndef MICROPY_PY_MACHINE_SPI_MSB
 #define MICROPY_PY_MACHINE_SPI_MSB      (0)
@@ -46,8 +46,9 @@
 #define SPI_MASTER                      (0)
 
 extern const mp_obj_type_t spi_type;
-extern const PinMap PinMap_SPI_MOSI[];
-extern const PinMap PinMap_SPI_MISO[];
+
+//extern const PinMap PinMap_SPI_MOSI[];
+//extern const PinMap PinMap_SPI_MISO[];
 
 typedef struct {
     mp_obj_base_t base;

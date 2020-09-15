@@ -45,11 +45,7 @@
 #include "serial_api.h"
 #include "main.h"
 
-/*UART pin location:     
-   loguart:
-   PA_7 (TX)
-   PA_8 (RX)
-*/
+/* LOGUART pins: */
 #define UART_TX    PA_7
 #define UART_RX    PA_8
 
