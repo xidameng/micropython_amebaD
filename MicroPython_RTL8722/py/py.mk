@@ -170,7 +170,6 @@ PY_EXTMOD_O_BASENAME = \
 	extmod/moduselect.o \
 	extmod/moduwebsocket.o \
 	extmod/modwebrepl.o \
-	extmod/modframebuf.o \
 	extmod/vfs.o \
 	extmod/vfs_reader.o \
 	extmod/vfs_posix.o \
@@ -186,6 +185,7 @@ PY_EXTMOD_O_BASENAME = \
 	extmod/machine_pulse.o \
 	extmod/machine_i2c.o \
 	extmod/machine_spi.o \
+	extmod/modframebuf.o \
 	#lib/utils/printf.o \ # xxm
 	#extmod/vfs_fat_diskio.o \
 

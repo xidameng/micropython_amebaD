@@ -252,7 +252,7 @@ manipulate_images: $(POSTBUILD)
 
 .PHONY: upload
 upload: $(IMAGETOOL)
-	echo 'NOTE: Make sure Ameba serial port name has been correctly updated in the Makefile!'
+	$(Q)echo '## Make sure Ameba serial port name has been correctly updated in the Makefile!'
 	./$(BUILD)/$(IMAGETOOL) $(UPLOAD_PATH)
 
 
