@@ -47,8 +47,8 @@
 
 extern const mp_obj_type_t spi_type;
 
-//extern const PinMap PinMap_SPI_MOSI[];
-//extern const PinMap PinMap_SPI_MISO[];
+extern const PinMap PinMap_SPI_MOSI[];
+extern const PinMap PinMap_SPI_MISO[];
 
 typedef struct {
     mp_obj_base_t base;

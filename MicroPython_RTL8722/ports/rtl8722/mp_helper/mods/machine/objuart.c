@@ -36,9 +36,9 @@
 
 STATIC const char *_parity_name[] = {"None", "1", "0"};
 
-extern serial_t log_uart_obj;
+serial_t mp_uart_obj;
 
-STATIC uart_obj_t uart_obj[3] = {{
+STATIC uart_obj_t uart_obj[2] = {{
     .base.type      = &uart_type,
     .unit           = 0,
     .params = {
@@ -57,24 +57,7 @@ STATIC uart_obj_t uart_obj[3] = {{
     .irq_handler = mp_const_none,
 }, {
     .base.type      = &uart_type,
-    .unit           = 1,
-    .params = {
-        .baudrate  = UART_DEFAULT_BAUDRATE,
-        .data_bits = UART_DEFAULT_DATA_BITS,
-        .parity    = UART_DEFAULT_PARITY,
-        .stop_bits = UART_DEFAULT_STOP_BITS,
-    },
-    .tx = {
-        .timeout_ms = UART_DEFAULT_TX_TIMEOUT,
-    },
-    .rx = {
-        .timeout_ms = UART_DEFAULT_RX_TIMEOUT,
-    },
-    .irq_enabled = true,
-    .irq_handler = mp_const_none,
-}, {
-    .base.type      = &uart_type,
-    .unit           = 2,
+    .unit           = 3,
     .params = {
         .baudrate  = UART_DEFAULT_BAUDRATE,
         .data_bits = UART_DEFAULT_DATA_BITS,
@@ -98,7 +81,7 @@ void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
      */
     if (event == RxIrq) {
 
-        char chr = serial_getc(&(self->obj));
+        char chr = serial_getc(&mp_uart_obj);
        
         if (self->irq_handler != mp_const_none) {
         /*
@@ -169,25 +152,22 @@ STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_ui
     self->tx.pin           = tx;
     self->rx.pin           = rx;
 
-    serial_init(&(self->obj), self->tx.pin->id, self->rx.pin->id);
-    //serial_init(&log_uart_obj, self->tx.pin->id, self->rx.pin->id);
+    serial_init(&mp_uart_obj, self->tx.pin->id, self->rx.pin->id);
 
     return (mp_obj_t)self;
 }
 
 STATIC mp_obj_t uart_init0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    printf("--uart_init0--\n");
-    //serial_init(&log_uart_obj, PA_7, PA_8);
-    serial_baud(&(self->obj), self->params.baudrate);
-    serial_format(&(self->obj), self->params.data_bits, self->params.parity, self->params.stop_bits);
+    serial_baud(&mp_uart_obj, self->params.baudrate);
+    serial_format(&mp_uart_obj, self->params.data_bits, self->params.parity, self->params.stop_bits);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_init_obj, uart_init0);
 
 STATIC mp_obj_t uart_deinit0(mp_obj_t self_in) {
     uart_obj_t *self = self_in;
-    serial_free(&(self->obj));
+    serial_free(&mp_uart_obj);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(uart_deinit_obj, uart_deinit0);
@@ -204,7 +184,7 @@ STATIC mp_obj_t uart_irq_enable(mp_uint_t n_args, const mp_obj_t *args) {
         } else {
             self->irq_enabled = false;
         }
-        serial_irq_set(&(self->obj), RxIrq, self->irq_enabled);
+        serial_irq_set(&mp_uart_obj, RxIrq, self->irq_enabled);
         return mp_const_none;
     }
 }
@@ -218,7 +198,7 @@ STATIC mp_obj_t uart_irq_handler0(mp_obj_t self_in, mp_obj_t func_in) {
     }
 
     self->irq_handler = func_in;
-    serial_irq_handler(&(self->obj), mp_obj_uart_irq_handler, self);
+    serial_irq_handler(&mp_uart_obj, mp_obj_uart_irq_handler, self);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_irq_handler_obj, uart_irq_handler0);
@@ -260,14 +240,14 @@ STATIC mp_obj_t uart_recv(mp_obj_t self_in, char *buf_in, mp_uint_t size, int *e
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!serial_readable(&(self->obj))) {
+        while (!serial_readable(&mp_uart_obj)) {
             if ((mp_hal_ticks_ms() - start) > self->rx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        buf_in[i] = (byte)serial_getc(&(self->obj));
+        buf_in[i] = (byte)serial_getc(&mp_uart_obj);
     }
 
 ret:
@@ -285,14 +265,14 @@ STATIC mp_obj_t uart_send(mp_obj_t self_in, const char *buf_in, mp_uint_t size, 
 
     mp_uint_t start = mp_hal_ticks_ms();
     for (mp_uint_t i = 0; i < size; i++) {
-        while (!serial_writable(&(self->obj))) {
+        while (!serial_writable(&mp_uart_obj)) {
             if ((mp_hal_ticks_ms() - start) > self->tx.timeout_ms) {
                 *errcode = MP_ETIMEDOUT;
                 goto ret;
             }
         }
         ret += 1;
-        serial_putc(&(self->obj), buf_in[i]);
+        serial_putc(&mp_uart_obj, buf_in[i]);
 
         // A workaround, it seems log uart's FIFO is not working ...
         mp_hal_delay_us(250);
@@ -314,13 +294,13 @@ STATIC mp_uint_t uart_ioctl(mp_obj_t self_in, mp_uint_t request, mp_uint_t arg, 
         ret = 0;
         mp_uint_t status = 0;
         // Only return none zero when RX FIFO is not empty
-        status = serial_readable(&(self->obj));
+        status = serial_readable(&mp_uart_obj);
         if ((flags & MP_STREAM_POLL_RD) && (status & true)) {
             ret |= MP_STREAM_POLL_RD;
         }
 
         // Only return none zero when TX FIFO is not full
-        status = serial_writable(&(self->obj));
+        status = serial_writable(&mp_uart_obj);
         if ((flags & MP_STREAM_POLL_WR) && (status & true)) {
             ret |= MP_STREAM_POLL_WR;
         }

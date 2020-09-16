@@ -49,38 +49,24 @@ void timer_init0(void) {
     // Do nothng here
 }
 
-#if 0
 void mp_obj_timer_irq_handler(timer_obj_t *self) {
     printf("entered timer irq\n");
 
     if (self->callback != mp_const_none) {
         gc_lock();
-        mp_printf(&mp_plat_print, "testing mp print");
-        printf("gc locked\n");
         nlr_buf_t nlr;
         if (nlr_push(&nlr) == 0) {
             mp_call_function_0(self->callback);
-            printf("callback function run\n");
             nlr_pop();
-            printf("nlr poped\n");
         } else {
-            printf("callback wrong type\n");
             self->callback = mp_const_none;
             mp_printf(&mp_plat_print, "Uncaught exception in callback handler");
             if (nlr.ret_val != MP_OBJ_NULL)
                 mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
         }
         gc_unlock();
-        printf("gc unlocked\n");
     }
 }
-#endif
-
-void mp_obj_timer_irq_handler(timer_obj_t *self) {
-    
-    mp_call_function_0(self->callback);
-}
-
 
 
 STATIC void timer_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
@@ -107,11 +93,7 @@ STATIC mp_obj_t timer_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_u
 
 STATIC mp_obj_t timer_init(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    printf("--timer init 1 --\n");
-    printf("the id is %d\n", self->id);
-    //gtimer_init(&(self->obj), self->id); // xxm
     gtimer_init(&mp_timer_obj, self->id);
-    printf("--timer init 2--\n");
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_init_obj, timer_init);
@@ -163,10 +145,8 @@ STATIC mp_obj_t timer_start(mp_uint_t n_args, const mp_obj_t *args) {
     uint8_t type = mp_obj_get_int(args[ARG_type]);
 
     if (type == TIMER_PERIODICAL) {
-        printf("timer is periodical\n");
         gtimer_start_periodical(&mp_timer_obj, duration, (void *)mp_obj_timer_irq_handler,
                 self->id); // xxm
-        printf("timer start success\n");
     } else if (type == TIMER_ONESHOT) {
         gtimer_start_one_shout(&mp_timer_obj, duration, (void *)mp_obj_timer_irq_handler,
                 self->id); // xxm

@@ -48,7 +48,6 @@
 const PinMap PinMap_UART_TX[] = {
     AF(PA_21, UART, _0, PullUp),
     AF(PA_26, UART, _3, PullUp),
-    AF(PA_18, UART, _2, PullUp),
     
     {NC,    NC,     0}
 };
@@ -56,7 +55,6 @@ const PinMap PinMap_UART_TX[] = {
 const PinMap PinMap_UART_RX[] = {
     AF(PA_22, UART, _0, PullUp),
     AF(PA_25, UART, _3, PullUp),
-    AF(PA_19, UART, _2, PullUp),
     
     {NC,    NC,     0}
 };
@@ -64,14 +62,14 @@ const PinMap PinMap_UART_RX[] = {
 
 const PinMap PinMap_I2C_SDA[] = {
     AF(PA_26, I2C, _0, PullUp),
-    AF(PB_6, I2C, _1, PullUp),
+    //AF(PB_6, I2C, _0, PullUp),
 
     {NC,    NC,     0}
 };
 
 const PinMap PinMap_I2C_SCL[] = {
     AF(PA_25, I2C, _0, PullUp),
-    AF(PB_5, I2C, _1, PullUp),
+    //AF(PB_5, I2C, _0, PullUp),
    
     {NC,    NC,     0}
 };
@@ -81,7 +79,7 @@ const PinMap PinMap_PWM[] = {
     AF(PA_24, PWM, _3, PullNone),
     AF(PA_25,  PWM, _4, PullNone),
     AF(PA_26, PWM, _5, PullNone),
-
+/*
     AF(PB_4, PWM, _8, PullNone),
     AF(PB_5, PWM, _9, PullNone),
     AF(PB_7, PWM, _17, PullNone),
@@ -91,20 +89,28 @@ const PinMap PinMap_PWM[] = {
     AF(PB_21, PWM, _13, PullNone),
     AF(PB_22, PWM, _14, PullNone),
     AF(PB_23, PWM, _15, PullNone),
-
+*/
     {NC,    NC,     0}
 };
 
+// BF is only for SPI
+#define BF(pin_name, af_name, af_index, pull) \
+{ \
+    .pin        = pin_name,                                 \
+    .peripheral = af_name ## af_index,                      \
+    .function   = PIN_DATA(pull, PINMUX_FUNCTION_ ## af_name ## M) \
+}
+
 const PinMap PinMap_SPI_MOSI[] = {
-    AF(PB_18, SPI, _0, S0),
-    AF(PB_4, SPI, _1, S1),
+    BF(PB_18, SPI, _0, 0),
+    BF(PB_4, SPI, _1, 1),
 
     {NC,    NC,     0}
 };
 
 const PinMap PinMap_SPI_MISO[] = {
-    AF(PB_19, SPI, _0, S0),
-    AF(PB_5, SPI, _1, S1),
+    BF(PB_19, SPI, _0, 0),
+    BF(PB_5, SPI, _1, 1),
 
     {NC,    NC,     0}
 };

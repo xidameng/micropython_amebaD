@@ -26,18 +26,21 @@
 
 #include "obji2c.h"
 
-STATIC i2c_obj_t i2c_obj[4] = {
+
+i2c_t i2cwire0;
+i2c_t i2cwire1;
+
+
+STATIC i2c_obj_t i2c_obj[2] = {
     {.base.type = &i2c_type, .unit = 0, .freq = I2C_DEFAULT_BAUD_RATE_HZ },
     {.base.type = &i2c_type, .unit = 1, .freq = I2C_DEFAULT_BAUD_RATE_HZ },
-    {.base.type = &i2c_type, .unit = 2, .freq = I2C_DEFAULT_BAUD_RATE_HZ },
-    {.base.type = &i2c_type, .unit = 3, .freq = I2C_DEFAULT_BAUD_RATE_HZ },
 };
 
 int _i2c_read(mp_obj_base_t *self_in, uint8_t *dest, size_t len, bool nack) {
   i2c_obj_t *self = (i2c_obj_t*)self_in;
   mp_uint_t i = 0;
   for (i = 0; i < len; i++) {
-    dest[i] = i2c_byte_read(&(self->obj), nack && (i == len));
+    dest[i] = i2c_byte_read(&i2cwire0, nack && (i == len));
   }
   return 0;
 }
@@ -46,7 +49,7 @@ int _i2c_write(mp_obj_base_t *self_in, const uint8_t *src, size_t len) {
   i2c_obj_t *self = (i2c_obj_t*)self_in;
   int num_acks = 0;
   while (len--) {
-    int ret = i2c_byte_write(&(self->obj), *src++);
+    int ret = i2c_byte_write(&i2cwire0, *src++);
     if (ret != true)
       return 0;
     ++num_acks;
@@ -59,7 +62,7 @@ int _i2c_write(mp_obj_base_t *self_in, const uint8_t *src, size_t len) {
 //   <0 - error, with errno being the negative of the return value
 int _i2c_readfrom(mp_obj_base_t *self_in, uint16_t addr, uint8_t *dest, size_t len, bool stop) {
   i2c_obj_t *self = (i2c_obj_t*)self_in;
-  int ret = i2c_read(&(self->obj), addr, dest, len, stop);
+  int ret = i2c_read(&i2cwire0, addr, dest, len, stop);
   if (ret != len)
     return -1;
   return 0; // success
@@ -70,7 +73,7 @@ int _i2c_readfrom(mp_obj_base_t *self_in, uint16_t addr, uint8_t *dest, size_t l
 //   <0 - error, with errno being the negative of the return value
 int _i2c_writeto(mp_obj_base_t *self_in, uint16_t addr, const uint8_t *src, size_t len, bool stop) {
   i2c_obj_t *self = (i2c_obj_t*)self_in;
-  int ret = i2c_write(&(self->obj), addr, src, len, stop);
+  int ret = i2c_write(&i2cwire0, addr, src, len, stop);
   return ret;
 }
 
@@ -123,9 +126,9 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     self->scl  = scl;
     self->sda  = sda;
     
-    i2c_init(&(self->obj), self->sda->id, self->scl->id);
+    i2c_init(&i2cwire0, self->sda->id, self->scl->id);
 
-    i2c_frequency(&(self->obj), self->freq);
+    i2c_frequency(&i2cwire0, self->freq);
 
     return (mp_obj_t)self;
 }
@@ -137,7 +140,7 @@ STATIC void i2c_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t
 
 STATIC mp_obj_t mp_i2c_reset(mp_obj_t self_in) {
     i2c_obj_t *self = self_in;
-    i2c_reset(&(self->obj));
+    i2c_reset(&i2cwire0);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(i2c_reset_obj, mp_i2c_reset);
