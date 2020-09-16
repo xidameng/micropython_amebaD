@@ -100,7 +100,7 @@ Use the ```UART``` module through ```umachine``` module
 
 ```bash
 from umachine import UART
-uart = UART(0, baudrate=9600)
+uart = UART(tx="PA_21", rx= "PA_22")
 uart.write('hello')
 uart.read(5) # read up to 5 bytes
 ```

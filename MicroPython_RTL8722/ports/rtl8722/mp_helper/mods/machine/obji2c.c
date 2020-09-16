@@ -108,9 +108,6 @@ STATIC mp_obj_t i2c_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     pin_obj_t *sda = pin_find(args[ARG_sda].u_obj);
     pin_obj_t *scl = pin_find(args[ARG_scl].u_obj);
 
-    printf("sda = %s, or is %d\n", *sda, *sda);
-    printf("scl = %s\n", *scl);
-
     // Use Realtek's api to validate pins
     PinName pn_sda = (PinName)pinmap_peripheral(sda->id, PinMap_I2C_SDA);
     PinName pn_scl = (PinName)pinmap_peripheral(scl->id, PinMap_I2C_SCL);
