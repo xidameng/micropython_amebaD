@@ -29,7 +29,8 @@
  *                              External variables
  * ***************************************************************************/
 
-gtimer_t mp_timer_obj;
+//gtimer_t mp_timer_obj;
+gtimer_t mp_timer_obj[GTIMER_MAX]; // max 4 timers
 
 /*****************************************************************************
  *                              Inernal variables
@@ -50,7 +51,8 @@ void timer_init0(void) {
 }
 
 void mp_obj_timer_irq_handler(timer_obj_t *self) {
-    printf("entered timer irq\n");
+    //printf("entered timer irq\n");
+    mp_printf(&mp_plat_print, "timer interrupt running");
 
     if (self->callback != mp_const_none) {
         gc_lock();
@@ -93,28 +95,28 @@ STATIC mp_obj_t timer_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_u
 
 STATIC mp_obj_t timer_init(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    gtimer_init(&mp_timer_obj, self->id);
+    gtimer_init(&mp_timer_obj[self->id], self->id);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_init_obj, timer_init);
 
 STATIC mp_obj_t timer_deinit(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    gtimer_deinit(&mp_timer_obj);
+    gtimer_deinit(&mp_timer_obj[self->id]);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_deinit_obj, timer_deinit);
 
 STATIC mp_obj_t timer_read_tick(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    uint32_t tick = gtimer_read_tick(&mp_timer_obj);
+    uint32_t tick = gtimer_read_tick(&mp_timer_obj[self->id]);
     return mp_obj_new_int(tick);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_read_tick_obj, timer_read_tick);
 
 STATIC mp_obj_t timer_read_us(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    uint64_t us = gtimer_read_us(&mp_timer_obj);
+    uint64_t us = gtimer_read_us(&mp_timer_obj[self->id]);
     return mp_obj_new_int_from_ull(us);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_read_us_obj, timer_read_us);
@@ -122,14 +124,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_read_us_obj, timer_read_us);
 STATIC mp_obj_t timer_reload(mp_obj_t self_in, mp_obj_t duration_us_in) {
     timer_obj_t *self = self_in;
     uint32_t duration_us = mp_obj_get_int(duration_us_in);
-    gtimer_reload(&mp_timer_obj, duration_us);
+    gtimer_reload(&mp_timer_obj[self->id], duration_us);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(timer_reload_obj, timer_reload);
 
 STATIC mp_obj_t timer_stop(mp_obj_t self_in) {
     timer_obj_t *self = self_in;
-    gtimer_stop(&mp_timer_obj);
+    gtimer_stop(&mp_timer_obj[self->id]);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_stop_obj, timer_stop);
@@ -145,11 +147,9 @@ STATIC mp_obj_t timer_start(mp_uint_t n_args, const mp_obj_t *args) {
     uint8_t type = mp_obj_get_int(args[ARG_type]);
 
     if (type == TIMER_PERIODICAL) {
-        gtimer_start_periodical(&mp_timer_obj, duration, (void *)mp_obj_timer_irq_handler,
-                self->id); // xxm
+        gtimer_start_periodical(&mp_timer_obj[self->id], duration, (void *)mp_obj_timer_irq_handler, self->id); // xxm
     } else if (type == TIMER_ONESHOT) {
-        gtimer_start_one_shout(&mp_timer_obj, duration, (void *)mp_obj_timer_irq_handler,
-                self->id); // xxm
+        gtimer_start_one_shout(&mp_timer_obj[self->id], duration, (void *)mp_obj_timer_irq_handler, self->id); // xxm
     } else
         mp_raise_ValueError("Invalid TIMER type");
     
