@@ -108,7 +108,10 @@ There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
 from umachine import Timer
 t = Timer(0)  # Use Timer 0/1/2/3 only
 t.init()      # Initialize Gtimer
-t.start(2000000, lambda :print("timer fired"), t.PERIODICAL)  # Set GTimer at duration of 2 seconds, with a lambda callback function and fired periodically
+def fun():
+print("timer fired!")
+
+t.start(2000000, fun(), t.ONESHOT)  # Set GTimer at duration of 2 seconds, with a lambda callback function and fired periodically
 ```
 
 

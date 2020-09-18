@@ -93,7 +93,7 @@ const PinMap PinMap_PWM[] = {
     {NC,    NC,     0}
 };
 
-// BF is only for SPI
+// BF is only for SPI, right now only support master mode
 #define BF(pin_name, af_name, af_index, pull) \
 { \
     .pin        = pin_name,                                 \
