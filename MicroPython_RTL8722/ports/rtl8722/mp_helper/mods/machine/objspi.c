@@ -26,164 +26,32 @@
 
 #include "objspi.h"
 
+#define SPI_MAX 2       //max 2 sets of SPI supported on Ameba D
+static uint8_t id = 0; // default SPI idx id is 0 
+
+spi_t mp_spi_obj[SPI_MAX];  // MBED obj 
+
 STATIC spi_obj_t spi_obj[2] = {
     {.base.type = &spi_type, .unit = 0, .bits = 8, .baudrate = SPI_DEFAULT_BAUD_RATE, .pol = SCPOL_INACTIVE_IS_LOW, .pha = SCPH_TOGGLES_IN_MIDDLE },
     {.base.type = &spi_type, .unit = 1, .bits = 8, .baudrate = SPI_DEFAULT_BAUD_RATE, .pol = SCPOL_INACTIVE_IS_LOW, .pha = SCPH_TOGGLES_IN_MIDDLE },
 };
 
-STATIC void objspi_init(mp_obj_base_t *self_in, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    spi_obj_t *self = (spi_obj_t*)self_in;
-    enum { ARG_baudrate, ARG_polarity, ARG_phase, ARG_bits, ARG_firstbit };
-    static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_baudrate, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
-        { MP_QSTR_polarity, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
-        { MP_QSTR_phase,    MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
-        { MP_QSTR_bits,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
-        { MP_QSTR_firstbit, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
-    };
-    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
-    mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-
-    if (args[ARG_baudrate].u_int != -1) 
-        self->baudrate = args[ARG_baudrate].u_int;   
-
-    if (args[ARG_polarity].u_int != -1)
-        self->pol = args[ARG_polarity].u_int;
-
-    if (args[ARG_phase].u_int != -1)
-        self->pha = args[ARG_phase].u_int;
-
-    if (args[ARG_bits].u_int != -1)
-        self->bits = args[ARG_bits].u_int;
-
-    //spi_init(&(self->obj), self->mosi->id, self->miso->id, self->sck->id, 0);
-    switch(self->unit) {
-        case 0:
-            ACTCK_SPI0_CCTRL(ON);
-            SLPCK_SPI0_CCTRL(ON);
-            PinCtrl(SPI0, self->ssi_pinmux, ON);
-            SPI0_FCTRL(ON);
-            break;
-        case 1:
-            ACTCK_SPI1_CCTRL(ON);
-            SLPCK_SPI1_CCTRL(ON);
-            PinCtrl(SPI1, self->ssi_pinmux, ON);
-            SPI1_FCTRL(ON);
-            break;
-        default:
-            break;
-    }
-
-    HalSsiSetDeviceRoleRtl8195a(NULL, 1);
-
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
-
-    SPI0_MULTI_CS_CTRL(ON);
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SER, BIT_SER_SER(2));
-
-    uint32_t ctrlr0_val = 0;
-    
-    ctrlr0_val |= BIT_CTRLR0_SCPH(self->pha);
-    ctrlr0_val |= BIT_CTRLR0_SCPOL(self->pol);
-    ctrlr0_val |= BIT_CTRLR0_DFS((self->bits - 1));
-    ctrlr0_val |= BIT_CTRLR0_SLV_OE(0);
-
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, ctrlr0_val);
-
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_MWCR, 2);
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_TXFTLR, 8);
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_RXFTLR, 7);
-    
-
-}
-
-STATIC void objspi_deinit(mp_obj_base_t *self_in) {
-    spi_obj_t *self = (spi_obj_t*)self_in;
-    SPI0_MULTI_CS_CTRL(OFF);
-    switch(self->unit) {
-        case 0:
-            ACTCK_SPI0_CCTRL(OFF);
-            SLPCK_SPI0_CCTRL(OFF);
-            PinCtrl(SPI0, self->ssi_pinmux, OFF);
-            SPI0_FCTRL(OFF);
-            break;
-        case 1:
-            ACTCK_SPI1_CCTRL(OFF);
-            SLPCK_SPI1_CCTRL(OFF);
-            PinCtrl(SPI1, self->ssi_pinmux, OFF);
-            SPI1_FCTRL(OFF);
-            break;
-        case 2:
-            ACTCK_SPI2_CCTRL(OFF);
-            SLPCK_SPI2_CCTRL(OFF);
-            PinCtrl(SPI2, self->ssi_pinmux, OFF);
-            SPI2_FCTRL(OFF);
-            break;
-        default:
-            break;
-    }
-    HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
-}
-
-STATIC void objspi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *src, uint8_t *dest) {
-    spi_obj_t *self = (spi_obj_t*)self_in;
-    if (dest == NULL) {
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
-        // tmod == 0 when send ??? weird 
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 1);
-        for (uint i = 0; i < len; i++) {
-            // Wait until SSI is not busy
-            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_BUSY);
-            // Wait until SSI TX's FIFO is not empty
-            while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFNF));
-            HAL_SSI_WRITE8(self->unit ,REG_DW_SSI_DR ,src[i]);
-        }
-        // Wait until TX's FIFO is zero
-        while (HAL_SSI_READ32(self->unit, REG_DW_SSI_TXFLR));
-
-        // Wait until TX's FIFO is zero
-        while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFE));
-    } else {
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 0);
-        // tmod == 0 when send ??? weird 
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_CTRLR0, 0x07);
-        HAL_SSI_WRITE32(self->unit, REG_DW_SSI_SSIENR, 1);
-        uint rx_fifo_count = 0;
-        uint timeout_count = 1000000;
-        for (uint i = 0; i < len; i++) {
-            // Wait until SSI is not busy
-            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_BUSY);
-            // Wait until SSI TX's FIFO is not empty
-            while (!(HAL_SSI_READ32(self->unit, REG_DW_SSI_SR) & BIT_SR_TFNF));
-            HAL_SSI_WRITE8(self->unit ,REG_DW_SSI_DR ,src[i]);
-
-            while (HAL_SSI_READ32(self->unit, REG_DW_SSI_RXFLR)) {
-                dest[rx_fifo_count++] = HAL_SSI_READ8(self->unit, REG_DW_SSI_DR);
-            }
-        }
-
-        if (rx_fifo_count < len) {
-            while((timeout_count != 0) && (rx_fifo_count < len)) {
-                while (HAL_SSI_READ32(self->unit, REG_DW_SSI_RXFLR)) {
-                    dest[rx_fifo_count++] = HAL_SSI_READ8(self->unit, REG_DW_SSI_DR);
-                }
-                timeout_count--;
-            }
-        }
-    }
-}
 
 STATIC void spi_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     spi_obj_t *self = self_in;
-    mp_printf(print, "SPI(%d, baudrate=%u, bits=%d, MISO=%q, MOSI=%q, SCK=%q)", self->unit,
-            self->baudrate, self->bits, self->miso->name, self->mosi->name, self->sck->name);
+    if (id == 0) {
+        mp_printf(print, "SPI(%d, baudrate=%u, bits=%d, MOSI=PB_18, MISO=PB_19, SCLK=PB_20, CS=PB_21 )", 
+            self->unit, self->baudrate, self->bits);
+    } else {
+        mp_printf(print, "SPI(%d, baudrate=%u, bits=%d, MOSI=PB_4, MISO=PB_5, SCLK=PB_6, CS=PB_7 )", 
+            self->unit, self->baudrate, self->bits);
+    }
 }
+
 
 STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw,
         const mp_obj_t *all_args) {
-    enum { ARG_unit, ARG_baudrate, ARG_pol, ARG_pha, ARG_bits, ARG_firstbit,
-        ARG_miso, ARG_mosi, ARG_sck };
+    enum { ARG_unit, ARG_baudrate, ARG_pol, ARG_pha, ARG_bits, ARG_firstbit, ARG_miso, ARG_mosi, ARG_sck };
     const mp_arg_t spi_init_args[] = {
         { MP_QSTR_unit,     MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_baudrate, MP_ARG_INT,                  {.u_int = SPI_DEFAULT_BAUD_RATE} },
@@ -191,9 +59,9 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
         { MP_QSTR_phase,    MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = SCPH_TOGGLES_IN_MIDDLE} },
         { MP_QSTR_bits,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
         { MP_QSTR_firstbit, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = MICROPY_PY_MACHINE_SPI_MSB} },
-        { MP_QSTR_miso,     MP_ARG_REQUIRED | MP_ARG_OBJ },
-        { MP_QSTR_mosi,     MP_ARG_REQUIRED | MP_ARG_OBJ },
-        { MP_QSTR_sck,      MP_ARG_REQUIRED | MP_ARG_OBJ },
+        { MP_QSTR_miso,     MP_ARG_KW_ONLY | MP_ARG_OBJ },
+        { MP_QSTR_mosi,     MP_ARG_KW_ONLY | MP_ARG_OBJ },
+        { MP_QSTR_sck,      MP_ARG_KW_ONLY | MP_ARG_OBJ },
     };
     // parse args
     mp_map_t kw_args;
@@ -201,60 +69,72 @@ STATIC mp_obj_t spi_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
     mp_arg_val_t args[MP_ARRAY_SIZE(spi_init_args)];
     mp_arg_parse_all(n_args, all_args, &kw_args, MP_ARRAY_SIZE(args), spi_init_args, args);
 
-    if (args[ARG_unit].u_int > 2)
+    if (args[ARG_unit].u_int > 1)
         mp_raise_ValueError("Invalid SPI unit");
 
-    pin_obj_t *miso = pin_find(args[ARG_miso].u_obj);
-    pin_obj_t *mosi = pin_find(args[ARG_mosi].u_obj);
-    pin_obj_t *sck  = pin_find(args[ARG_sck].u_obj);
+    id = args[ARG_unit].u_int;
+    //printf("id is %d\n", id);
 
-    PinName pn_miso = (PinName)pinmap_peripheral(miso->id, PinMap_SPI_MISO);
-    PinName pn_mosi = (PinName)pinmap_peripheral(mosi->id, PinMap_SPI_MOSI);
+    if (args[ARG_unit].u_int == 0) {
 
-    if (pn_miso == NC) 
-        mp_raise_ValueError("SPI MISO pin not match");
+        mp_spi_obj[id].spi_idx = MBED_SPI0;
+        spi_init(&mp_spi_obj[id],  SPI_0_MOSI, SPI_0_MISO, SPI_0_SCLK, SPI_0_CS);
+        spi_format(&mp_spi_obj[id], 8, 0, 0);                      // 8 bits, mode 0[polarity=0,phase=0], and master-role
+        spi_frequency(&mp_spi_obj, SPI_DEFAULT_BAUD_RATE);      // default 2M baud rate
+        //printf("SPI0 init finished\n");
 
-    if (pn_mosi == NC) 
-        mp_raise_ValueError("SPI MOSI pin not match");
+    } else if (args[ARG_unit].u_int == 1) {
 
-    uint32_t ssi_peri = pinmap_merge(pn_mosi, pn_miso);
-
-    if (unlikely(ssi_peri == NC)) 
-        mp_raise_ValueError("Invalid SPI pin");
-
-    uint8_t ssi_idx = RTL_GET_PERI_IDX(ssi_peri);
-    uint8_t ssi_pinmux = RTL_GET_PERI_SEL(ssi_peri);
-
-    /* Pinmux workaround */
-    if ((ssi_idx == 0) && (ssi_pinmux == SSI0_MUX_TO_GPIOC)) {
-        EEPROM_PIN_CTRL(OFF);
+        mp_spi_obj[id].spi_idx = MBED_SPI1;
+        spi_init(&mp_spi_obj[id], SPI_1_MOSI, SPI_1_MISO, SPI_1_SCLK, SPI_1_CS);
+        spi_format(&mp_spi_obj[id], 8, 0, 0);
+        spi_frequency(&mp_spi_obj[id], SPI_DEFAULT_BAUD_RATE);
+        //printf("SPI1 init finished\n");
     }
 
     spi_obj_t *self  = &spi_obj[args[ARG_unit].u_int];
     self->baudrate = args[ARG_baudrate].u_int;
     self->bits     = args[ARG_bits].u_int;
-    self->pol      = args[ARG_pol].u_int;
-    self->pha      = args[ARG_pha].u_int;
-    self->miso     = miso;
-    self->mosi     = mosi;
-    self->sck      = sck;
-    self->ssi_idx  = ssi_idx;
-    self->ssi_pinmux = ssi_pinmux;
 
     return (mp_obj_t)self;
 }
 
-STATIC const mp_machine_spi_p_t spi_protocol_p = {
-    .init     = objspi_init,
-    .deinit   = objspi_deinit,
-    .transfer = objspi_transfer,
+
+STATIC void spi_stop(mp_obj_base_t *self_in) {
+    spi_free(&mp_spi_obj[id]);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(spi_stop_obj, spi_stop);
+
+
+STATIC int spi_read(mp_obj_base_t *self_in) {
+    return spi_master_write(&mp_spi_obj[id], NULL);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(spi_read_obj, spi_read);
+
+
+STATIC void spi_write(mp_obj_base_t *self_in, mp_obj_t value_in) {
+    spi_obj_t *self = (spi_obj_t*)self_in;
+    mp_int_t value = mp_obj_get_int(value_in);
+
+    spi_master_write(&mp_spi_obj[id], value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(spi_write_obj, spi_write);
+
+
+STATIC const mp_map_elem_t spi_locals_dict_table[] = {
+    // basic SPI operations
+    { MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&spi_stop_obj) },
+    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&spi_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&spi_write_obj) },
+
 };
+STATIC MP_DEFINE_CONST_DICT(spi_locals_dict, spi_locals_dict_table);
+
 
 const mp_obj_type_t spi_type = {
     { &mp_type_type },
     .name        = MP_QSTR_SPI,
     .print       = spi_print,
     .make_new    = spi_make_new,
-    .protocol    = &spi_protocol_p,
-    .locals_dict = (mp_obj_t)&mp_machine_spi_locals_dict,
+    .locals_dict = (mp_obj_dict_t *)&spi_locals_dict,
 };

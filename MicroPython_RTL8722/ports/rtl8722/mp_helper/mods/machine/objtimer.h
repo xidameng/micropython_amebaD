@@ -43,7 +43,7 @@ extern const mp_obj_type_t timer_type;
 typedef struct {
     mp_obj_base_t base;
     gtimer_t obj;
-    uint8_t id;
+    uint32_t id;
     mp_obj_t callback;
 } timer_obj_t;
 

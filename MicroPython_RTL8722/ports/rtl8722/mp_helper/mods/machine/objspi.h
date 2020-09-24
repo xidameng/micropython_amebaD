@@ -36,19 +36,30 @@
 #include "spi_api.h"
 #include "spi_ex_api.h"
 
-#define SPI_DEFAULT_BAUD_RATE           (20000000)
+#define SPI_DEFAULT_BAUD_RATE           (2000000)
 
 #ifndef MICROPY_PY_MACHINE_SPI_MSB
 #define MICROPY_PY_MACHINE_SPI_MSB      (0)
 #define MICROPY_PY_MACHINE_SPI_LSB      (1)
 #endif
 
-#define SPI_MASTER                      (0)
-
 extern const mp_obj_type_t spi_type;
 
 extern const PinMap PinMap_SPI_MOSI[];
 extern const PinMap PinMap_SPI_MISO[];
+
+// SPI0 (S1)
+#define SPI_0_MOSI  PB_18
+#define SPI_0_MISO  PB_19
+#define SPI_0_SCLK  PB_20
+#define SPI_0_CS    PB_21
+
+// SPI1 (S1)
+#define SPI_1_MOSI  PB_4
+#define SPI_1_MISO  PB_5
+#define SPI_1_SCLK  PB_6
+#define SPI_1_CS    PB_7
+
 
 typedef struct {
     mp_obj_base_t base;
