@@ -32,6 +32,8 @@
 
 /********************** Local variables ***************************************/
 
+static toggle_flag = 0;
+
 /********************** Local functions ***************************************/
 
 /********************** function bodies ***************************************/
@@ -189,7 +191,7 @@ STATIC mp_obj_t pin_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uin
 STATIC mp_obj_t pin_value(mp_uint_t n_args, const mp_obj_t *args) {
     pin_obj_t *self = args[0];
     if (n_args == 1) {
-        // get the value
+        // if only 1 arg (self) then get the value
         return MP_OBJ_NEW_SMALL_INT(pin_get_value(self));
     } else {
         // set the pin value
@@ -238,7 +240,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_on_obj, pin_on);
 
 STATIC mp_obj_t pin_toggle(mp_obj_t self_in) {
     pin_obj_t *self = self_in;
-    gpio_write(&(self->obj), ~(gpio_read((gpio_t *)&(self->obj))));
+    if(pin_get_value(self) == 1){
+        gpio_write(&(self->obj), 0);
+    } else {
+        gpio_write(&(self->obj), 1);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_toggle_obj, pin_toggle);

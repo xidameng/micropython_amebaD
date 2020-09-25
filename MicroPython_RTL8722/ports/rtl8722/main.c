@@ -40,6 +40,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "osdep_service.h"
+#include "cmsis_os.h"
 
 #include "device.h"
 #include "serial_api.h"
@@ -49,6 +50,7 @@
 #define UART_TX    PA_7
 #define UART_RX    PA_8
 
+serial_t    uartobj;
 
 /*****************************************************************************
  *                              Internal variables
@@ -58,7 +60,8 @@
  *                              External variables
  * ***************************************************************************/
 
-serial_t    uartobj;
+
+osThreadId main_tid = 0;
 
 uint8_t mpHeap[MP_HEAP_SIZE];
 
@@ -88,17 +91,21 @@ void micropython_task(void const *arg) {
             if (pyexec_friendly_repl() != 0) 
                 mp_printf(&mp_plat_print, "soft reboot\n");
         }
-    }
-    rtw_thread_exit();
+    osThreadYield();
+    } 
 }
 
 
 int main (void) {
-
+/*
     struct task_struct stUpyTask;
     BaseType_t xReturn = rtw_create_task(&stUpyTask, MICROPY_TASK_NAME,
             MICROPY_TASK_STACK_DEPTH, MICROPY_TASK_PRIORITY, micropython_task, NULL);
-    vTaskStartScheduler();
+*/
+    osThreadDef(micropython_task, osPriorityRealtime, 1, MICROPY_TASK_STACK_DEPTH);
+    main_tid = osThreadCreate(osThread(micropython_task), NULL);
+
+    osKernelStart();
 
     for(;;);
     

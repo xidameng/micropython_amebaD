@@ -4,7 +4,7 @@ Realtek's RTL8722 is a ARM Cortex-M33 based, dual-band WiFi and BLE 5.0 capable 
 This is a alpha version of the MicroPython port for Ameba RTL8722 platform, details of the platform can be found here  https://www.amebaiot.com/en/amebad/
 
 
-## 1. How to build code?
+## 1. How to build firmware?
 Currently, this SDK only support building on Cygwin or Linux.
 
 Before preceed, please make sure that you have already installed GNU ```make```
@@ -38,6 +38,8 @@ $ make upload
 
 
 ## 3. How to use MicroPython RTL8722 Port?
+
+### 3.1 Brief introduction to MicroPython RTL8722 port
 MicroPython distinguishes itself from other compilation-based platforms (Arduino etc.) with its powerful method of real-time interaction with Microcontroller through a built-in feature --  ```REPL```. 
 
 REPL stands for Read-Evaluation-Print-Loop, it's an interactive prompt that you can use to access and control your microcontroller.
@@ -46,7 +48,7 @@ REPL has been equipped with other powerful features like tab completion, line ed
 
 To use REPL, simply open any serial terminal software (most common ones are teraterm, putty etc.) on your PC and connect to your microcontroller's serial port, then set baudrate to ```115200``` before reset the board, then you will see ```>>>``` MicroPython prompt appear on the console. Now you may type in any Python script on REPL as long as it's support by MicroPython and your microcontroller's MicroPython port.
 
-### 3.1 REPL Hotkeys
+### 3.2 REPL Hotkeys
 1. Ctrl + d : Soft reboot
 	MicroPython will perform software reboot, this is useful when your microcontroller is behaving abnormally. This will also run scripts in 'boot.py' once again.
 
@@ -63,7 +65,7 @@ To use REPL, simply open any serial terminal software (most common ones are tera
 ## 4. Peripheral Control -- umachine module
 MicroPython Ameba D port supports rich peripheral feature through the use of ```umachine``` module
 
-### 4.1 GPIO
+### GPIO
 To control GPIO, import ```Pin``` module through ```umachine```. Here pin PB_18 is used as an example to output logic level 0 and 1
 
 ```bash
@@ -74,7 +76,7 @@ a.value(0)
 ```
 
 
-### 4.2 PWM
+### PWM
 To use PWM (Pulse Width Modulation), import ```PWM``` module through ```umachine```. Here pin PA_26 is used as an example to make an LED to slowly brighten up
 
 ```bash
@@ -87,7 +89,7 @@ t.sleep_ms(2)
 ```
 
 
-### 4.3 Delay and Timing
+### Delay and Timing
 Use the ```time``` module
 
 ```bash
@@ -99,7 +101,7 @@ start = time.ticks_ms() # get millisecond counter
 ```
 
 
-### 4.4 Timer
+### Timer
 Use the ```Timer``` module through ```umachine``` module
 
 There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
@@ -107,14 +109,11 @@ There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
 ```bash
 from umachine import Timer
 t = Timer(0)  # Use Timer 0/1/2/3 only
-def fun():
-print("timer fired!")
-
-t.start(2000000, fun(), t.PERIODICAL)  # Set GTimer at duration of 2 seconds, with a lambda callback function and fired periodically
+t.start(2000000, lambda x: print('timer fired!'), t.PERIODICAL)  # Set GTimer at duration of 2 seconds, with a lambda callback function and fired periodically
 ```
 
 
-### 4.5 RTC
+### RTC
 Use the ```RTC``` (Real Time Clock) module through ```umachine``` module
 
 ```bash
@@ -125,7 +124,7 @@ rtc.datetime() # get date and time
 ```
 
 
-### 4.6 UART
+### UART
 Use the ```UART``` module through ```umachine``` module
 
 ```bash
@@ -136,7 +135,7 @@ uart.read(5) # read up to 5 bytes
 ```
 
 
-### 4.7 I2C
+### I2C
 Use the ```I2C``` (Inter-Integrated Circuit) module through ```umachine``` module
 
 Note: I2C only works in ```master``` mode.
@@ -150,7 +149,7 @@ i2c.readfrom(8, 6) # receive 5 bytes from slave
 ```
 
 
-### 4.8 SPI 
+### SPI 
 Use the ```SPI``` (Serial Peripheral Interface) module through ```umachine``` module, currently only support ```Master``` mode, default SPI baud rate is ```2MHz```.
 
 ```bash
@@ -158,6 +157,5 @@ from umachine import SPI
 spi = SPI(0)		# Only support 2 sets of SPI -- 0 and 1 
 spi 				# type instance name to check for details of the SPI set 
 spi.write(123)		# Write number 123 
-spi.read()                     
-rbuf = bytearray(5)
+spi.read()
 ```

@@ -266,7 +266,7 @@ purge:
 .PHONY: cleanpwd
 cleanpwd:
 	rm -f ./*.d
-	rm -f ./*.bin
+	#rm -f ./*.bin
 
 
 .PHONY: com

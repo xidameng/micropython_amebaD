@@ -43,37 +43,8 @@
 //#include "osdep_api.h"  // xxm
 
 
-#if 0
-int mp_hal_stdin_rx_chr(void) {
-    printf("--mp_hal_stdin_rx_chr--\n");
-  return mp_term_rx_chr();
-}
+TaskHandle_t mp_main_task_handle;
 
-void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-    printf("--mp_hal_stdout_tx_strn--\n");
-    mp_term_tx_strn(str, len);
-}
-
-void mp_hal_stdout_tx_chr(char c) {
-    printf("mp_hal_stdout_tx_chr\n");
-    mp_term_tx_strn(&c, 1);
-}
-
-void mp_hal_stdout_tx_str(const char *str) {
-    printf("mp_hal_stdout_tx_str\n");
-    mp_term_tx_strn(str, strlen(str));
-}
-
-void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
-    while (len--) {
-        if (*str == '\n') {
-            mp_hal_stdout_tx_chr('\r');
-        }
-        printf("mp_hal_stdout_tx_strn_cooked\n");
-        mp_hal_stdout_tx_chr(*str++);
-    }
-}
-#endif 
 
 extern serial_t    uartobj;
 //extern serial_t    sobj;
@@ -147,4 +118,13 @@ void mp_hal_delay_us(uint32_t us) {
 
 uint32_t mp_hal_ticks_ms(void) {
     return rtw_get_current_time();
+}
+
+// Wake up the main task if it is sleeping
+void mp_hal_wake_main_task_from_isr(void) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(mp_main_task_handle, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken == pdTRUE) {
+        portYIELD_FROM_ISR(pdTRUE);
+    }
 }
