@@ -144,6 +144,7 @@ void mp_thread_create(void *(*entry)(void*), void *arg, size_t *stack_size) {
     mp_thread_mutex_lock(&thread_mutex, 1);
 
     // create thread
+    #if 0
     TaskHandle_t id = xTaskGenericCreate(freertos_entry,
             "Thread",
             *stack_size / sizeof(StackType_t),  // Task depth
@@ -152,6 +153,15 @@ void mp_thread_create(void *(*entry)(void*), void *arg, size_t *stack_size) {
             NULL,
             stack,
             NULL);
+    #endif
+    TaskHandle_t id = xTaskCreate(
+            freertos_entry,
+            "Thread",
+            *stack_size / sizeof(StackType_t),  // Task depth
+            arg,            // Parameters
+            2,              // Priority for spawn tasks
+            NULL); // xxm
+
 
     if (id == NULL) {
         mp_thread_mutex_unlock(&thread_mutex);

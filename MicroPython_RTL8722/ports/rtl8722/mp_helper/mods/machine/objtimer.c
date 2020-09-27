@@ -52,9 +52,11 @@ void timer_init0(void) {
 }
 
 void mp_obj_timer_irq_handler(timer_obj_t *self) {
-    printf("entered timer irq\n");
-    mp_printf(&mp_plat_print, "timer interrupt running");
-
+    //printf("entered timer irq\n");
+    //mp_printf(&mp_plat_print, "timer interrupt running");
+    mp_sched_schedule(self->callback, self);
+    mp_hal_wake_main_task_from_isr();
+    #if 0
     if (self->callback != mp_const_none) {
         gc_lock();
         nlr_buf_t nlr;
@@ -69,6 +71,7 @@ void mp_obj_timer_irq_handler(timer_obj_t *self) {
         }
         gc_unlock();
     }
+    #endif
 }
 
 
@@ -144,56 +147,45 @@ STATIC mp_obj_t timer_stop(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(timer_stop_obj, timer_stop);
 
-#if 1
-void test_irq_handler(timer_obj_t *self){
-    printf("entered timer irq\n");
-    mp_printf(&mp_plat_print, "timer interrupt running");
 
-    if (self->callback != mp_const_none) {
-        gc_lock();
-        mp_call_function_0(self->callback);
-        gc_unlock();
-    }
+void test_irq_handler() {
+    printf("--timer triggered. to stop: type t.stop()--\n");
 }
-
-void test_irq_handler2() {
-    printf("testing xxm");
-}
-#endif
 
 
 STATIC mp_obj_t timer_start(mp_uint_t n_args, const mp_obj_t *args) {
-    enum { ARG_self, ARG_duration, ARG_callback, ARG_type };
+    //enum { ARG_self, ARG_duration, ARG_callback, ARG_type };
+    enum { ARG_self, ARG_duration, ARG_type };
     timer_obj_t *self = args[ARG_self];
     uint32_t duration = mp_obj_get_int(args[ARG_duration]);
-    //printf("duration is %d\n", duration);
-
+#if 0
     if (!MP_OBJ_IS_FUN(args[ARG_callback]) && (args[ARG_callback] != mp_const_none))
         mp_raise_ValueError("Error function type");
-
+#endif
     int32_t type = mp_obj_get_int(args[ARG_type]);
-    //printf("type is %d\n", type);
 
     if (type == TIMER_PERIODICAL) {
-        printf("IF periodical timer started\n"); 
-        gtimer_start_periodical(&mp_timer_obj[mp_timer_id], duration, (void *)mp_obj_timer_irq_handler, 0); // xxm
-        printf("periodical timer ended\n");    
+        //printf("IF periodical timer started\n"); 
+        gtimer_start_periodical(&mp_timer_obj[mp_timer_id], duration, test_irq_handler, NULL); 
+        //printf("periodical timer ended\n");    
     } else if (type == TIMER_ONESHOT) {
-        printf("ELSE IF periodical timer started\n"); 
-        gtimer_start_one_shout(&mp_timer_obj[mp_timer_id], duration, (void *)(test_irq_handler), 4); // xxm
-        printf("one shot timer ended\n");
-    } else {
+        //printf("ELSE IF periodical timer started\n"); 
+        gtimer_start_one_shout(&mp_timer_obj[mp_timer_id], duration, test_irq_handler, NULL); 
+        //printf("one shot timer ended\n");
+    } else { mp_raise_ValueError("Invalid TIMER type"); }
+#if 0
+    else {
         printf("ELSE timer started\n"); 
         gtimer_start_periodical(&mp_timer_obj[mp_timer_id], duration, (void *)test_irq_handler2, 0);
         printf("ELSE timer ended\n");
     }
-        //mp_raise_ValueError("Invalid TIMER type");
-    
+    printf("test before passing callback\n");
     self->callback = args[ARG_callback];
     printf("test at the end of timer start\n");
+#endif
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(timer_start_obj, 4, 4,  timer_start);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(timer_start_obj, 3, 3,  timer_start);
 
 STATIC const mp_map_elem_t timer_locals_dict_table[] = {
     // instance methods

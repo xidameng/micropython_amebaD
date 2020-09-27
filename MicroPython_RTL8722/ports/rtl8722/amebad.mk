@@ -100,7 +100,7 @@ UPY_C += mp_helper/help.c
 UPY_C += mp_helper/mphal.c
 UPY_C += mp_helper/input.c
 UPY_C += mp_helper/bufhelper.c
-UPY_C += mp_helper/mpthreadport.c
+#UPY_C += mp_helper/mpthreadport.c
 UPY_C += mp_helper/gccollect.c
 UPY_C += mp_helper/mods/modameba.c
 UPY_C += mp_helper/mods/modmachine.c
@@ -266,7 +266,7 @@ purge:
 .PHONY: cleanpwd
 cleanpwd:
 	rm -f ./*.d
-	#rm -f ./*.bin
+	rm -f ./*.bin
 
 
 .PHONY: com

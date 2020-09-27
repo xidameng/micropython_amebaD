@@ -66,13 +66,22 @@ To use REPL, simply open any serial terminal software (most common ones are tera
 MicroPython Ameba D port supports rich peripheral feature through the use of ```umachine``` module
 
 ### GPIO
-To control GPIO, import ```Pin``` module through ```umachine```. Here pin PB_18 is used as an example to output logic level 0 and 1
+To control GPIO, import ```Pin``` module through ```umachine```. Here pin PB_18 is used as an example to output logic level 0 and 1 and blink 3 times 
 
 ```bash
 from umachine import Pin
 a = Pin("PB_18", Pin.OUT)
 a.value(1)
+time.sleep_ms(500)
 a.value(0)
+time.sleep_ms(500)
+a.on()
+time.sleep_ms(500)
+a.off()
+time.sleep_ms(500)
+a.toggle()
+time.sleep_ms(500)
+a.toggle()
 ```
 
 
@@ -109,7 +118,7 @@ There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
 ```bash
 from umachine import Timer
 t = Timer(0)  # Use Timer 0/1/2/3 only
-t.start(2000000, lambda x: print('timer fired!'), t.PERIODICAL)  # Set GTimer at duration of 2 seconds, with a lambda callback function and fired periodically
+t.start(2000000, t.PERIODICAL)  # Set GTimer fired periodically at duration of 2 seconds, printing text on the terminal
 ```
 
 
