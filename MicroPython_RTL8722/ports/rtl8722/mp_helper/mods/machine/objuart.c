@@ -105,10 +105,10 @@ void mp_obj_uart_irq_handler(uart_obj_t *self, SerialIrq event) {
 
 STATIC void uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     uart_obj_t *self = self_in;
-    mp_printf(print, "UART(baudrate=%u, bits=%u, parity=%s, stop=%u, tx_timeout=%u, rx_timeout=%u, tx=%q, rx=%q)",
+    mp_printf(print, "UART(baudrate=%u, bits=%u, parity=%s, stop=%u, tx_timeout=%u, rx_timeout=%u)",
         self->params.baudrate, self->params.data_bits,
         _parity_name[self->params.parity], self->params.stop_bits,
-        self->tx.timeout_ms, self->rx.timeout_ms, self->tx.pin, self->rx.pin);
+        self->tx.timeout_ms, self->rx.timeout_ms);
 }
 
 STATIC mp_obj_t uart_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *all_args) {
