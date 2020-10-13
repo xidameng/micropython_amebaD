@@ -34,7 +34,7 @@
  * ***************************************************************************/
 
 void modwireless_init(void) {
-    wlan_init0();
+    //wlan_init0();
 }
 
 STATIC const mp_map_elem_t wireless_module_globals_table[] = {

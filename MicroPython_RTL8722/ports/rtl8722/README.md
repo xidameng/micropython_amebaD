@@ -7,7 +7,7 @@ This is a alpha version of the MicroPython port for Ameba RTL8722 platform, deta
 ## 1. How to build firmware?
 Currently, this SDK only support building on Cygwin or Linux.
 
-Before preceed, please make sure that you have already installed GNU ```make```
+Before preceed, please make sure that you have already installed GNU ```make``` and the latest ```Python3```.
 
 Open Cygwin terminal/Ubuntu terminal and navigate to "\micropython_amebaD\MicroPython_RTL8722\ports\rtl8722" and then type,
 
@@ -15,6 +15,28 @@ Open Cygwin terminal/Ubuntu terminal and navigate to "\micropython_amebaD\MicroP
 $ make
 ```
 
+### 1.1 FAQ
+During the building process, some user may encounter error that suspend the process, this is due to the system enevironment setup and can be fixed as follows,
+
+#### Error related to python
+By default, MicroPython use ```Python3``` to run some building scripts for the MicroPython kernal, if you encounter error related to python, it may be because the path of the Python3 executable is not added to system environment variable.
+
+However, if environment variable is already added but still not working, you may try,
+1) Re-start your PC
+2) type "python" on your terminal, if the python shown is python3, then please add 
+```bash
+PYTHON = python
+``` 
+to the second line of the Makefile in our "port/rtl8722" folder
+
+#### Error related to MPY-CROSS
+If building process stop when ```mpy-cross``` shown as error, there is a step to be done as follows,
+1) navigate to "MicroPython_RTL8722/mpy-cross" folder
+2) Open your Cygwin/Linux terminal and just type 
+```bash
+$ make
+```
+Wait for make finish building the MicroPython Cross Compiler, then this should fix the error
 
 ## 2. How to upload?
 There are 2 methods to upload Ameba D MicroPython image to your Ameba.
@@ -139,6 +161,7 @@ Use the ```UART``` module through ```umachine``` module
 ```bash
 from umachine import UART
 uart = UART(tx="PA_21", rx= "PA_22")
+uart.init()
 uart.write('hello')
 uart.read(5) # read up to 5 bytes
 ```
@@ -167,4 +190,21 @@ spi = SPI(0)		# Only support 2 sets of SPI -- 0 and 1
 spi 				# type instance name to check for details of the SPI set 
 spi.write(123)		# Write number 123 
 spi.read()
+```
+
+## Netowork
+RTL8722 MicroPython port support WiFi connection through ```WLAN``` module.
+### WiFi
+
+Connect to WiFi with WPA2 password
+```bash
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPtestSSID", pswd = "micropythonameba")
+```
+Scan network
+```bash
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.STA)
+wifi.scan()
 ```

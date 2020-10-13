@@ -79,6 +79,8 @@ void micropython_task(void const *arg) {
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
+    modmachine_init();
+    modwireless_init();
     pyexec_frozen_module("boot.py");
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();

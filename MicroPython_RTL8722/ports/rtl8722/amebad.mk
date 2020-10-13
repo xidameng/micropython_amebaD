@@ -105,7 +105,8 @@ UPY_C += mp_helper/gccollect.c
 UPY_C += mp_helper/mods/modameba.c
 UPY_C += mp_helper/mods/modmachine.c
 #UPY_C += mp_helper/mods/modlwip.c
-#UPY_C += mp_helper/mods/moduwireless.c
+UPY_C += mp_helper/mods/wireless/objwlan.c
+UPY_C += mp_helper/mods/moduwireless.c
 #UPY_C += mp_helper/mods/modnetwork.c
 UPY_C += mp_helper/mods/modutime.c
 #UPY_C += mp_helper/mods/modterm.c
@@ -123,7 +124,6 @@ UPY_C += mp_helper/mods/machine/objtimer.c
 UPY_C += mp_helper/mods/machine/objspi.c
 UPY_C += mp_helper/mods/machine/objuart.c
 #UPY_C += mp_helper/mods/machine/objcrypto.c
-#UPY_C += mp_helper/mods/wireless/objwlan.c
 #UPY_C += mp_helper/mods/network/objnetif.c
 #UPY_C += mp_helper/mods/network/dhcps.c
 UPY_C += lib/utils/pyexec.c
@@ -190,9 +190,11 @@ LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 ###############################
 #         ARCHIVE LIST        #
 ###############################
+LIBAR += -Wl,--start-group
 LIBAR += -L$(VENDOR)/../ARCHIVE_LIB/ -l_arduino -l_wlan -l_wps -l_wlan_mp -l_wifi_ucps_fw 
 LIBAR += -l_wifi_fw -l_websocket -l_user -l_usbh -l_usbd -l_tftp -l_mdns -l_m4a_self 
 LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt 
+LIBAR += -Wl,--end-group
 
 
 ###########################
