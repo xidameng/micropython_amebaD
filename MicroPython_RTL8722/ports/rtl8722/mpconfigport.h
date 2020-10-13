@@ -16,6 +16,8 @@
 #define MICROPY_COMP_MODULE_CONST               (1)
 #define MICROPY_COMP_CONST                      (1)
 #define MICROPY_REPL_EVENT_DRIVEN               (0)
+#define MICROPY_PY_BUILTINS_HELP                (1)
+#define MICROPY_PY_BUILTINS_HELP_TEXT           ameba_mp_help_text
 #define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN        (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN        (0)
 #define MICROPY_CPYTHON_COMPAT                  (1)
