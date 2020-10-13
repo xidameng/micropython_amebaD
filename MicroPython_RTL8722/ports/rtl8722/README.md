@@ -112,11 +112,16 @@ To use PWM (Pulse Width Modulation), import ```PWM``` module through ```umachine
 
 ```bash
 from umachine import Pin, PWM
-import time as t
+import time
 p = PWM(pin = "PA_26")
-for i in range(1000):
-p.pulsewidth(i) # this and following line will be auto indented on REPL
-t.sleep_ms(2)
+# 0 duty cycle thus output 0
+p.write(0.0)
+# 10% duty cycle
+p.write(0.1)
+# 50% duty cycle
+p.write(0.5)
+# 100% duty cycle
+p.write(1.0)
 ```
 
 
