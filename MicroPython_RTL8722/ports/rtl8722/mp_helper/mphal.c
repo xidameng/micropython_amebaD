@@ -40,6 +40,7 @@
 #include "wait_api.h"
 #include "serial_api.h"
 #include <stdio.h>
+#include "lib/utils/interrupt_char.h"
 //#include "osdep_api.h"  // xxm
 
 
@@ -72,8 +73,7 @@ void uart_send_string_with_length(serial_t *uartobj, char *pstr, size_t len)
 //       HAL TX & RX         //
 ///////////////////////////////
 int mp_hal_stdin_rx_chr(void) {
-    //printf("--mp_hal_stdin_rx_chr--\n");
-  return serial_getc(&uartobj);
+    return serial_getc(&uartobj);
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {

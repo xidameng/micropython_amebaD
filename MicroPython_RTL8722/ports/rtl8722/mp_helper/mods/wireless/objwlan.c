@@ -55,7 +55,6 @@ const unsigned char *ssid = NULL;
 
 STATIC wlan_obj_t wlan_obj = {
     .base.type      = &wlan_type,
-    .mode           = RTW_MODE_STA,
     .security_type  = RTW_SECURITY_WPA2_AES_PSK,
 };
 
@@ -72,10 +71,10 @@ static char connect_result = WL_FAILURE;
 //mp_obj_base_t base;
 
 // settings of requested network
-static uint8_t  _networkCount;
-static char     _networkSsid[WL_NETWORKS_LIST_MAXNUM][WL_SSID_MAX_LENGTH];
-static int32_t  _networkRssi[WL_NETWORKS_LIST_MAXNUM];
-static uint32_t _networkEncr[WL_NETWORKS_LIST_MAXNUM];
+uint8_t  _networkCount;
+char     _networkSsid[WL_NETWORKS_LIST_MAXNUM][WL_SSID_MAX_LENGTH];
+int32_t  _networkRssi[WL_NETWORKS_LIST_MAXNUM];
+uint32_t _networkEncr[WL_NETWORKS_LIST_MAXNUM];
 
 
 
@@ -196,28 +195,28 @@ static void printEncryptionType(uint32_t thisType) {
 
     switch (thisType) {
         case SECURITY_OPEN:
-            printf("Open");
+            printf("Open\n");
             break;
         case SECURITY_WEP_PSK:
-            printf("WEP");
+            printf("WEP\n");
             break;
         case SECURITY_WPA_TKIP_PSK:
-            printf("WPA TKIP");
+            printf("WPA TKIP\n");
             break;
         case SECURITY_WPA_AES_PSK:
-            printf("WPA AES");
+            printf("WPA AES\n");
             break;
         case SECURITY_WPA2_AES_PSK:
-            printf("WPA2 AES");
+            printf("WPA2 AES\n");
             break;
         case SECURITY_WPA2_TKIP_PSK:
-            printf("WPA2 TKIP");
+            printf("WPA2 TKIP\n");
             break;
         case SECURITY_WPA2_MIXED_PSK:
-            printf("WPA2 Mixed");
+            printf("WPA2 Mixed\n");
             break;
         case SECURITY_WPA_WPA2_MIXED:
-            printf("WPA/WPA2 AES");
+            printf("WPA/WPA2 AES\n");
             break;
     }
 }
@@ -235,29 +234,38 @@ static int8_t startScanNetworks() {
 STATIC mp_obj_t wlan_scan() {
     uint8_t attempts = 10;
     uint8_t numOfNetworks = 0;
+    uint8_t conStatus = WL_DISCONNECTED;
 
-    if(getConnectionStatus() != WL_NO_SHIELD) {
+    conStatus = getConnectionStatus();
+    printf("%d\n", conStatus);
+
+    if(conStatus != WL_NO_SHIELD) {
+
         if (startScanNetworks() == WL_FAILURE) {
+            printf("\n## WiFi scan network returned FAIL\n");
             mp_raise_ValueError("Scan error!");
             return mp_const_none;
         }
+
         do {
              mp_hal_delay_ms(2000);
              numOfNetworks = _networkCount;
         } while ((numOfNetworks == 0) && (--attempts > 0));
+
     } else {
         printf("WiFi shield not present\n");
         mp_raise_ValueError("Scan error!");
     }
+
 
     if (numOfNetworks == -1) { //if scan fail
         printf("Could not find available wifi\n");
     } else { // if scan success
         printf("The number of networks found: ");
         printf("%d\n", numOfNetworks);
-
+//int thisNet = 0;
         for (int thisNet = 0; thisNet < numOfNetworks; thisNet++) {
-            printf(thisNet);
+            printf("%d", thisNet);
             printf(") ");
             printf("%s", _networkSsid[thisNet]);
             printf("\tSignal: ");

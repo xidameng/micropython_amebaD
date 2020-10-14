@@ -170,7 +170,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 
 #define MICROPY_TASK_NAME                   "MicroPython"
 #define MICROPY_TASK_STACK_DEPTH            (((20 * 1024) + 512) / sizeof(StackType_t))
-#define MICROPY_TASK_PRIORITY               (1)
+#define MICROPY_TASK_PRIORITY               (3) // 3 for Realtime, the highest priority
 
 #define MICROPY_NETWORK_CORE_STACK_NAME     "TCPIP"
 #define MICROPY_NETWORK_CORE_STACK_DEPTH    (10 * 1024) + 0
