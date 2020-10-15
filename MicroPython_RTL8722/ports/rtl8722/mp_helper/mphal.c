@@ -41,6 +41,7 @@
 #include "serial_api.h"
 #include <stdio.h>
 #include "lib/utils/interrupt_char.h"
+#include "cmsis_os.h"
 //#include "osdep_api.h"  // xxm
 
 
@@ -109,11 +110,12 @@ void mp_hal_stdout_tx_strn_cooked(const char *str, size_t len) {
 //       Delay & Time        //
 ///////////////////////////////
 void mp_hal_delay_ms(uint32_t ms) {
-    wait_ms(ms);
+    //vTaskDelay(ms) // vTaskDelay takes in tick as parameter, each tick = 1 ms
+    osDelay(ms); //RTOS delay
 }
 
 void mp_hal_delay_us(uint32_t us) {
-    wait_us(us);
+    wait_us(us); // asm NOP
 }
 
 uint32_t mp_hal_ticks_ms(void) {

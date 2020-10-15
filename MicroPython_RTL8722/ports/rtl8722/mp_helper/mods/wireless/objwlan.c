@@ -234,12 +234,8 @@ static int8_t startScanNetworks() {
 STATIC mp_obj_t wlan_scan() {
     uint8_t attempts = 10;
     uint8_t numOfNetworks = 0;
-    uint8_t conStatus = WL_DISCONNECTED;
 
-    conStatus = getConnectionStatus();
-    printf("%d\n", conStatus);
-
-    if(conStatus != WL_NO_SHIELD) {
+    if(getConnectionStatus() != WL_NO_SHIELD) {
 
         if (startScanNetworks() == WL_FAILURE) {
             printf("\n## WiFi scan network returned FAIL\n");
