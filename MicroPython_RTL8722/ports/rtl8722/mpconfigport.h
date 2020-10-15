@@ -83,10 +83,12 @@
 
 #define MICROPY_KBD_EXCEPTION                   (1)
 #define MICROPY_PY_TERM_NUM                     (3)
-
+#define MICROPY_PY_WEBREPL                      (0)
+#define GENERIC_ASM_API                         (0)
 #define MICROPY_NLR_SETJMP                      (0)
 #define MICROPY_PY_LWIP_SLIP                    (0)
-#define MICROPY_PY_OS_DUPTERM                   (0)
+#define MICROPY_PY_OS_DUPTERM                   (1)
+#define MICROPY_PY_UOS_DUPTERM_BUILTIN_STREAM   (1)
 #define MICROPY_NLR_X64                         (0)
 
 #define MICROPY_READER_VFS                      (MICROPY_VFS)

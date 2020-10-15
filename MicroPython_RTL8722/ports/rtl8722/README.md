@@ -197,19 +197,29 @@ spi.write(123)		# Write number 123
 spi.read()
 ```
 
-## Netowork
+## Netoworking
 RTL8722 MicroPython port support WiFi connection through ```WLAN``` module.
-### WiFi
 
-Connect to WiFi with WPA2 password
+### WiFi
+#### Connect to WiFi with WPA2 security type 
+WPA2 is the most common type, if not sure what security type your WiFi router is configured as, use this one
 ```bash
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
 wifi.connect(ssid = "MPtestSSID", pswd = "micropythonameba")
 ```
-Scan network
+#### Scan network
 ```bash
 from wireless import WLAN
-wifi = WLAN(mode = WLAN.STA)
-wifi.scan()
+WLAN.scan()
 ```
+
+#### Access Point (AP) mode
+Set up Ameba as an access point is an easy job, follow example below to start your own AP,
+```Python
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.AP)
+wifi.start_ap(ssid = "MPtestSSID", pswd = "micropythonameba")
+```
+
+#### HTTP

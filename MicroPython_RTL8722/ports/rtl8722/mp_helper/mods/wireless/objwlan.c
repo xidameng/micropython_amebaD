@@ -276,6 +276,167 @@ STATIC mp_obj_t wlan_scan() {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(wlan_scan_obj, wlan_scan);
 
+
+
+int8_t apActivate()
+{
+#if CONFIG_LWIP_LAYER
+    struct ip_addr ipaddr;
+    struct ip_addr netmask;
+    struct ip_addr gw;
+    struct netif * pnetif = &xnetif[0];
+#endif
+    int timeout = 20;
+    int ret = WL_SUCCESS;
+    if (ap.ssid.val[0] == 0) {
+        printf("Error: SSID can't be empty\n\r");
+        ret = WL_FAILURE;
+        goto exit;
+    }
+    if (ap.password == NULL) {
+        ap.security_type = RTW_SECURITY_OPEN;
+    } else{
+          ap.security_type = RTW_SECURITY_WPA2_AES_PSK;
+    }
+
+#if CONFIG_LWIP_LAYER
+    dhcps_deinit();
+    IP4_ADDR(&ipaddr, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+    IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1 , NETMASK_ADDR2, NETMASK_ADDR3);
+    IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+    netif_set_addr(pnetif, &ipaddr, &netmask,&gw);
+#endif
+    wifi_off();
+    vTaskDelay(20);
+    if (wifi_on(RTW_MODE_AP) < 0){
+        printf("\n\rERROR: Wifi on failed!");
+        ret = WL_FAILURE;
+        goto exit;
+    }
+    printf("\n\rStarting AP ...");
+
+    if((ret = wifi_start_ap((char*)ap.ssid.val, ap.security_type, (char*)ap.password, ap.ssid.len, ap.password_len, ap.channel)) < 0) {
+        printf("\n\rERROR: Operation failed!");
+        ret = WL_FAILURE;
+        goto exit;
+    }
+
+    while (1) {
+        char essid[33];
+
+        if (wext_get_ssid(WLAN0_NAME, ((unsigned char *)essid)) > 0) {
+            if (strcmp(((const char *)essid), ((const char *)ap.ssid.val)) == 0) {
+                printf("\n\r%s started\n", ap.ssid.val);
+                ret = WL_SUCCESS;
+                break;
+            }
+        }
+
+        if (timeout == 0) {
+            printf("\n\rERROR: Start AP timeout!");
+            ret = WL_FAILURE;
+            break;
+        }
+
+        vTaskDelay(1 * configTICK_RATE_HZ);
+        timeout --;
+    }
+#if CONFIG_LWIP_LAYER
+    //LwIP_UseStaticIP(pnetif);
+    dhcps_init(pnetif);
+#endif
+
+exit:
+    init_wifi_struct( );
+    if (ret == WL_SUCCESS) {
+        wifi_mode = RTW_MODE_AP;
+    }
+    return ret;
+}
+
+
+
+int8_t apSetPassphrase(const char *passphrase, uint8_t len)
+{
+    //char *password = NULL;
+    int ret = WL_SUCCESS;
+
+    strcpy((char*)ap.password, (char*)passphrase);
+    //ap.password = password;
+    ap.password_len = len;
+    if (ap.password_len < 8) {
+        printf("Error: Password length can't less than 8\n\r");
+        ret = WL_FAILURE;
+    }
+    return ret;
+}
+
+
+int8_t apSetNetwork(char* ssid, uint8_t ssid_len)
+{
+    int ret = WL_SUCCESS;
+
+    ap.ssid.len = ssid_len;
+
+    if (ap.ssid.len > 32) {
+        printf("Error: SSID length can't exceed 32\n\r");
+        ret = WL_FAILURE;
+    }
+    strcpy((char *)ap.ssid.val, (char*)ssid);
+    return ret;
+}
+
+STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    enum { ARG_ssid, ARG_pswd};
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_ssid, MP_ARG_REQUIRED | MP_ARG_OBJ },
+        { MP_QSTR_pswd, MP_ARG_REQUIRED | MP_ARG_OBJ },
+    };
+
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    uint8_t status = WL_IDLE_STATUS;
+    int channel = 1;
+    int8_t attempts = 2;
+
+    int8_t *ssid = NULL;
+    mp_uint_t ssid_len = 0;
+    int8_t *pswd = NULL;
+    mp_uint_t pswd_len = 0;
+
+    ssid = mp_obj_str_get_data(args[ARG_ssid].u_obj, &ssid_len);
+    pswd = mp_obj_str_get_data(args[ARG_pswd].u_obj, &pswd_len);
+
+    while ( (status!= WL_CONNECTED) && (attempts == 0) ) {
+        if ((apSetNetwork(ssid, ssid_len)) != WL_FAILURE) {
+            if (apSetPassphrase(pswd, pswd_len) != WL_FAILURE) {
+                ap.channel = channel;
+                if (apActivate() != WL_FAILURE) {
+                    status = WL_CONNECTED;
+                } else {
+                    status = WL_CONNECT_FAILED;
+                }
+            } else {
+                status = WL_CONNECT_FAILED;
+            }
+        } else {
+            status = WL_CONNECT_FAILED;
+        }
+        mp_hal_delay_ms(10000);
+        attempts--;
+    } // end of initializing AP
+    
+    if (status == WL_CONNECT_FAILED) {
+        printf("Failed to start AP after 2 attempts, try again later\n");
+        return mp_const_none;
+    } else {
+        printf("AP [%s] start successfully\n", ssid);
+        return mp_const_none;
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(wlan_start_ap_obj, 0, wlan_start_ap);
+
 #if 0
 STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_ssid, ARG_auth};
@@ -588,48 +749,6 @@ STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_is_connect_to_ap_obj, wlan_is_connect_to_ap);
 
-void wifi_event_scan_result_report_hdl (char *buf, int buf_len, int flags,
-        void *userfunc) {
-
-    mp_obj_t func = MP_OBJ_FROM_PTR(userfunc);
-
-    if (func != mp_const_none) {
-        nlr_buf_t nlr;
-        if (nlr_push(&nlr) == 0) {
-
-            //TODO Should gc_lock ?
-            
-            /*
-             *  Make a new tuple and send it to callback function, I decide not to do
-             *  gc_lock because we need to pass new data to outside of callback
-             */
-            rtw_scan_result_t** ptr = (rtw_scan_result_t**) buf;
-
-            mp_obj_t tuple[8];
-            mp_obj_t attrtuple;
-
-            tuple[0] = mp_obj_new_str((*ptr)->SSID.val, (*ptr)->SSID.len);
-            tuple[1] = mp_obj_new_bytes((*ptr)->BSSID.octet, ETH_ALEN);
-            tuple[2] = mp_obj_new_int((*ptr)->signal_strength);
-            tuple[3] = mp_obj_new_int((*ptr)->bss_type);
-            tuple[4] = mp_obj_new_int((*ptr)->security);
-            tuple[5] = mp_obj_new_int((*ptr)->wps_type);
-            tuple[6] = mp_obj_new_int((*ptr)->channel);
-            tuple[7] = mp_obj_new_int((*ptr)->band);
-
-            attrtuple = mp_obj_new_attrtuple(wlan_scan_info_fields, 8, tuple);
-
-            mp_call_function_1(func, attrtuple);
-
-            nlr_pop();
-        } else {
-            mp_printf(&mp_plat_print, "Uncaught exception in callback handler");
-            if (nlr.ret_val != MP_OBJ_NULL) {
-                mp_obj_print_exception(&mp_plat_print, nlr.ret_val);
-            }
-        }
-    }
-}
 
 #endif
 
@@ -720,8 +839,8 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),          MP_OBJ_FROM_PTR(&wlan_connect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_scan),             MP_OBJ_FROM_PTR(&wlan_scan_obj) },
-    /*
     { MP_OBJ_NEW_QSTR(MP_QSTR_start_ap),         MP_OBJ_FROM_PTR(&wlan_start_ap_obj) },
+    /*
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),       MP_OBJ_FROM_PTR(&wlan_disconnect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_off),              MP_OBJ_FROM_PTR(&wlan_off_obj) },
