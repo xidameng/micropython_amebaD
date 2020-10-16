@@ -219,7 +219,7 @@ Set up Ameba as an access point is an easy job, follow example below to start yo
 ```Python
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.AP)
-wifi.start_ap(ssid = "MPtestSSID", pswd = "micropythonameba")
+wifi.start_ap(ssid = "0000MPSSID", pswd = "1234567890")
 ```
 
 #### HTTP

@@ -144,8 +144,7 @@ enum wl_auth_mode {
 void wlan_init0(void);
 void validate_wlan_mode(uint8_t mode);
 void validate_ssid(mp_uint_t len);
-void validate_key(int8_t **key, uint8_t *key_len, uint32_t *sec_type, mp_obj_t obj);
-void validate_channel(uint8_t channel);
+
 
 typedef struct {
     mp_obj_base_t base;
