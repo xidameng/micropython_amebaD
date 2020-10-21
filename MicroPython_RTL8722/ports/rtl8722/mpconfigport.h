@@ -126,11 +126,11 @@ extern const struct _mp_obj_module_t mp_module_umachine;
 extern const struct _mp_obj_module_t mp_module_uos;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uwireless;
-#if xmdebug
+//extern const struct _mp_obj_module_t mp_module_usocket;
+#if 0
 extern const struct _mp_obj_module_t mp_module_uterminal;
 extern const struct _mp_obj_module_t mp_module_ussl;
 extern const struct _mp_obj_module_t mp_network_module;
-extern const struct _mp_obj_module_t mp_module_lwip;
 #endif
 
 
@@ -140,8 +140,8 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),          MP_OBJ_FROM_PTR(&mp_module_uos) },        \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),        MP_OBJ_FROM_PTR(&mp_module_utime) },      \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uwireless),    MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
-/*    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_lwip) },    \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),      MP_OBJ_FROM_PTR(&mp_module_usocket) },    \
+/*    { MP_OBJ_NEW_QSTR(MP_QSTR_ussl),         MP_OBJ_FROM_PTR(&mp_module_ussl) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),      MP_OBJ_FROM_PTR(&mp_network_module) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uterminal),    MP_OBJ_FROM_PTR(&mp_module_uterminal) },   \
 */
@@ -152,7 +152,8 @@ extern const struct _mp_obj_module_t mp_module_lwip;
     { MP_OBJ_NEW_QSTR(MP_QSTR_os),      MP_OBJ_FROM_PTR(&mp_module_uos) },         \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time),    MP_OBJ_FROM_PTR(&mp_module_utime) },       \
     { MP_OBJ_NEW_QSTR(MP_QSTR_wireless), MP_OBJ_FROM_PTR(&mp_module_uwireless) },  \
-/*    { MP_OBJ_NEW_QSTR(MP_QSTR_json),    MP_OBJ_FROM_PTR(&mp_module_ujson) },    \
+/*    { MP_OBJ_NEW_QSTR(MP_QSTR_socket), MP_OBJ_FROM_PTR(&mp_module_usocket) },  \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_json),    MP_OBJ_FROM_PTR(&mp_module_ujson) },    \
     { MP_OBJ_NEW_QSTR(MP_QSTR_errno),   MP_OBJ_FROM_PTR(&mp_module_uerrno) },   \
     { MP_OBJ_NEW_QSTR(MP_QSTR_select),  MP_OBJ_FROM_PTR(&mp_module_uselect) },  \
 */
@@ -167,7 +168,7 @@ extern const struct _mp_obj_module_t mp_module_lwip;
 #define MICROPY_WLAN_AP_DEFAULT_SSID        "YourSSID"
 #define MICROPY_WLAN_AP_DEFAULT_PASS        "YourPSWD"
 
-#define MP_HEAP_SIZE                        (180 * 1024)
+#define MP_HEAP_SIZE                        (170 * 1024)
 //#define MP_HEAP_SIZE                        (1124 * 1024)
 
 #define MICROPY_TASK_NAME                   "MicroPython"

@@ -38,7 +38,7 @@
 #include <dhcp/dhcps.h>
 
 
-struct netif xnetif[NET_IF_NUM]; 
+extern struct netif xnetif[NET_IF_NUM]; 
 
 
 

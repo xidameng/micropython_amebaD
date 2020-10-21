@@ -202,24 +202,26 @@ RTL8722 MicroPython port support WiFi connection through ```WLAN``` module.
 
 ### WiFi
 #### Connect to WiFi with WPA2 security type 
-WPA2 is the most common type, if not sure what security type your WiFi router is configured as, use this one
+WPA2 is the most common type of authentication, if not sure what security type your WiFi router is configured as, use this one
 ```bash
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPtestSSID", pswd = "micropythonameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
 ```
 #### Scan network
+scanning nearby available networks can be done with script below
 ```bash
 from wireless import WLAN
 WLAN.scan()
 ```
 
 #### Access Point (AP) mode
-Set up Ameba as an access point is an easy job, follow example below to start your own AP,
+Set up Ameba as an access point is simple too, follow example below to start your own AP
+Note: MCU will stay in AP mode to service connections thus will not return to REPL
 ```Python
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.AP)
-wifi.start_ap(ssid = "0000MPSSID", pswd = "1234567890")
+wifi.start_ap(ssid = "MPSSID", pswd = "upyameba")
 ```
 
 #### HTTP

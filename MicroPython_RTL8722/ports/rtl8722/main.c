@@ -47,11 +47,9 @@
 #include "main.h"
 #include "lib/utils/interrupt_char.h"
 
-/* LOGUART pins: */
-#define UART_TX    PA_7
-#define UART_RX    PA_8
 
-serial_t    uartobj;
+
+//serial_t    uartobj;
 
 //void serial_repl_handler(uint32_t id, SerialIrq event);
 /*****************************************************************************
@@ -69,11 +67,8 @@ uint8_t mpHeap[MP_HEAP_SIZE];
 
 void micropython_task(void const *arg) {
 
-    serial_init(&uartobj,UART_TX,UART_RX);
-    serial_baud(&uartobj,115200);
-    serial_format(&uartobj, 8, ParityNone, 1);
-    //serial_irq_handler(&uartobj, serial_repl_handler, (uint32_t)&uartobj);
-    //serial_irq_set(&uartobj, RxIrq, 1);
+soft_reset:
+    repl_init0();
     mp_stack_ctrl_init();
 
 #if MICROPY_ENABLE_GC
@@ -97,7 +92,10 @@ void micropython_task(void const *arg) {
                 mp_printf(&mp_plat_print, "soft reboot\n");
         }
     osThreadYield();
-    } 
+    }
+
+goto soft_reset;
+
 }
 
 
