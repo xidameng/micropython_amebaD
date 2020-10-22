@@ -47,8 +47,10 @@
 TaskHandle_t mp_main_task_handle;
 
 serial_t    uartobj;
+
 STATIC uint8_t uart_ringbuf_array[256];
 ringbuf_t   uartRingbuf = {uart_ringbuf_array, sizeof(uart_ringbuf_array)};;
+
 /* LOGUART pins: */
 #define UART_TX    PA_7
 #define UART_RX    PA_8
@@ -56,17 +58,18 @@ ringbuf_t   uartRingbuf = {uart_ringbuf_array, sizeof(uart_ringbuf_array)};;
 //volatile int repl_buf = 0;
 
 void serial_repl_handler(uint32_t id, SerialIrq event) {
-    int data = 0;
+    gc_lock();
     if (event == RxIrq) {
-        while (serial_readable(&uartobj)) {
+        //while (serial_readable(&uartobj)) {
             int repl_buf = serial_getc(&uartobj);
             if (repl_buf == mp_interrupt_char) {
                 mp_keyboard_interrupt();
             } else {
                 ringbuf_put(&uartRingbuf, repl_buf);
             }
-        }
+        //}
     }
+    gc_unlock();
 }
 
 void repl_init0() {

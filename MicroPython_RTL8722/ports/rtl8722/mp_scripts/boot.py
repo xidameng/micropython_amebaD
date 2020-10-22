@@ -1,5 +1,9 @@
+import machine
+import wireless
 from machine import Pin, UART, Timer, RTC, PWM, I2C, SPI
 from wireless import WLAN
 import time
-print("[MP]: Importing peripheral libraries..")
-print("[MP]: Boot init finished..")
+import modules
+print()
+print("[MP]: Importing builtin libraries...")
+print("[MP]: Boot init finished")

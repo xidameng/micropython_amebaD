@@ -28,7 +28,7 @@
 
 
 i2c_t i2cwire0;
-i2c_t i2cwire1;
+//i2c_t i2cwire1;
 
 
 STATIC i2c_obj_t i2c_obj[2] = {

@@ -113,7 +113,11 @@ void wlan_init0(void) {
     }
 }
 
-
+void wlan_deinit0(void) {
+    // shut down wifi
+    dhcps_deinit();
+    wifi_off();
+}
 
 
 /*****************************************************************************
@@ -149,17 +153,11 @@ static void init_wifi_struct(void) {
 }
 
 
-unsigned char* getIPAddress(){
-
-    return LwIP_GetIP(&xnetif[0]);
-} 
-
-
-STATIC mp_obj_t IPAddress() {
-    char* IP = getIPAddress();
+STATIC mp_obj_t get_ip(mp_obj_t self_in) {
+    unsigned char* IP = LwIP_GetIP(&xnetif[0]);
     return mp_obj_new_str(IP,strlen(IP));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(IPAddress_obj, IPAddress);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(get_ip_obj, get_ip);
 
 
 void validate_wlan_mode(uint8_t mode) {
@@ -213,6 +211,7 @@ rtw_result_t wifidrv_scan_result_handler( rtw_scan_handler_result_t* malloced_sc
     return RTW_SUCCESS;
 }
 
+
 static void printEncryptionType(uint32_t thisType) {
 
     switch (thisType) {
@@ -243,6 +242,7 @@ static void printEncryptionType(uint32_t thisType) {
     }
 }
 
+
 static int8_t startScanNetworks() {
     _networkCount = 0;
     if (wifi_scan_networks(wifidrv_scan_result_handler, NULL) != RTW_SUCCESS) {
@@ -252,8 +252,7 @@ static int8_t startScanNetworks() {
 }
 
 
-//STATIC mp_obj_t wlan_scan(mp_obj_t self_in) {
-STATIC mp_obj_t wlan_scan() {
+STATIC mp_obj_t wlan_scan(mp_obj_t self_in) {
     uint8_t attempts = 10;
     uint8_t numOfNetworks = 0;
 
@@ -296,8 +295,7 @@ STATIC mp_obj_t wlan_scan() {
     
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(wlan_scan_obj, wlan_scan);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_scan_obj, wlan_scan);
 
 
 int8_t apActivate()
@@ -488,11 +486,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(wlan_start_ap_obj, 0, wlan_start_ap);
 
 STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     
-    enum { ARG_ssid, ARG_pswd };
+    enum { ARG_ssid, ARG_pswd, ARG_security };
     
     STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_ssid,  MP_ARG_REQUIRED | MP_ARG_OBJ  ,{.u_obj = mp_const_none}},
-        { MP_QSTR_pswd,  MP_ARG_REQUIRED | MP_ARG_OBJ  ,{.u_obj = mp_const_none}},
+        { MP_QSTR_ssid,      MP_ARG_REQUIRED | MP_ARG_OBJ  ,{.u_obj = mp_const_none}},
+        { MP_QSTR_pswd,      MP_ARG_OBJ                    ,{.u_obj = mp_const_none}},
+        { MP_QSTR_security,  MP_ARG_INT                    ,{.u_int = RTW_SECURITY_WPA2_AES_PSK}}, // default WPA2
     };
     
     //wlan_obj_t *self = pos_args[0];
@@ -505,7 +504,8 @@ STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *
     int pswd_len = 0;
     int ret = RTW_ERROR;
     uint8_t dhcp_result;
-    
+    char* xmpassword = NULL;
+
     // init wifi drivers
     wlan_init0();
 
@@ -515,10 +515,10 @@ STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *
         memset(wifi.bssid.octet, 0, ETH_ALEN);
         memcpy(wifi.ssid.val, ssid, ssid_len);
         wifi.ssid.len = ssid_len;
+    } else {
+        mp_raise_ValueError("ssid can't be empty");
     }
 
-    wifi.security_type = RTW_SECURITY_WPA2_AES_PSK;
-    char* xmpassword = NULL;
     if (args[ARG_pswd].u_obj != mp_const_none) {
         memset(pswd, 0, sizeof(pswd));
         xmpassword = mp_obj_str_get_data(args[ARG_pswd].u_obj, &pswd_len);
@@ -526,48 +526,42 @@ STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *
         validate_pswd(pswd_len);
         wifi.password = pswd;
         wifi.password_len = pswd_len;
-        wifi.key_id = 0;
+    } else {
+        wifi.password = NULL;
+        wifi.password_len = 0;
+    }
+
+    wifi.key_id = 0;
+
+    rtw_security_t mp_security = args[ARG_security].u_int;
+    switch(mp_security) {
+        case RTW_SECURITY_OPEN:
+            wifi.security_type = RTW_SECURITY_OPEN;
+            break;
+        case RTW_SECURITY_WPA_TKIP_PSK:
+            wifi.security_type = RTW_SECURITY_WPA_TKIP_PSK;
+            break;
+        case RTW_SECURITY_WPA2_TKIP_PSK:
+            wifi.security_type = RTW_SECURITY_WPA2_TKIP_PSK;
+            break;
+        case RTW_SECURITY_WPA_AES_PSK:
+            wifi.security_type = RTW_SECURITY_WPA_AES_PSK;
+            break;
+        case RTW_SECURITY_WPA2_AES_PSK:
+            wifi.security_type = RTW_SECURITY_WPA2_AES_PSK;
+            break;
+        case RTW_SECURITY_WPA2_MIXED_PSK:
+            wifi.security_type = RTW_SECURITY_WPA2_MIXED_PSK;
+            break;
+        case RTW_SECURITY_WPA_WPA2_MIXED:
+            wifi.security_type = RTW_SECURITY_WPA_WPA2_MIXED;
+            break;
+        default:
+            mp_raise_ValueError("This security type is not supported");
+            break;
     }
 
     ret = wifi_connect((char*)wifi.ssid.val, wifi.security_type, (char*)wifi.password, wifi.ssid.len, wifi.password_len, wifi.key_id, NULL);
-
-#if 0
-    switch(security_type) {
-        case RTW_SECURITY_OPEN:
-            ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_NONE, NULL, 0, 0, 0, 0, NULL, 0);
-            break;
-        case RTW_SECURITY_WEP_PSK:
-        case RTW_SECURITY_WEP_SHARED:
-            ret = wext_set_auth_param(WLAN0_NAME, IW_AUTH_80211_AUTH_ALG,
-                    IW_AUTH_ALG_SHARED_KEY);
-            break;
-        case RTW_SECURITY_WPA_TKIP_PSK:
-        case RTW_SECURITY_WPA2_TKIP_PSK:
-            ret = wext_set_auth_param(WLAN0_NAME, IW_AUTH_80211_AUTH_ALG,
-                    IW_AUTH_ALG_OPEN_SYSTEM);
-            if (ret == RTW_SUCCESS) 
-                ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_TKIP, NULL,
-                        0, 0, 0, 0, NULL, 0);
-            if (ret == RTW_SUCCESS) 
-                ret = wext_set_passphrase(WLAN0_NAME, key, key_len);
-            break;
-        case RTW_SECURITY_WPA_AES_PSK:
-        case RTW_SECURITY_WPA2_AES_PSK:
-        case RTW_SECURITY_WPA2_MIXED_PSK:
-        case RTW_SECURITY_WPA_WPA2_MIXED:
-            ret = wext_set_auth_param(WLAN0_NAME, IW_AUTH_80211_AUTH_ALG,
-                    IW_AUTH_ALG_OPEN_SYSTEM);
-            if (ret == RTW_SUCCESS) 
-                ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_CCMP, NULL,
-                        0, 0, 0, 0, NULL, 0);
-            if (ret == RTW_SUCCESS)
-                ret = wext_set_passphrase(WLAN0_NAME, key, key_len);
-            break;
-        default:
-            ret = RTW_ERROR;
-            break;
-    }
-#endif
 
     if (ret == RTW_SUCCESS) {
 
@@ -595,26 +589,24 @@ STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *
     }
 
     if (wifi_status == WL_CONNECTED) {
-        printf("WiFi is connected to %s\n", ssid);
+        printf("\nWiFi is connected to %s\n", ssid);
     } else {
-        mp_raise_OSError("WiFi connect failed.");
+        mp_raise_ValueError("WiFi connect failed.");
     }
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(wlan_connect_obj, 1, wlan_connect);
 
-#if 0
-STATIC mp_obj_t wlan_disconnect(mp_obj_t self_in) {
-    const uint8_t null_bssid[ETH_ALEN + 2] = {0x00, 0x00, 0x00, 0x00,
-        0x00, 0x01, 0x00, 0x00};
 
-    //wlan_obj_t *self = self_in;
+STATIC mp_obj_t wlan_disconnect(mp_obj_t self_in) {
+
+    wlan_obj_t *self = self_in;
 
     if (self->mode != RTW_MODE_STA)
-        mp_raise_OSError("Disconnect only support STA mode");
+        mp_raise_ValueError("Disconnect only support STA mode");
 
-    int16_t ret = wext_set_bssid(WLAN0_NAME, null_bssid);
+    int ret = wifi_disconnect();
 
     if (ret != RTW_SUCCESS) {
         mp_raise_msg(&mp_type_OSError, "Disconnect error");
@@ -624,88 +616,64 @@ STATIC mp_obj_t wlan_disconnect(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_disconnect_obj, wlan_disconnect);
 
-STATIC mp_obj_t wlan_on(mp_uint_t n_args, const mp_obj_t *args) {
+
+STATIC mp_obj_t wlan_on(mp_obj_t self_in) {
     int16_t ret = RTW_ERROR;
 
-    //wlan_obj_t *self = args[0];
+    wlan_obj_t *self = self_in;
 
-    if (rltk_wlan_running(WLAN0_IDX)) {
+    if ( (wifi_is_up(RTW_STA_INTERFACE)) || (wifi_is_up(RTW_AP_INTERFACE)) ) {
         mp_raise_msg(&mp_type_OSError, "WLAN has already running, please turn it off first.");
     }
 
-    int mode = self->mode;
-
-    if (n_args > 1) {
-        mode = mp_obj_get_int(args[1]);
-        self->mode = mode;
-        wifi_mode = mode;
-    }
-
     // Init WLAN0 first
-    ret = rltk_wlan_init(WLAN0_IDX, self->mode);
-
-    // Init WLAN1 second if mode is RTW_MODE_STA_AP
-    if (self->mode == RTW_MODE_STA_AP) {
-        ret = rltk_wlan_init(WLAN1_IDX, self->mode);
-    }
+    ret = wifi_on(self->mode);
 
     if (ret != RTW_SUCCESS) {
         mp_raise_msg(&mp_type_OSError, "WLAN init error");
     }
 
-    rltk_wlan_start(WLAN0_IDX);
-
-    if (self->mode == RTW_MODE_STA_AP) {
-        rltk_wlan_start(WLAN1_IDX);
-    }
-
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(wlan_on_obj, 1, 2, wlan_on);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_on_obj, wlan_on);
+
 
 STATIC mp_obj_t wlan_off(mp_obj_t self_in) {
 
-    //wlan_obj_t *self = self_in;
-
-    rltk_wlan_deinit();
+    if (wifi_off() != RTW_SUCCESS) {
+        mp_raise_msg(&mp_type_OSError, "WLAN off failed");
+    } 
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_off_obj, wlan_off);
 
-STATIC mp_obj_t wlan_wifi_is_running(mp_obj_t self_in, mp_obj_t idx_in) {
 
-    mp_uint_t index = mp_obj_get_int(idx_in);
+STATIC mp_obj_t wlan_wifi_is_running(mp_obj_t self_in) {
 
-    if (index > 1) 
-        mp_raise_ValueError("Invalid WLAN index");
-
-    //wlan_obj_t *self = self_in;
-
-    if (rltk_wlan_running(index))
+    if ( wifi_is_up(RTW_STA_INTERFACE) ) {
+        printf("STA interface is running\n");
         return mp_const_true;
-    
-    return mp_const_false;
+    } else if ( wifi_is_up(RTW_AP_INTERFACE) ) {
+        printf("AP interface is running\n");
+        return mp_const_true;
+    } else {
+        printf("No running interface\n");
+        return mp_const_false;
+    }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(wlan_wifi_is_running_obj, wlan_wifi_is_running);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_wifi_is_running_obj, wlan_wifi_is_running);
 
 
 STATIC mp_obj_t wlan_is_connect_to_ap(mp_obj_t self_in) {
 
-    //wlan_obj_t *self = self_in;
-
-    int16_t ret = rltk_wlan_is_connected_to_ap();
-
-    if (ret != RTW_SUCCESS)
+    if ( wifi_is_connected_to_ap() != RTW_SUCCESS)
         return mp_const_false;
 
     return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_is_connect_to_ap_obj, wlan_is_connect_to_ap);
 
-
-#endif
 
 STATIC void wlan_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     //wlan_obj_t *self = self_in;
@@ -794,15 +762,13 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),          MP_OBJ_FROM_PTR(&wlan_connect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_scan),             MP_OBJ_FROM_PTR(&wlan_scan_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_start_ap),         MP_OBJ_FROM_PTR(&wlan_start_ap_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_IPaddress),         MP_OBJ_FROM_PTR(&IPAddress_obj) },
-    /*
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_start_ap),         MP_OBJ_FROM_PTR(&wlan_start_ap_obj) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_get_ip),           MP_OBJ_FROM_PTR(&get_ip_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),       MP_OBJ_FROM_PTR(&wlan_disconnect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_off),              MP_OBJ_FROM_PTR(&wlan_off_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_wifi_is_running),  MP_OBJ_FROM_PTR(&wlan_wifi_is_running_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_connect_to_ap), MP_OBJ_FROM_PTR(&wlan_is_connect_to_ap_obj) },
-    */
     // class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_CONNECTED),        MP_OBJ_NEW_SMALL_INT(WL_CONNECTED) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_DISCONNECTED),     MP_OBJ_NEW_SMALL_INT(WL_DISCONNECTED) },
@@ -811,18 +777,18 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     // WLAN mode 
     { MP_OBJ_NEW_QSTR(MP_QSTR_STA),              MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AP),               MP_OBJ_NEW_SMALL_INT(RTW_MODE_AP) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_STA_AP),           MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA_AP) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_STA_AP),           MP_OBJ_NEW_SMALL_INT(RTW_MODE_STA_AP) },
 
     // SECURITY MODE
     { MP_OBJ_NEW_QSTR(MP_QSTR_OPEN),             MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_OPEN) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WEP_PSK),          MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WEP_PSK) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WEP_SHARED),       MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WEP_SHARED) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA_TKIP_PSK),     MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA_TKIP_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA_AES_PSK),      MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA_AES_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA2_TKIP_PSK),    MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA2_TKIP_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA2_AES_PSK),     MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA2_AES_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA2_MIXED_PSK),   MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA2_MIXED_PSK) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WPA_WPA2_MIXED),   MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WPA_WPA2_MIXED) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_WEP_PSK),          MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WEP_PSK) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_WEP_SHARED),       MP_OBJ_NEW_SMALL_INT(RTW_SECURITY_WEP_SHARED) },
 
 };
 STATIC MP_DEFINE_CONST_DICT(wlan_locals_dict, wlan_locals_dict_table);

@@ -28,9 +28,10 @@
 #include "py/builtin.h"
 
 const char ameba_mp_help_text[] =
-"Welcome to use MicroPython_Ameba RTL8722 Port"
+"Welcome to use MicroPython_Ameba RTL8722 Port!\n"
 "\n"
-"Please visit https://github.com/ambiot/ambd_micropython/tree/master/MicroPython_RTL8722/ports/rtl8722 for more information about this port\n"
+"For more information about this port please visit\n"
+"https://github.com/ambiot/ambd_micropython/tree/master/MicroPython_RTL8722/ports/rtl8722\n"
 "\n"
 "For online docs please visit http://docs.micropython.org/\n"
 "\n"
@@ -42,4 +43,6 @@ const char ameba_mp_help_text[] =
 "  CTRL-E        -- on a blank line, enter paste mode\n"
 "\n"
 "For further help on a specific object, type help(obj)\n"
+"To find out all available built-in modules, type help(modules)\n"
+"\n"
 ;

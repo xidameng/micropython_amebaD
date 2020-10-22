@@ -74,25 +74,35 @@ soft_reset:
 #if MICROPY_ENABLE_GC
     gc_init(mpHeap, mpHeap + sizeof(mpHeap));
 #endif
+
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_init(mp_sys_argv, 0);
+
     modmachine_init();
     modwireless_init();
+
+    //readline_init0();
     pyexec_frozen_module("boot.py");
+
 #if MICROPY_REPL_EVENT_DRIVEN
     pyexec_event_repl_init();
 #endif
+
     for ( ; ; ) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
             if (pyexec_raw_repl() != 0)
                 mp_printf(&mp_plat_print, "soft reboot\n");
+                break;
         } else {
             if (pyexec_friendly_repl() != 0) 
                 mp_printf(&mp_plat_print, "soft reboot\n");
+                break;
         }
     osThreadYield();
     }
+
+    modwireless_deinit();
 
 goto soft_reset;
 

@@ -37,6 +37,10 @@ void modwireless_init(void) {
     //wlan_init0();
 }
 
+void modwireless_deinit(void) {
+    wlan_deinit0();
+}
+
 STATIC const mp_map_elem_t wireless_module_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),     MP_OBJ_NEW_QSTR(MP_QSTR_wireless) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WLAN),         MP_OBJ_FROM_PTR(&wlan_type) },
