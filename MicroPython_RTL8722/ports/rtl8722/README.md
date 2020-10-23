@@ -90,7 +90,7 @@ MicroPython Ameba D port supports rich peripheral feature through the use of ```
 ### GPIO
 To control GPIO, import ```Pin``` module through ```umachine```. Here pin PB_18 is used as an example to output logic level 0 and 1 and blink 3 times 
 
-```bash
+```Python
 from umachine import Pin
 a = Pin("PB_18", Pin.OUT)
 a.value(1)
@@ -110,7 +110,7 @@ a.toggle()
 ### PWM
 To use PWM (Pulse Width Modulation), import ```PWM``` module through ```umachine```. Here pin PA_26 is used as an example to make an LED to slowly brighten up
 
-```bash
+```Python
 from umachine import Pin, PWM
 import time
 p = PWM(pin = "PA_26")
@@ -128,7 +128,7 @@ p.write(1.0)
 ### Delay and Timing
 Use the ```time``` module
 
-```bash
+```Python
 import time
 time.sleep(1)           # sleep for 1 second
 time.sleep_ms(500)      # sleep for 500 milliseconds
@@ -142,7 +142,7 @@ Use the ```Timer``` module through ```umachine``` module
 
 There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
 
-```bash
+```Python
 from umachine import Timer
 t = Timer(0)  # Use Timer 0/1/2/3 only
 t.start(2000000, t.PERIODICAL)  # Set GTimer fired periodically at duration of 2 seconds, printing text on the terminal
@@ -152,7 +152,7 @@ t.start(2000000, t.PERIODICAL)  # Set GTimer fired periodically at duration of 2
 ### RTC
 Use the ```RTC``` (Real Time Clock) module through ```umachine``` module
 
-```bash
+```Python
 from umachine import RTC
 rtc = RTC()
 rtc.datetime((2020, 12, 31, 4, 23, 58, 59, 0)) # set a specific date and time (year, month, day, weekday(0 for Monday), hour, minute, second, total seconds)
@@ -163,7 +163,7 @@ rtc.datetime() # get date and time
 ### UART
 Use the ```UART``` module through ```umachine``` module
 
-```bash
+```Python
 from umachine import UART
 uart = UART(tx="PA_21", rx= "PA_22")
 uart.init()
@@ -177,7 +177,7 @@ Use the ```I2C``` (Inter-Integrated Circuit) module through ```umachine``` modul
 
 Note: I2C only works in ```master``` mode.
 
-```bash
+```Python
 from umachine import Pin, I2C
 i2c = I2C(scl = "PA_25", sda = "PA_26", freq=100000) # configure I2C with pins and freq. of 100KHz
 i2c.scan()
@@ -189,7 +189,7 @@ i2c.readfrom(8, 6) # receive 5 bytes from slave
 ### SPI 
 Use the ```SPI``` (Serial Peripheral Interface) module through ```umachine``` module, currently only support ```Master``` mode, default SPI baud rate is ```2MHz```.
 
-```bash
+```Python
 from umachine import SPI
 spi = SPI(0)		# Only support 2 sets of SPI -- 0 and 1 
 spi 				# type instance name to check for details of the SPI set 
@@ -203,14 +203,14 @@ RTL8722 MicroPython port support WiFi connection through ```WLAN``` module.
 ### WiFi
 #### Connect to WiFi with WPA2 security type 
 WPA2 is the most common type of authentication, if not sure what security type your WiFi router is configured as, use this one
-```bash
+```Python
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
 wifi.connect(ssid = "MPSSID", pswd = "upyameba")
 ```
 #### Scan network
 scanning nearby available networks can be done with script below
-```bash
+```Python
 from wireless import WLAN
 WLAN.scan()
 ```
@@ -224,4 +224,19 @@ wifi = WLAN(mode = WLAN.AP)
 wifi.start_ap(ssid = "MPSSID", pswd = "upyameba")
 ```
 
-#### HTTP
+### Socket
+After WiFi is set up, the best way to access the network is to use socket. Socket is like an imaginary ethernet plug by which you use to connect your PC to some server on the internet like Google or Github. Application layer protocol like HTTP is built on top of socket. Once you are given an IP address and a port number, you can start to connect to the remote device and talk to it.
+
+import ```socket``` to use socket module
+
+```Python
+import socket
+from wireless import WLAN
+# first connect to WiFi
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+# second start a socket object
+s = socket.SOCK()
+# third connect the client to server
+s.connect("www.google.com", 80) # domain google, port 80
+```

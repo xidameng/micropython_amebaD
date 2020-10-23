@@ -1,9 +1,7 @@
-import machine
-import wireless
-from machine import Pin, UART, Timer, RTC, PWM, I2C, SPI
+import machine, wireless ,time, modules, socket
 from wireless import WLAN
-import time
-import modules
+from machine import Pin, UART, Timer, RTC, PWM, I2C, SPI
+from socket import SOCK
 print()
 print("[MP]: Importing builtin libraries...")
 print("[MP]: Boot init finished")
