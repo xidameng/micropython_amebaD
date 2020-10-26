@@ -431,9 +431,6 @@ STATIC mp_obj_t wlan_start_ap(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map
     //ssid = mp_obj_str_get_str(args[ARG_ssid].u_obj);
     //pswd = mp_obj_str_get_str(args[ARG_pswd].u_obj);
 
-    printf("zzw ssid   %s\n", ap_ssid);
-    printf("zzw pswd   %s\n", ap_pswd);
-
     //ssid_len = strlen(ssid);
     //pswd_len = strlen(pswd);
 

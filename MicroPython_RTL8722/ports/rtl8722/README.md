@@ -229,6 +229,7 @@ After WiFi is set up, the best way to access the network is to use socket. Socke
 
 import ```socket``` to use socket module
 
+#### Client Socket
 ```Python
 import socket
 from wireless import WLAN
@@ -239,4 +240,20 @@ wifi.connect(ssid = "MPSSID", pswd = "upyameba")
 s = socket.SOCK()
 # third connect the client to server
 s.connect("www.google.com", 80) # domain google, port 80
+```
+
+#### Server Socket
+```Python
+import socket
+from wireless import WLAN
+# first connect to WiFi
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+# second start a socket object
+s = socket.SOCK()
+# third connect the client to server
+port = 5000
+s.bind(port) # bind the server to localhost with port 5000
+s.listen()
+conn, addr = s.accept()
 ```

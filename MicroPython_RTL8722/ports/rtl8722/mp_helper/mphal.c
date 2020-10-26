@@ -59,16 +59,14 @@ ringbuf_t   uartRingbuf = {uart_ringbuf_array, sizeof(uart_ringbuf_array)};;
 
 void serial_repl_handler(uint32_t id, SerialIrq event) {
     gc_lock();
-    if (event == RxIrq) {
-        //while (serial_readable(&uartobj)) {
-            int repl_buf = serial_getc(&uartobj);
-            if (repl_buf == mp_interrupt_char) {
-                mp_keyboard_interrupt();
-            } else {
-                ringbuf_put(&uartRingbuf, repl_buf);
-            }
-        //}
-    }
+    //if (event == RxIrq) {
+        int repl_buf = serial_getc(&uartobj);
+        if (repl_buf == mp_interrupt_char) {
+            mp_keyboard_interrupt();
+        } else {
+            ringbuf_put(&uartRingbuf, (uint8_t)repl_buf);
+        }
+    //}
     gc_unlock();
 }
 
@@ -76,8 +74,8 @@ void repl_init0() {
     serial_init(&uartobj,UART_TX,UART_RX);
     serial_baud(&uartobj,115200);
     serial_format(&uartobj, 8, ParityNone, 1);
-    serial_irq_handler(&uartobj, serial_repl_handler, (uint32_t)&uartobj);
-    serial_irq_set(&uartobj, RxIrq, 1);
+    //serial_irq_handler(&uartobj, serial_repl_handler, (uint32_t)&uartobj);
+    //serial_irq_set(&uartobj, RxIrq, 1);
 }
 
 
@@ -104,14 +102,26 @@ void uart_send_string_with_length(serial_t *uartobj, char *pstr, size_t len)
 //       HAL TX & RX         //
 ///////////////////////////////
 int mp_hal_stdin_rx_chr(void) {
-    //return serial_getc(&uartobj);
-//    for(;;) {
-        int c = ringbuf_get(&uartRingbuf);
-        if (c != -1) {
-            return c;
-//        }
-    }
+    int c = serial_getc(&uartobj);
+    if (c == mp_interrupt_char) mp_keyboard_interrupt();
+    else return c;
 }
+int mp_hal_stdin_rx_readable(void) {
+    return serial_readable(&uartobj);
+}
+
+
+#if 0
+int mp_hal_stdin_rx_chr(void) {
+    return serial_getc(&uartobj);
+#if 0
+    int c = ringbuf_get(&uartRingbuf);
+    if (c != -1) {
+        return c;
+    }
+#endif
+}
+#endif
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
     //printf("--mp_hal_stdout_tx_strn--\n");
