@@ -45,8 +45,6 @@
 
 /* all global variables start with a "amb" prefix to distinguish from others*/
 
-
-typedef enum eProtMode {TCP_MODE, UDP_MODE}tProtMode;
 #define DATA_LENTH      128
 
 static uint32_t amb_ip_address = 0;
@@ -68,11 +66,11 @@ int start_server(uint16_t port, uint8_t protMode)
     int _sock;
     int timeout;
 
-    if (protMode == 0) {
+    if (protMode == SOCK_STREAM) { // TCP
         timeout = 3000;
         _sock = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         lwip_setsockopt(_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    } else {
+    } else { // UDP
         timeout = 1000;
         _sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         lwip_setsockopt(_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
@@ -136,7 +134,7 @@ int get_available(int sock)
         lwip_setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
         lwip_setsockopt(client_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
         lwip_setsockopt(client_fd, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable));
-        printf("\r\nA client connected to this server :\r\n[PORT]: %d\r\n[IP]:%s\r\n\r\n", ntohs(amb_cli_addr.sin_port), inet_ntoa(amb_cli_addr.sin_addr.s_addr));
+        printf("\r\nA client connected to this server :\r\n[PORT]: %d\r\n[IP]:%s\r\n", ntohs(amb_cli_addr.sin_port), inet_ntoa(amb_cli_addr.sin_addr.s_addr));
         return client_fd;
     }
 }
@@ -225,7 +223,7 @@ int start_client(uint32_t ipAddress, uint16_t port, uint8_t protMode)
     int timeout;
     int _sock;
 
-    if (protMode == 0) {//tcp
+    if (protMode == SOCK_STREAM) {//tcp
         _sock = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     } else { //udp
         _sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -242,7 +240,7 @@ int start_client(uint32_t ipAddress, uint16_t port, uint8_t protMode)
     serv_addr.sin_addr.s_addr = ipAddress;
     serv_addr.sin_port = htons(port);
 
-    if (protMode == 0) {//TCP MODE
+    if (protMode == SOCK_STREAM) {//TCP MODE
         if (lwip_connect(_sock, ((struct sockaddr *)&serv_addr), sizeof(serv_addr)) == 0) {
             printf("\r\nConnect to Server successfully!\r\n");
 
@@ -313,12 +311,28 @@ STATIC mp_obj_t socket_recv(const mp_obj_t self_in, const mp_obj_t arg_len) {
 
     mp_uint_t ret = get_receive(sock->fd, vstr.buf, len, NULL, NULL, NULL);
     if (ret == -1) {
-        mp_raise_ValueError("socket recv failed");
+        mp_raise_ValueError("socket failed to recv");
     }
     vstr.len = ret;
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(socket_recv_obj, socket_recv);
+
+
+STATIC mp_obj_t socket_close(const mp_obj_t self_in) {
+    socket_obj_t *sock = self_in;
+    stop_socket(sock->fd);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(socket_close_obj, socket_close);
+
+
+
+STATIC mp_obj_t socket_settimeout(const mp_obj_t self_in, const mp_obj_t arg_time) {
+    socket_obj_t *sock = self_in;
+    int timeout = mp_obj_get_int(arg_time); // timeout in seconds
+    set_sock_recv_timeout(sock->fd, timeout*1000);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(socket_settimeout_obj, socket_settimeout);
 
 
 
@@ -334,9 +348,9 @@ STATIC mp_obj_t client_connect(mp_obj_t self_in, mp_obj_t arg_host,  mp_obj_t ar
 
     if (getHostByName(host) == WL_SUCCESS) {
         if (self->type == SOCK_DGRAM) { //udp
-            amb_client_sock = start_client(amb_ip_address, port, UDP_MODE);
+            amb_client_sock = start_client(amb_ip_address, port, SOCK_DGRAM);
         } else { //tcp
-            amb_client_sock = start_client(amb_ip_address, port, TCP_MODE);
+            amb_client_sock = start_client(amb_ip_address, port, SOCK_STREAM);
         }
     }
 
@@ -362,9 +376,9 @@ MP_DEFINE_CONST_FUN_OBJ_3(socket_connect_obj, client_connect);
 /********************************/
 
 STATIC mp_obj_t server_bind(mp_obj_t self_in, mp_obj_t arg_port) {
-
+    socket_obj_t *sock = self_in;
     // default using localhost as server addr, thus only port is required
-    amb_server_sock = start_server(mp_obj_get_int(arg_port), TCP_MODE);
+    amb_server_sock = start_server(mp_obj_get_int(arg_port), SOCK_STREAM);
     if ( amb_server_sock >= 0) { // default server TCP mode
         printf("server bind success\n");
         return mp_const_none;
@@ -433,7 +447,7 @@ STATIC mp_obj_t socket_make_new(const mp_obj_type_t *type_in, size_t n_args, siz
     socket_obj_t *sock = m_new_obj_with_finaliser(socket_obj_t);
     sock->base.type = type_in;
     sock->domain = AF_INET;     //IPv4
-    sock->type = SOCK_STREAM;   //Stream
+    sock->type = SOCK_STREAM;   //Stream (TCP)
     sock->proto = 0;            //TCP
     sock->peer_closed = false;
     if (n_args > 0) {
@@ -442,7 +456,6 @@ STATIC mp_obj_t socket_make_new(const mp_obj_type_t *type_in, size_t n_args, siz
             sock->type = mp_obj_get_int(args[1]);
         }
     }
-
     return MP_OBJ_FROM_PTR(sock);
 }
 
@@ -455,19 +468,16 @@ STATIC const mp_rom_map_elem_t socket_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_accept),      MP_ROM_PTR(&socket_accept_obj) },
     { MP_ROM_QSTR(MP_QSTR_recv),        MP_ROM_PTR(&socket_recv_obj) },
     { MP_ROM_QSTR(MP_QSTR_send),        MP_ROM_PTR(&socket_send_obj) },
+    { MP_ROM_QSTR(MP_QSTR_settimeout),  MP_ROM_PTR(&socket_settimeout_obj) },
+    { MP_ROM_QSTR(MP_QSTR_close),       MP_ROM_PTR(&socket_close_obj) },
 #if 0
     { MP_ROM_QSTR(MP_QSTR_sendall),     MP_ROM_PTR(&socket_sendall_obj) },
     { MP_ROM_QSTR(MP_QSTR_sendto),      MP_ROM_PTR(&socket_sendto_obj) },
     { MP_ROM_QSTR(MP_QSTR_recvfrom),    MP_ROM_PTR(&socket_recvfrom_obj) },
     { MP_ROM_QSTR(MP_QSTR_setsockopt),  MP_ROM_PTR(&socket_setsockopt_obj) },
-    { MP_ROM_QSTR(MP_QSTR_settimeout),  MP_ROM_PTR(&socket_settimeout_obj) },
     { MP_ROM_QSTR(MP_QSTR_setblocking), MP_ROM_PTR(&socket_setblocking_obj) },
     { MP_ROM_QSTR(MP_QSTR_makefile),    MP_ROM_PTR(&socket_makefile_obj) },
     { MP_ROM_QSTR(MP_QSTR_fileno),      MP_ROM_PTR(&socket_fileno_obj) },
-    { MP_ROM_QSTR(MP_QSTR_read),        MP_ROM_PTR(&mp_stream_read_obj) },
-    { MP_ROM_QSTR(MP_QSTR_readinto),    MP_ROM_PTR(&mp_stream_readinto_obj) },
-    { MP_ROM_QSTR(MP_QSTR_readline),    MP_ROM_PTR(&mp_stream_unbuffered_readline_obj) },
-    { MP_ROM_QSTR(MP_QSTR_write),       MP_ROM_PTR(&mp_stream_write_obj) },
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(socket_locals_dict, socket_locals_dict_table);
@@ -476,7 +486,6 @@ STATIC const mp_obj_type_t socket_type = {
     { &mp_type_type },
     .name = MP_QSTR_SOCK,
     .make_new = socket_make_new,
-    //.protocol = &socket_stream_p,
     .locals_dict = (mp_obj_t)&socket_locals_dict,
 };
 

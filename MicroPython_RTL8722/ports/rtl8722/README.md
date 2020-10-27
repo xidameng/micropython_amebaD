@@ -257,3 +257,63 @@ s.bind(port) # bind the server to localhost with port 5000
 s.listen()
 conn, addr = s.accept()
 ```
+
+#### Echo Server and Client example
+Here is an example of letting a server socket and a client socket to echo each other's msg, to use this example, you need 2 devices, one of them is ameba RTL8722, the other can be a PC or another wifi board that runs MicroPython.
+
+##### Server Code
+```Python
+import socket
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+s = socket.SOCK()
+port = 5000
+s.bind(port) 
+s.listen()
+conn, addr = s.accept()
+while True:
+	data = conn.recv(1024)
+	conn.send(data+"from server")
+```
+
+##### Client Code
+```Python
+import socket
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+c = socket.SOCK()
+# make sure to check the server IP address and update in the next line of code
+c.connect("your server IP address", 5000) 
+c.send("hello world")
+data = c.recv(1024)
+print(data)
+```
+
+
+#### HTTP Website example
+With socket created, we can visit an HTTP website and get whatever information from it
+
+##### Get information from HTTP website
+```Python
+import socket
+from wireless import WLAN
+wifi = WLAN(mode = WLAN.STA)
+wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+
+def http_get(url):
+	_, _, host, path = url.split('/', 3)
+	c = socket.SOCK()
+	# We are visiting MicroPython official website's test page
+	c.connect(host, 80) 
+	c.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
+	while True:
+		data = c.recv(100)
+		if data:
+			print(str(data,'utf8'), end='')
+		else:
+			break
+
+http_get('http://micropython.org/ks/test.html')
+```

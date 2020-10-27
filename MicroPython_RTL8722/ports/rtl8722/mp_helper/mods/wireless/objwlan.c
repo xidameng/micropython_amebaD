@@ -36,9 +36,10 @@
 #include "lwip/err.h"
 #include "lwip/api.h"
 #include <dhcp/dhcps.h>
+#include "netutils.h"
 
 
-extern struct netif xnetif[NET_IF_NUM]; 
+extern struct netif xnetif[NET_IF_NUM]; // max 3 network interface
 
 
 
@@ -154,8 +155,9 @@ static void init_wifi_struct(void) {
 
 
 STATIC mp_obj_t get_ip(mp_obj_t self_in) {
-    unsigned char* IP = LwIP_GetIP(&xnetif[0]);
-    return mp_obj_new_str(IP,strlen(IP));
+    unsigned char *IP = LwIP_GetIP(&xnetif[0]);
+    
+    return netutils_format_ipv4_addr((uint8_t *)IP, NETUTILS_BIG);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(get_ip_obj, get_ip);
 
@@ -760,7 +762,7 @@ STATIC const mp_map_elem_t wlan_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_connect),          MP_OBJ_FROM_PTR(&wlan_connect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_scan),             MP_OBJ_FROM_PTR(&wlan_scan_obj) },
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_start_ap),         MP_OBJ_FROM_PTR(&wlan_start_ap_obj) },
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_get_ip),           MP_OBJ_FROM_PTR(&get_ip_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_ip),           MP_OBJ_FROM_PTR(&get_ip_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disconnect),       MP_OBJ_FROM_PTR(&wlan_disconnect_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_on),               MP_OBJ_FROM_PTR(&wlan_on_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_off),              MP_OBJ_FROM_PTR(&wlan_off_obj) },
