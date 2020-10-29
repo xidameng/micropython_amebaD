@@ -322,6 +322,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(socket_recv_obj, socket_recv);
 STATIC mp_obj_t socket_close(const mp_obj_t self_in) {
     socket_obj_t *sock = self_in;
     stop_socket(sock->fd);
+    return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(socket_close_obj, socket_close);
 
@@ -331,6 +332,7 @@ STATIC mp_obj_t socket_settimeout(const mp_obj_t self_in, const mp_obj_t arg_tim
     socket_obj_t *sock = self_in;
     int timeout = mp_obj_get_int(arg_time); // timeout in seconds
     set_sock_recv_timeout(sock->fd, timeout*1000);
+    return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(socket_settimeout_obj, socket_settimeout);
 

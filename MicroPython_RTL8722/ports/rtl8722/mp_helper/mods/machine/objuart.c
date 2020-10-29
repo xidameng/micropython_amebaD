@@ -209,7 +209,7 @@ STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),      MP_OBJ_FROM_PTR(&uart_deinit_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_read),        MP_OBJ_FROM_PTR(&mp_stream_read_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readline),    MP_OBJ_FROM_PTR((&mp_stream_unbuffered_readline_obj)) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_readinto),    MP_OBJ_FROM_PTR((&mp_stream_readinto_obj)) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_readinto),    MP_OBJ_FROM_PTR((&mp_stream_readinto_obj)) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_write),       MP_OBJ_FROM_PTR(&mp_stream_write_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_irq_enable),  MP_OBJ_FROM_PTR((&uart_irq_enable_obj)) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_irq_handler), MP_OBJ_FROM_PTR((&uart_irq_handler_obj)) },

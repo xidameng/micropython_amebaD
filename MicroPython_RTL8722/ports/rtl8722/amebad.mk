@@ -115,7 +115,7 @@ UPY_C += mp_helper/mods/moduos.c
 #UPY_C += mp_helper/mods/machine/objwdt.c
 #UPY_C += mp_helper/mods/machine/objflash.c
 UPY_C += mp_helper/mods/machine/objrtc.c
-#UPY_C += mp_helper/mods/machine/objadc.c
+UPY_C += mp_helper/mods/machine/objadc.c
 ##UPY_C += mp_helper/mods/machine/objdac.c
 UPY_C += mp_helper/mods/machine/objpin.c
 UPY_C += mp_helper/mods/machine/obji2c.c
@@ -188,9 +188,9 @@ LIBFLAGS = -Wl,--no-enum-size-warning -Wl,--warn-common
 #         ARCHIVE LIST        #
 ###############################
 LIBAR += -Wl,--start-group
-LIBAR += -L$(VENDOR)/../ARCHIVE_LIB/ -l_arduino -l_wlan -l_wps -l_wlan_mp -l_wifi_ucps_fw 
+LIBAR += -L$(VENDOR)/../ARCHIVE_LIB/ -l_arduino -l_wlan -l_wps -l_wifi_ucps_fw 
 LIBAR += -l_wifi_fw -l_websocket -l_user -l_usbh -l_usbd -l_tftp -l_mdns -l_m4a_self 
-LIBAR += -l_httpd -l_httpc -l_http2 -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt 
+LIBAR += -l_httpd -l_httpc -l_eap -l_dct -l_coap -l_cmsis_dsp -l_bt 
 LIBAR += -Wl,--end-group
 
 

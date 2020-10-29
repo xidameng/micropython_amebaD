@@ -125,6 +125,16 @@ p.write(1.0)
 ```
 
 
+### ADC
+To use ADC (Analog to Digital Convertor), import ```ADC``` module through ```umachine```. Here we connect pin PB_4 to a Potentiometer to read its analogue value  
+
+```Python
+from umachine import ADC
+a = ADC(0)
+a.read()
+```
+
+
 ### Delay and Timing
 Use the ```time``` module
 
