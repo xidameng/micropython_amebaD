@@ -206,7 +206,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(uart_irq_handler_obj, uart_irq_handler0);
 STATIC const mp_map_elem_t uart_locals_dict_table[] = {
     // instance methods
     { MP_OBJ_NEW_QSTR(MP_QSTR_init),        MP_OBJ_FROM_PTR(&uart_init_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_deinit),      MP_OBJ_FROM_PTR(&uart_deinit_obj) },
+    //{ MP_OBJ_NEW_QSTR(MP_QSTR_deinit),      MP_OBJ_FROM_PTR(&uart_deinit_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_read),        MP_OBJ_FROM_PTR(&mp_stream_read_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_readline),    MP_OBJ_FROM_PTR((&mp_stream_unbuffered_readline_obj)) },
     //{ MP_OBJ_NEW_QSTR(MP_QSTR_readinto),    MP_OBJ_FROM_PTR((&mp_stream_readinto_obj)) },

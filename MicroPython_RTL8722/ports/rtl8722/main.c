@@ -102,7 +102,7 @@ soft_reset:
     osThreadYield();
     }
 
-    modwireless_deinit();
+    //modwireless_deinit();
 
 goto soft_reset;
 
