@@ -442,7 +442,7 @@ wifi.scan()
 #### <del>Access Point (AP) mode
 <del>Set up Ameba as an access point is supported too, follow example below to start your own AP
 Note: MCU will stay in AP mode to service connections thus will not return to REPL
-<del>```
+```Python
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.AP)
 wifi.start_ap(ssid = "MPSSID", pswd = "upyameba")
