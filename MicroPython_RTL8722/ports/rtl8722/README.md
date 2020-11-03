@@ -192,10 +192,7 @@ PWM( unit_id[optional], pin_name[required])
 Use help(PWM) to view more information about this class
 
 Note: PWM is only supported on the following pins,
-PA_23,
-PA_24
-PA_25
-PA_26
+PA_23, PA_24, PA_25, PA_26
 
 
 
@@ -216,15 +213,15 @@ ADC( unit_id[required])
 Use help(ADC) to view more information about this class
 
 Note: There are only 7 units of ADC pins, they are
-unit |  Pin
-------------
- 0   |  PB_4
- 1   |  PB_5
- 2   |  PB_6
- 3   |  PB_7
- 4   |  PB_1
- 5   |  PB_2
- 6   |  PB_3
+|unit |  Pin  
+|:----|:-----:
+| 0   |  PB_4 
+| 1   |  PB_5 
+| 2   |  PB_6 
+| 3   |  PB_7 
+| 4   |  PB_1 
+| 5   |  PB_2 
+| 6   |  PB_3 
 
 
 
@@ -264,11 +261,11 @@ Timer( unit_id[optinal] )
 Use help(Timer) to view more information about this class
 
 Note: There are only 3 units of general timer, they are
-unit |  Timer  |  Freq
------------------------
- 1   |  TIMER1 |  32KHz
- 2   |  TIMER2 |  32KHz
- 3   |  TIMER3 |  32KHz
+| unit |  Timer  |  Freq
+|:-----|:-------:|:-------: 
+|  1   |  TIMER1 |  32 KHz 
+|  2   |  TIMER2 |  32KHz 
+|  3   |  TIMER3 |  32KHz 
 
 
 ### RTC
@@ -300,20 +297,20 @@ UART( unit_id[optional], baudrate[optional], databits[optional], stopbit[optiona
 ```
 PS: Leaving all parameters except tx and rx blank will set the uart to default values which are
 
-Parameter | Default value
--------------------------
-unit_id   |      0
-baudrate  |    115200
-databits  |      8
-stopbit   |      1
-paritybit |      0
-timeout   |     10 ms
+| Parameter | Default value
+| :---------|:-------------:
+| unit_id   |      0
+| baudrate  |    115200
+| databits  |      8
+| stopbit   |      1
+| paritybit |      0
+| timeout   |     10 ms
 
 Note: There are currently 2 sets of uart, they are
-unit |   TX   |   RX
------------------------
- 0   |  PA_21 |  PA_22
- 3   |  PA_26 |  PA_25
+| unit |   TX   |   RX
+|:-----|:------:|:-------: 
+|  0   |  PA_21 |  PA_22
+|  3   |  PA_26 |  PA_25
 
  Use help(UART) to view more information about this class
 
@@ -339,15 +336,15 @@ I2C( unit_id[optional], sda_pin[required], scl_pin[required], frequency[optional
 ```
 PS: Leaving optional parameters blank will will assume taking default values which are
 
-Parameter | Default value
--------------------------
-unit_id   |      0
-frequency |   100000 Hz
+| Parameter | Default value
+|:----------|:-------------: 
+| unit_id   |      0
+| frequency |   100000 Hz
 
 There is currently 1 set of I2C, it is
-unit |   sda  |   scl
-----------------------
-  0  |  PA_26 |  PA_25
+| unit |   sda  |   scl
+|:-----|:------:|:------: 
+|   0  |  PA_26 |  PA_25
 
 Use help(I2C) to view more information about this class
 
@@ -372,22 +369,22 @@ SPI( unit_id[required], baudrate[optional], polarity[optional], phase[optional],
 ```
 PS: Leaving optional parameters blank will will assume taking default values which are
 
-Parameter | Default value
---------------------------
-baudrate  |  2000000 Hz
-polarity  | inactive_low
-phase     | toggle_middle
-databits  |      8
-firstbit  |     MSB
-miso      |     N.A.
-mosi      |     N.A.
-sck       |     N.A.
+| Parameter | Default value
+|:----------|:-------------: 
+| baudrate  |  2000000 Hz
+| polarity  | inactive_low
+| phase     | toggle_middle
+| databits  |      8
+| firstbit  |     MSB
+| miso      |     N.A.
+| mosi      |     N.A.
+| sck       |     N.A.
 
 There is currently 2 set of SPI, they are,
-unit |   mosi |   miso  |  SCK  |  CS
----------------------------------------
-  0  |  PB_18 |  PB_19  | PB_20 | PB_21
-  1  |  PB_4  |  PB_5   | PB_6  | PB_7
+| unit |   mosi |   miso  |  SCK  |  CS
+|:-----|:------:|:-------:|:-----:|:-----: 
+|   0  |  PB_18 |  PB_19  | PB_20 | PB_21
+|   1  |  PB_4  |  PB_5   | PB_6  | PB_7
 
 Use help(SPI) to view more information about this class
 
@@ -426,10 +423,10 @@ connect( ssid[required], pswd[optional], security[optional])
 
 PS: Leaving optional parameters blank will will assume taking default values which are
 
-Parameter | Default value
---------------------------
-   pswd   |     NULL
- security |  WPA2_AES_PSK
+| Parameter | Default value
+|:----------|:-------------: 
+|    pswd   |     NULL
+|  security |  WPA2_AES_PSK
 
 Note: Connecting to an ```OPEN``` network is also supported, just omit 'pswd' parameter and type in "security = WLAN.OPEN" 
 
@@ -442,17 +439,17 @@ wifi = WLAN(mode = WLAN.STA)
 wifi.scan()
 ```
 
-<del> #### Access Point (AP) mode
-Set up Ameba as an access point is supported too, follow example below to start your own AP
+#### <del>Access Point (AP) mode
+<del>Set up Ameba as an access point is supported too, follow example below to start your own AP
 Note: MCU will stay in AP mode to service connections thus will not return to REPL
-```Python
+<del>```
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.AP)
 wifi.start_ap(ssid = "MPSSID", pswd = "upyameba")
 ```
 
 ### Socket
-After WiFi is set up, the best way to access the network is to use socket. Socket is like an imaginary ethernet plug by which you use to connect your PC to some server on the internet like Google or Github. Application layer protocol like HTTP is built on top of socket. Once you are given an IP address and a port number, you can start to connect to the remote device and talk to it.
+After WiFi is set up, the best way to access the network is to use socket. Socket is like an imaginary ethernet socket by which you use to connect your PC to some server on the internet like Google or Github. Application layer protocol like HTTP and etc. are built on top of socket. Once you are given an IP address and a port number, you can start to connect to the remote device and talk to it.
 
 import ```socket``` to use socket module
 
@@ -462,12 +459,28 @@ import socket
 from wireless import WLAN
 # first connect to WiFi
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba") # change the ssid and pswd to yours
 # second start a socket object
 s = socket.SOCK()
 # third connect the client to server
-s.connect("www.google.com", 80) # domain google, port 80
+s.connect("www.google.com", 80) # domain google (must be in string), port 80 (integer)
 ```
+
+#### For Your Information
+The above example start with creating an object of class ```SOCK```, and it has the following format
+```Python
+socket.SOCK( domain[optional], type[optional] )
+```
+PS: Leaving optional parameters blank will will assume taking default values which are
+
+| Parameter |  Default value
+|:----------|:---------------: 
+|  domain   |  AF_INET(IPv4)
+|   type    | SOCK_STREAM(TCP)
+
+Use help(socket) and help(socket.SOCK) to view more information about this class
+
+
 
 #### Server Socket
 ```Python
@@ -475,12 +488,12 @@ import socket
 from wireless import WLAN
 # first connect to WiFi
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba") # change the ssid and pswd to yours
 # second start a socket object
 s = socket.SOCK()
 # third connect the client to server
 port = 5000
-s.bind(port) # bind the server to localhost with port 5000
+s.bind(port) # bind the server to localhost with port 5000 (integer)
 s.listen()
 conn, addr = s.accept()
 ```
@@ -493,15 +506,15 @@ Here is an example of letting a server socket and a client socket to echo each o
 import socket
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba") # change the ssid and pswd to yours
 s = socket.SOCK()
 port = 5000
 s.bind(port) 
 s.listen()
 conn, addr = s.accept()
 while True:
-	data = conn.recv(1024)
-	conn.send(data+"from server")
+data = conn.recv(1024)
+conn.send(data+"from server")
 ```
 
 ##### Client Code
@@ -509,7 +522,7 @@ while True:
 import socket
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba") # change the ssid and pswd to yours
 c = socket.SOCK()
 # make sure to check the server IP address and update in the next line of code
 c.connect("your server IP address", 5000) 
@@ -524,10 +537,11 @@ With socket created, we can visit an HTTP website and get whatever information f
 
 ##### Get information from HTTP website
 ```Python
+# use Ctrl+E to enter Paste mode, then copy and paste the following code in Paste mode
 import socket
 from wireless import WLAN
 wifi = WLAN(mode = WLAN.STA)
-wifi.connect(ssid = "MPSSID", pswd = "upyameba")
+wifi.connect(ssid = "MPSSID", pswd = "upyameba") # change the ssid and pswd to yours
 
 def http_get(url):
 	_, _, host, path = url.split('/', 3)
