@@ -20,7 +20,7 @@ $(info ## This build only supports Cygwin and Linux!)
 # Declaring tools depending on OS
 # Windows Cygwin
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN) 
-TC_PATH := amebad_tool/toolchain/cygwin/ameba_d_toolchain_windows/bin/
+TC_PATH := amebad_tool/toolchain/cygwin/asdk-6.5.0/bin/
 CROSS_COMPILE := arm-none-eabi-
 AR = $(TC_PATH)$(CROSS_COMPILE)ar.exe
 CC = $(TC_PATH)$(CROSS_COMPILE)gcc.exe
