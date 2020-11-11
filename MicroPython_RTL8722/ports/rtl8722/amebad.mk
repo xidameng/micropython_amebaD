@@ -275,7 +275,8 @@ com:
 
 .PHONY: release
 release:
-	cp -f $(BUILD)/km0_km4_image2.bin $(TOP)/../Release
+	cp -f $(BUILD)/km0_km4_image2.bin $(TOP)/../Release/Windows
+	cp -f $(BUILD)/km0_km4_image2.bin $(TOP)/../Release/Linux
 
 
 ######################

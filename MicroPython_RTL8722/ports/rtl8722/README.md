@@ -241,12 +241,12 @@ Use help(time) to view more information about this class
 ### Timer
 Use the ```Timer``` module through ```machine``` module
 
-There are 4 sets of 32KHz General Timers available to user, Timer 0/1/2/3
+There are 3 sets of 32KHz General Timers available to user, Timer 1/2/3
 
 ```Python
 from machine import Timer
 t = Timer(1)  # Use Timer 1/2/3 only
-t.start(2, t.PERIODICAL)  # Set GTimer fired periodically at duration of 2 seconds, printing text on the terminal
+t.start(2000000, t.PERIODICAL)  # Set GTimer fired periodically at duration of 2 seconds, printing text on the terminal
 
 # To stop the periodical timer, type 
 t.stop()
@@ -274,8 +274,9 @@ Use the ```RTC``` (Real Time Clock) module through ```machine``` module
 ```Python
 from machine import RTC
 rtc = RTC()
+rtc.datetime() # get date and time 
 rtc.datetime((2020, 12, 31, 4, 23, 58, 59, 0)) # set a specific date and time (year, month, day, weekday(0 for Monday), hour, minute, second, total seconds)
-rtc.datetime() # get date and time
+rtc.datetime() # check the updated date and time
 ```
 Use help(RTC) to view more information about this class
 
@@ -352,12 +353,11 @@ Use help(I2C) to view more information about this class
 ### SPI 
 Use the ```SPI``` (Serial Peripheral Interface) module through ```machine``` module
 
-Note: SPI only works in ```Master``` mode
 
 ```Python
 from machine import SPI
-spi = SPI(0)		# Only support 2 sets of SPI -- 0 and 1 
-spi 				# type instance name to check for details of the SPI set 
+spi = SPI(0)		  # Only support 2 sets of SPI -- 0 and 1 
+spi 				      # type instance name to check for details of the SPI set 
 spi.write(123)		# Write number 123 
 spi.read()
 ```
@@ -365,9 +365,9 @@ spi.read()
 #### For Your Information
 The above example start with creating an object of class ```SPI```, and it has the following format
 ```Python
-SPI( unit_id[required], baudrate[optional], polarity[optional], phase[optional], databits[optional], firstbit[optional], miso[optional], mosi[optional], sck[optional])
+SPI( unit_id[required], baudrate[optional], polarity[optional], phase[optional], databits[optional], firstbit[optional], miso[optional], mosi[optional], sck[optional], mode[optional])
 ```
-PS: Leaving optional parameters blank will will assume taking default values which are
+PS: Leaving optional parameters blank will assume taking default values which are
 
 | Parameter | Default value
 |:----------|:-------------: 
@@ -379,12 +379,15 @@ PS: Leaving optional parameters blank will will assume taking default values whi
 | miso      |     N.A.
 | mosi      |     N.A.
 | sck       |     N.A.
+| mode      |    Master
 
 There is currently 2 set of SPI, they are,
 | unit |   mosi |   miso  |  SCK  |  CS
 |:-----|:------:|:-------:|:-----:|:-----: 
 |   0  |  PB_18 |  PB_19  | PB_20 | PB_21
 |   1  |  PB_4  |  PB_5   | PB_6  | PB_7
+
+Note: both unit support master mode, but ```only unit 0``` support slave mode
 
 Use help(SPI) to view more information about this class
 
