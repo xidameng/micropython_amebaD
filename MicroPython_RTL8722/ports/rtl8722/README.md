@@ -326,8 +326,8 @@ Note: I2C only works in ```master``` mode.
 from machine import Pin, I2C
 i2c = I2C(scl = "PA_25", sda = "PA_26", freq=100000) # configure I2C with pins and freq. of 100KHz
 i2c.scan()
-i2c.writeto(8, 'hello') # send 5 bytes to slave with address 8
-i2c.readfrom(8, 6) # receive 5 bytes from slave
+i2c.writeto(8, 123) # send 1 byte to slave with address 8
+i2c.readfrom(8, 6) # receive 6 bytes from slave
 ```
 
 #### For Your Information

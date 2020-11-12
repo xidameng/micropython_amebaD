@@ -76,6 +76,8 @@ static int wifi_mode = 0;
 static bool init_wlan = false;
 static char connect_result = WL_FAILURE;
 
+static bool wlan_drv_state = true;
+
 
 
 //mp_obj_base_t base;
@@ -505,8 +507,13 @@ STATIC mp_obj_t wlan_connect(size_t n_args, const mp_obj_t *pos_args, mp_map_t *
     uint8_t dhcp_result;
     char* xmpassword = NULL;
 
+    if (wlan_drv_state == false) {
+        mp_raise_ValueError("Turn on wifi before connect");
+    }
     // init wifi drivers
     wlan_init0();
+
+    //wlan_drv_state = true;
 
     if (args[ARG_ssid].u_obj != mp_const_none) {
         ssid = mp_obj_str_get_data(args[ARG_ssid].u_obj, &ssid_len);
@@ -632,6 +639,8 @@ STATIC mp_obj_t wlan_on(mp_obj_t self_in) {
         mp_raise_msg(&mp_type_OSError, "WLAN init error");
     }
 
+    wlan_drv_state = true;
+
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_on_obj, wlan_on);
@@ -639,9 +648,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(wlan_on_obj, wlan_on);
 
 STATIC mp_obj_t wlan_off(mp_obj_t self_in) {
 
+    dhcps_deinit();
     if (wifi_off() != RTW_SUCCESS) {
         mp_raise_msg(&mp_type_OSError, "WLAN off failed");
     } 
+    wlan_drv_state = false;
 
     return mp_const_none;
 }

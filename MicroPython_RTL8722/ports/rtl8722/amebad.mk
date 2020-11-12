@@ -270,7 +270,9 @@ cleanpwd:
 
 .PHONY: com
 com:
-	picocom -b115200 $(UPLOAD_PATH)
+	@if [ $(findstring CYGWIN, $(OS)) = CYGWIN ]; \
+		then ttermpro /C=3 /BAUD=115200; \
+		else picocom -b115200 $(UPLOAD_PATH); fi
 
 
 .PHONY: release

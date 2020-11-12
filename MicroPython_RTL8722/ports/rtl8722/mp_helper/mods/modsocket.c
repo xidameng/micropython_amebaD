@@ -48,8 +48,8 @@
 #define DATA_LENTH      128
 
 static uint32_t amb_ip_address = 0;
-static bool amb_is_connected = 0;
-static int amb_client_sock;
+static bool amb_is_connected = false;
+static int amb_client_sock = -1;
 static int amb_server_sock;
 static int amb_recvTimeout = 3000;
 static struct sockaddr_in amb_cli_addr;
@@ -354,6 +354,9 @@ STATIC mp_obj_t client_connect(mp_obj_t self_in, mp_obj_t arg_host,  mp_obj_t ar
         } else { //tcp
             amb_client_sock = start_client(amb_ip_address, port, SOCK_STREAM);
         }
+    } else {
+        printf("Get host IP address failed\n");
+        return mp_const_false;
     }
 
     if (amb_client_sock < 0) {
