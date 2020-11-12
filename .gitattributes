@@ -14,6 +14,7 @@
 *.mpy binary
 *.bz2 binary
 *.tar binary
+*.exe binary
 
 # These should also not be modified by git.
 tests/basics/string_cr_conversion.py -text
@@ -26,3 +27,4 @@ ports/cc3200/hal/des.c -text
 ports/cc3200/hal/i2s.c -text
 ports/cc3200/hal/i2s.h -text
 ports/cc3200/version.h -text
+Release/Linux/Double_Click_Me_to_Upload.sh -text
