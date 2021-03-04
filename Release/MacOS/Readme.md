@@ -7,7 +7,7 @@ To use image tool to upload firmware to Ameba,
 2. Paste the following line to your terminal
 
 ```
-./Run_Me_in_Terminal.sh
+bash Run_Me_in_Terminal.sh
 ```
 
 3. Follow instructions on the terminal
