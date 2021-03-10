@@ -9,6 +9,8 @@ int sdioInitErr = FR_OK;
 static void *m_fs = NULL;
 static void *m_file = NULL;
 static char logical_drv[4] = "0:/";
+char mp_cwd[TEST_SIZE];
+bool dirChanged = false;
 
 #if 0
 logical_drv[0] = '0';
@@ -67,6 +69,9 @@ bool init_sd_fs(void){
         drv_num = -1;
     }
 
+    memset(mp_cwd, 0, TEST_SIZE);
+    sprintf(mp_cwd, "%s", logical_drv);
+
     return (-(int)ret);
 }
 
@@ -86,7 +91,7 @@ char* getRootPath() {
     }
 }
 
-
+#if 0
 char* getCWD() {
 
 	char absolute_path[128];
@@ -99,7 +104,7 @@ char* getCWD() {
 
     return absolute_path;
 }
-
+#endif
 
 void open(char* fileName) {
     FRESULT ret = FR_OK;
@@ -117,7 +122,7 @@ void open(char* fileName) {
             break;
         }
 
-        sprintf(absolute_path, "%s%s", getRootPath(), fileName);
+        sprintf(absolute_path, "%s/%s", mp_cwd, fileName);
 
         ret = f_open((FIL *)m_file, absolute_path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
 
@@ -150,6 +155,9 @@ STATIC mp_obj_t listdir(void) {
     unsigned int fnlen;
     int bufidx = 0;
 
+    char* fn2print;
+
+
 #if _USE_LFN
     char lfn[(_MAX_LFN + 1)];
     fno.lfname = lfn;
@@ -162,7 +170,14 @@ STATIC mp_obj_t listdir(void) {
             break;
         }
 
-        ret = f_opendir(&dir, getRootPath());
+        // open current directory
+        if(dirChanged) {
+            ret = f_opendir(&dir, mp_cwd);
+        } else {
+            ret = f_opendir(&dir, getRootPath());
+        }
+
+
         if (ret != FR_OK) {
             break;
         }
@@ -195,7 +210,15 @@ STATIC mp_obj_t listdir(void) {
         }
     } while (0);
 
-    return mp_obj_new_str(result_buf, bufidx);
+    /* the filenames are separated with '\0', so we scan one by one */
+    fn2print = result_buf + strlen(result_buf) + 1;
+    while(strlen(fn2print) > 0) {
+        printf("%s\r\n", fn2print);
+        fn2print += strlen(fn2print) + 1;
+    }
+
+    //return mp_obj_new_str(result_buf, bufidx);
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(listdir_obj, listdir);
 
@@ -220,7 +243,7 @@ STATIC mp_obj_t mkdir(mp_obj_t dirName) {
         }
     } while (0);
 
-    return mp_obj_new_int(ret);
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(mkdir_obj, mkdir);
 
@@ -230,23 +253,43 @@ MP_DEFINE_CONST_FUN_OBJ_1(mkdir_obj, mkdir);
 STATIC mp_obj_t chdir(mp_obj_t dirName) {
     FRESULT ret = FR_OK;
     char absolute_path[128];
+    char root[] = "/";
     
     char* dir_path = mp_obj_str_get_str(dirName);
+    //printf("dir path keyed in is :%s\n", dir_path);
     do {
         if (drv_num < 0) {
             ret = FR_DISK_ERR;
             break;
         }
 
-        sprintf(absolute_path, "%s%s", getRootPath(), dir_path);
+        if (!strcmp(dir_path, root)) { // cd back to root dir
+            dirChanged = false;
+            sprintf(absolute_path, "%s", getRootPath());
+            ret = f_chdir(absolute_path);
+        } else {
+            if (dirChanged) {  // cd to 2 and above layer of dir
+                sprintf(absolute_path, "%s/%s", mp_cwd, dir_path);
+            } else {  // cd to 2nd layer dir
+                sprintf(absolute_path, "%s%s", getRootPath(), dir_path);
+            }
 
-        ret = f_chdir(absolute_path);
-        if (ret != FR_OK) {
-            break;
+            ret = f_chdir(absolute_path);
+            if (ret != FR_OK) {
+                break;
+            }
         }
     } while (0);
 
-    return mp_obj_new_int(ret);
+    // update flag
+    dirChanged = true;
+
+    //update mp_cwd
+    memset(mp_cwd, 0, TEST_SIZE);
+    sprintf(mp_cwd, "%s", absolute_path);
+    //printf("mp_cwd is %s\n", mp_cwd);
+
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(chdir_obj, chdir);
 
@@ -273,15 +316,21 @@ STATIC mp_obj_t rm(mp_obj_t fileName) {
         }
     } while (0);
 
-    return mp_obj_new_int(ret);
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rm_obj, rm);
 
 
+STATIC mp_obj_t pwd() {
+    printf("%s\n", mp_cwd);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(pwd_obj, pwd);
 
 
-#if 0
-STATIC mp_obj_t open(mp_obj_t fileName) {
+
+STATIC mp_obj_t create(mp_obj_t fileName) {
     FRESULT ret = FR_OK;
     char absolute_path[128];
 
@@ -298,9 +347,9 @@ STATIC mp_obj_t open(mp_obj_t fileName) {
             break;
         }
 
-        sprintf(absolute_path, "%s%s", getRootPath(), fn);
+        sprintf(absolute_path, "%s/%s", mp_cwd, fn);
 
-        ret = f_open((FIL *)m_file, absolute_path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
+        ret = f_open((FIL *)m_file, absolute_path, FA_CREATE_ALWAYS);
 
         if (ret != FR_OK) {
             printf("open file (%s) fail. (ret=%d)\n", absolute_path, ret);
@@ -308,35 +357,26 @@ STATIC mp_obj_t open(mp_obj_t fileName) {
         }
     } while (0);
 
-    if (ret != FR_OK) {
-        if (m_file != NULL) {
-            free(m_file);
-            m_file = NULL;
-        }
-    }
 
-    return MP_OBJ_FROM_PTR(m_file); // TBD, here should return an object of sdfs, not pointer
-}
-MP_DEFINE_CONST_FUN_OBJ_1(open_obj, open);
-#endif
-
-STATIC mp_obj_t close() {
-    FRESULT ret = FR_OK;
-
-    ret = f_close((FIL *)m_file);
+    //close the file
+    f_close((FIL *)m_file);
     free(m_file);
     m_file = NULL;
 
-    return mp_obj_new_int(ret);
+    if (ret != FR_OK) {
+        mp_raise_ValueError("Failed to create file");
+    }
+
+    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(close_obj, close);
+MP_DEFINE_CONST_FUN_OBJ_1(create_obj, create);
 
 
 
 
 STATIC mp_obj_t read(mp_obj_t fileName) {
     FRESULT ret = FR_OK;
-    char buf[128];
+    char buf[512];
     unsigned int readsize = 0;
     unsigned char nbyte = 127;
 
@@ -348,10 +388,16 @@ STATIC mp_obj_t read(mp_obj_t fileName) {
     if (ret != FR_OK) {
         printf("File function error. \r\n");
     } else {
-        printf("%s", buf);
+        printf("%s \r\n", buf);
     }
 
-    return mp_obj_new_int(readsize);
+    //close the file
+    f_close((FIL *)m_file);
+    free(m_file);
+    m_file = NULL;
+
+    //return mp_obj_new_int(readsize);
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(read_obj, read);
 
@@ -361,6 +407,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(read_obj, read);
 STATIC mp_obj_t write(mp_obj_t fileName, mp_obj_t buf_in) {
     FRESULT ret = FR_OK;
     unsigned int writesize = 0;
+    char buf[512];
 
     char* fn = mp_obj_str_get_str(fileName);
     open(fn);
@@ -373,18 +420,28 @@ STATIC mp_obj_t write(mp_obj_t fileName, mp_obj_t buf_in) {
     ret = f_write((FIL *)m_file, (const void *)bufinfo.buf, bufinfo.len, &writesize);
 #endif
 
-    char* buf = mp_obj_str_get_str(buf_in);
+    memset(&buf[0], 0x00, 512);
 
-    printf("Recv: %s, commencing f write\n", buf);
+    char* buf_temp = mp_obj_str_get_str(buf_in);
+
+    strcpy(&buf[0], buf_temp);
+
+    //printf("Recv: %s, commencing f write\n", buf_temp);
 
     ret = f_write((FIL *)m_file, (const void *)buf, sizeof(buf), &writesize);
 
-    printf("test f write finish\n");
+    //printf("test f write finish\n");
     if (ret != FR_OK) {
         printf("File function error. \r\n");
     }
 
+    //close the file
+    f_close((FIL *)m_file);
+    free(m_file);
+    m_file = NULL;
+
     //return writesize;
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(write_obj, write);
 
@@ -398,13 +455,13 @@ MP_DEFINE_CONST_FUN_OBJ_2(write_obj, write);
 
 
 STATIC const mp_map_elem_t sdfs_module_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_fs)   },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),      MP_OBJ_NEW_QSTR(MP_QSTR_sdfs) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_listdir),       MP_OBJ_FROM_PTR(&listdir_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_mkdir),         MP_OBJ_FROM_PTR(&mkdir_obj)   },
     { MP_OBJ_NEW_QSTR(MP_QSTR_chdir),         MP_OBJ_FROM_PTR(&chdir_obj)   },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pwd),           MP_OBJ_FROM_PTR(&pwd_obj)     },
     { MP_OBJ_NEW_QSTR(MP_QSTR_rm),            MP_OBJ_FROM_PTR(&rm_obj)      },
-    //{ MP_OBJ_NEW_QSTR(MP_QSTR_open),          MP_OBJ_FROM_PTR(&open_obj)    },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_close),         MP_OBJ_FROM_PTR(&close_obj)   },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_create),        MP_OBJ_FROM_PTR(&create_obj)  },
     { MP_OBJ_NEW_QSTR(MP_QSTR_read),          MP_OBJ_FROM_PTR(&read_obj)    },
     { MP_OBJ_NEW_QSTR(MP_QSTR_write),         MP_OBJ_FROM_PTR(&write_obj)   },
 };
